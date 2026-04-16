@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, ReactNode } from "react";
+import { usePathname } from "next/navigation";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { ScrollSmoother } from "gsap/ScrollSmoother";
@@ -10,9 +11,11 @@ gsap.registerPlugin(ScrollTrigger, ScrollSmoother);
 
 export default function LenisProvider({ children }: { children: ReactNode }) {
   const reduced = useReducedMotion();
+  const pathname = usePathname();
+  const isDashboardRoute = pathname.startsWith("/dashboard");
 
   useEffect(() => {
-    if (reduced) return;
+    if (reduced || isDashboardRoute) return;
 
     const isTouch = window.matchMedia("(pointer: coarse)").matches;
     const smoother = ScrollSmoother.create({
@@ -42,7 +45,11 @@ export default function LenisProvider({ children }: { children: ReactNode }) {
       window.removeEventListener("nav-section-settled", handleNavSettled);
       smoother.kill();
     };
-  }, [reduced]);
+  }, [reduced, isDashboardRoute]);
+
+  if (isDashboardRoute) {
+    return <>{children}</>;
+  }
 
   return (
     <div id="smooth-wrapper">

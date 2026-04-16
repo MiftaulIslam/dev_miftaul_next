@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { LockKeyhole, ShieldAlert } from "lucide-react";
 
@@ -14,6 +15,7 @@ type LoginValues = {
 };
 
 export default function DashboardLogin() {
+  const router = useRouter();
   const [error, setError] = useState("");
   const {
     register,
@@ -32,7 +34,8 @@ export default function DashboardLogin() {
         method: "POST",
         body: JSON.stringify({ password: values.password }),
       });
-      window.location.reload();
+      router.replace("/dashboard/overview");
+      router.refresh();
     } catch (submitError) {
       const message = submitError instanceof Error ? submitError.message : "Invalid password.";
       setError(message);

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 
@@ -31,12 +31,6 @@ export function Dialog({
   size?: keyof typeof sizes;
   className?: string;
 }) {
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
   useEffect(() => {
     if (!open) return;
     const prev = document.body.style.overflow;
@@ -51,7 +45,7 @@ export function Dialog({
     };
   }, [open, onClose]);
 
-  if (!mounted || !open) return null;
+  if (!open || typeof document === "undefined") return null;
 
   return createPortal(
     <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4">

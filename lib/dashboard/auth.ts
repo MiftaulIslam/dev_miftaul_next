@@ -3,8 +3,9 @@ import "server-only";
 import { createHash, timingSafeEqual } from "node:crypto";
 import { cookies } from "next/headers";
 
-export const DASHBOARD_COOKIE = "dashboard_session";
-const DASHBOARD_COOKIE_VALUE = "ok";
+import { DASHBOARD_COOKIE, DASHBOARD_COOKIE_VALUE } from "@/lib/dashboard/session-cookie";
+
+export { DASHBOARD_COOKIE };
 
 function hashValue(value: string) {
   return createHash("sha256").update(value).digest();

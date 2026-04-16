@@ -7,6 +7,7 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { ArrowDown, ExternalLink, Globe, Mail } from "lucide-react";
 import { GitHubIcon, LinkedInIcon } from "@/components/ui/SocialIcons";
+import ScrollHighlightText from "@/components/ui/ScrollHighlightText";
 import type { PortfolioSettings } from "@/lib/dashboard/types";
 import { useReducedMotion } from "@/lib/useReducedMotion";
 
@@ -292,9 +293,12 @@ export default function Hero({ portraitSlotRef, profile }: HeroProps) {
             </span>
           </div>
 
-          <p className="hero-summary opacity-0 text-muted-foreground text-base md:text-lg max-w-lg leading-relaxed">
-            {profile.shortSummary}
-          </p>
+          <ScrollHighlightText
+            as="p"
+            text={profile.shortSummary}
+            className="hero-summary opacity-0 text-muted-foreground text-base md:text-lg max-w-lg leading-relaxed"
+            triggerStart="top 82%"
+          />
 
           <div ref={ctaRef} className="flex flex-wrap gap-3">
             <button

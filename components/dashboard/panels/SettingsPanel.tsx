@@ -1,15 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Plus, Trash2 } from "lucide-react";
-import { Controller, useFieldArray, useForm } from "react-hook-form";
+import { Eye, EyeOff, Plus, Trash2 } from "lucide-react";
+import { Controller, useFieldArray, useForm, useWatch } from "react-hook-form";
 
 import { requestJson } from "@/components/dashboard/api";
 import { Button } from "@/components/ui/dashboard/Button";
 import { Card } from "@/components/ui/dashboard/Card";
 import { ImageUpload } from "@/components/ui/dashboard/ImageUpload";
 import { Input } from "@/components/ui/dashboard/Input";
-import { Textarea } from "@/components/ui/dashboard/Textarea";
+import { renderSummaryWithHighlights } from "@/lib/dashboard/render-summary-highlights";
 import type { PortfolioSettings } from "@/lib/dashboard/types";
 
 type SettingsFormValues = {
@@ -84,6 +84,8 @@ function fromFormValues(values: SettingsFormValues) {
 export default function SettingsPanel() {
   const [status, setStatus] = useState("");
   const [error, setError] = useState("");
+  const [shortSummaryPreview, setShortSummaryPreview] = useState(false);
+  const [detailedSummaryPreview, setDetailedSummaryPreview] = useState(false);
 
   const form = useForm<SettingsFormValues>({
     defaultValues: {
@@ -109,6 +111,9 @@ export default function SettingsPanel() {
   const designationFields = useFieldArray({ control: form.control, name: "designations" });
   const socialsFields = useFieldArray({ control: form.control, name: "socials" });
   const focusedFields = useFieldArray({ control: form.control, name: "currentlyFocusedOn" });
+
+  const shortSummaryLive = useWatch({ control: form.control, name: "shortSummary" });
+  const detailedSummaryLive = useWatch({ control: form.control, name: "detailedSummary" });
 
   useEffect(() => {
     const load = async () => {
@@ -223,20 +228,59 @@ export default function SettingsPanel() {
       </Card>
 
       <Card>
-        <Textarea
-          label="Short Summary"
-          placeholder="One or two lines for cards and meta."
-          className="md:col-span-2"
-          rows={3}
-          {...form.register("shortSummary")}
-        />
-        <Textarea
-          label="Detailed Summary"
-          placeholder="Longer bio for the about section."
-          className="mt-4 md:col-span-2"
-          rows={6}
-          {...form.register("detailedSummary")}
-        />
+        <div className="space-y-1.5">
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-xs font-medium uppercase tracking-[0.08em] text-slate-400">Short summary</span>
+            <button
+              type="button"
+              onClick={() => setShortSummaryPreview((v) => !v)}
+              className="rounded-lg p-2 text-slate-400 transition hover:bg-white/10 hover:text-cyan-300"
+              title={shortSummaryPreview ? "Edit" : "Preview"}
+              aria-label={shortSummaryPreview ? "Switch to edit mode" : "Switch to preview mode"}
+            >
+              {shortSummaryPreview ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </button>
+          </div>
+          {shortSummaryPreview ? (
+            <div className="min-h-[88px] rounded-xl border border-white/12 bg-slate-950/60 px-3 py-2.5 text-sm">
+              {renderSummaryWithHighlights(shortSummaryLive ?? "")}
+            </div>
+          ) : (
+            <textarea
+              placeholder="One or two lines for cards and meta. Use **emphasis** or ***strong emphasis***."
+              rows={3}
+              className="min-h-[88px] w-full rounded-xl border border-white/12 bg-slate-900/70 px-3 py-2 text-sm text-white outline-none transition focus:border-blue-400/55 focus:ring-2 focus:ring-blue-500/20"
+              {...form.register("shortSummary")}
+            />
+          )}
+        </div>
+
+        <div className="mt-6 space-y-1.5">
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-xs font-medium uppercase tracking-[0.08em] text-slate-400">Detailed summary</span>
+            <button
+              type="button"
+              onClick={() => setDetailedSummaryPreview((v) => !v)}
+              className="rounded-lg p-2 text-slate-400 transition hover:bg-white/10 hover:text-cyan-300"
+              title={detailedSummaryPreview ? "Edit" : "Preview"}
+              aria-label={detailedSummaryPreview ? "Switch to edit mode" : "Switch to preview mode"}
+            >
+              {detailedSummaryPreview ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </button>
+          </div>
+          {detailedSummaryPreview ? (
+            <div className="min-h-[160px] rounded-xl border border-white/12 bg-slate-950/60 px-3 py-2.5 text-sm">
+              {renderSummaryWithHighlights(detailedSummaryLive ?? "")}
+            </div>
+          ) : (
+            <textarea
+              placeholder="Longer bio for the about section. **Bold phrases** and ***key highlights***."
+              rows={6}
+              className="min-h-[160px] w-full rounded-xl border border-white/12 bg-slate-900/70 px-3 py-2 text-sm text-white outline-none transition focus:border-blue-400/55 focus:ring-2 focus:ring-blue-500/20"
+              {...form.register("detailedSummary")}
+            />
+          )}
+        </div>
       </Card>
 
       <Card title="Designations">

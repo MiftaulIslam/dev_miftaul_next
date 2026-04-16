@@ -1,5 +1,6 @@
 import "server-only";
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { neon } from "@neondatabase/serverless";
 
 let sqlClient: any = null;

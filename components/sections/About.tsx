@@ -9,6 +9,7 @@ import { MapPin, Mail, CheckCircle2 } from "lucide-react";
 import CountUp from "react-countup";
 import { useInView } from "framer-motion";
 import SectionHeading from "@/components/ui/SectionHeading";
+import ScrollHighlightText from "@/components/ui/ScrollHighlightText";
 import type { PortfolioSettings } from "@/lib/dashboard/types";
 import { useReducedMotion } from "@/lib/useReducedMotion";
 
@@ -151,12 +152,13 @@ export default function About({ portraitTargetRef, profile }: AboutProps) {
 
           <div className="flex flex-col gap-7">
             {bioParagraphs.map((paragraph, index) => (
-              <p
+              <ScrollHighlightText
                 key={`${paragraph.slice(0, 18)}-${index}`}
+                as="p"
+                text={paragraph}
                 className="about-text-item opacity-0 text-muted-foreground leading-relaxed text-base md:text-lg"
-              >
-                {paragraph}
-              </p>
+                triggerStart="top 76%"
+              />
             ))}
 
             <div className="about-info-card opacity-0 border-y border-white/10 py-4 md:py-5 grid grid-cols-1 md:grid-cols-[1fr_1fr_auto] gap-4 md:gap-6 items-center">

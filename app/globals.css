@@ -259,6 +259,34 @@ p {
   z-index: 1;
 }
 
+/* Scroll highlight tokens */
+.scroll-highlight-token {
+  display: inline;
+  border-radius: 0.22em;
+  padding: 0 0.08em;
+  background-repeat: no-repeat;
+  background-position: 0 84%;
+  background-size: 0% 100%;
+}
+
+.scroll-highlight-token-white {
+  background-image: linear-gradient(
+    90deg,
+    rgba(248, 250, 252, 0.26) 0%,
+    rgba(148, 163, 184, 0.12) 55%,
+    rgba(2, 6, 23, 0.28) 100%
+  );
+}
+
+.scroll-highlight-token-blue {
+  background-image: linear-gradient(
+    90deg,
+    rgba(96, 165, 250, 0.28) 0%,
+    rgba(59, 130, 246, 0.16) 58%,
+    rgba(2, 6, 23, 0.3) 100%
+  );
+}
+
 /* ── Animations ── */
 @keyframes drift {
   0%, 100% { transform: translate(0, 0) scale(1); }

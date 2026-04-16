@@ -1,6 +1,9 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { useState } from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import {
   BookOpenText,
   BriefcaseBusiness,
@@ -13,59 +16,21 @@ import {
 } from "lucide-react";
 
 import { requestJson } from "@/components/dashboard/api";
-import BlogsPanel from "@/components/dashboard/panels/BlogsPanel";
-import ExperiencePanel from "@/components/dashboard/panels/ExperiencePanel";
-import OverviewPanel from "@/components/dashboard/panels/OverviewPanel";
-import ProjectsPanel from "@/components/dashboard/panels/ProjectsPanel";
-import ReviewsPanel from "@/components/dashboard/panels/ReviewsPanel";
-import SettingsPanel from "@/components/dashboard/panels/SettingsPanel";
-import StacksPanel from "@/components/dashboard/panels/StacksPanel";
 import { Button } from "@/components/ui/dashboard/Button";
 import { cn } from "@/lib/cn";
 
-type MenuKey =
-  | "overview"
-  | "blog"
-  | "reviews"
-  | "settings"
-  | "skills"
-  | "projects"
-  | "experience";
+const menus = [
+  { href: "/dashboard/overview", label: "Overview", icon: LayoutDashboard },
+  { href: "/dashboard/blog", label: "Blog", icon: BookOpenText },
+  { href: "/dashboard/reviews", label: "Reviews", icon: MessageSquareMore },
+  { href: "/dashboard/settings", label: "Settings", icon: Settings },
+  { href: "/dashboard/skills", label: "Skills", icon: Sparkles },
+  { href: "/dashboard/projects", label: "Projects", icon: BriefcaseBusiness },
+  { href: "/dashboard/experience", label: "Experience", icon: Wrench },
+] as const;
 
-const menus: Array<{ key: MenuKey; label: string; icon: React.ComponentType<{ className?: string }> }> =
-  [
-    { key: "overview", label: "Overview", icon: LayoutDashboard },
-    { key: "blog", label: "Blog", icon: BookOpenText },
-    { key: "reviews", label: "Reviews", icon: MessageSquareMore },
-    { key: "settings", label: "Settings", icon: Settings },
-    { key: "skills", label: "Skills", icon: Sparkles },
-    { key: "projects", label: "Projects", icon: BriefcaseBusiness },
-    { key: "experience", label: "Experience", icon: Wrench },
-  ];
-
-function getPanel(activeMenu: MenuKey) {
-  switch (activeMenu) {
-    case "overview":
-      return <OverviewPanel />;
-    case "blog":
-      return <BlogsPanel />;
-    case "reviews":
-      return <ReviewsPanel />;
-    case "settings":
-      return <SettingsPanel />;
-    case "skills":
-      return <StacksPanel />;
-    case "projects":
-      return <ProjectsPanel />;
-    case "experience":
-      return <ExperiencePanel />;
-    default:
-      return null;
-  }
-}
-
-export default function DashboardApp() {
-  const [activeMenu, setActiveMenu] = useState<MenuKey>("overview");
+export default function DashboardShell({ children }: { children: ReactNode }) {
+  const pathname = usePathname();
   const [logoutPending, setLogoutPending] = useState(false);
   const [error, setError] = useState("");
 
@@ -74,7 +39,7 @@ export default function DashboardApp() {
     setLogoutPending(true);
     try {
       await requestJson("/api/dashboard/auth", { method: "DELETE" });
-      window.location.reload();
+      window.location.href = "/dashboard";
     } catch (logoutError) {
       setError(logoutError instanceof Error ? logoutError.message : "Failed to logout.");
       setLogoutPending(false);
@@ -98,22 +63,21 @@ export default function DashboardApp() {
           <nav className="flex flex-1 flex-col gap-0.5 overflow-y-auto px-3 py-4">
             {menus.map((menu) => {
               const Icon = menu.icon;
-              const active = activeMenu === menu.key;
+              const active = pathname === menu.href;
               return (
-                <button
-                  key={menu.key}
-                  type="button"
-                  onClick={() => setActiveMenu(menu.key)}
+                <Link
+                  key={menu.href}
+                  href={menu.href}
                   className={cn(
                     "flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium transition",
                     active
-                      ? "bg-gradient-to-r from-blue-500/20 to-cyan-500/10 text-white shadow-[inset_0_0_0_1px_rgba(59,130,246,0.35)]"
+                      ? "bg-linear-to-r from-blue-500/20 to-cyan-500/10 text-white shadow-[inset_0_0_0_1px_rgba(59,130,246,0.35)]"
                       : "text-slate-400 hover:bg-white/[0.06] hover:text-white",
                   )}
                 >
                   <Icon className={cn("h-4 w-4 shrink-0", active ? "text-cyan-300" : "text-slate-500")} />
                   {menu.label}
-                </button>
+                </Link>
               );
             })}
           </nav>
@@ -133,7 +97,7 @@ export default function DashboardApp() {
         </aside>
 
         <main className="min-h-0 min-w-0 flex-1 overflow-y-auto">
-          <div className="mx-auto max-w-6xl px-5 py-8 md:px-10 md:py-10">{getPanel(activeMenu)}</div>
+          <div className="mx-auto max-w-6xl px-5 py-8 md:px-10 md:py-10">{children}</div>
         </main>
       </div>
     </div>
