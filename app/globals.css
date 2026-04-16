@@ -180,7 +180,9 @@ body {
   overflow-x: hidden;
 }
 
-/* Hide app UI while intro overlay is active */
+/* Hide app UI while intro overlay is active.
+   Do NOT hide #smooth-wrapper: the intro itself renders inside #smooth-content (Lenis),
+   so hiding the wrapper would make the intro invisible (blank screen). */
 body.intro-active [data-app-navbar="true"] {
   opacity: 0 !important;
   visibility: hidden !important;
@@ -188,10 +190,8 @@ body.intro-active [data-app-navbar="true"] {
   transform: translateY(-20px) !important;
 }
 
-body.intro-active #smooth-wrapper {
-  opacity: 0 !important;
-  visibility: hidden !important;
-  pointer-events: none !important;
+body.intro-active {
+  overflow: hidden;
 }
 
 /* ── Custom scrollbar ── */

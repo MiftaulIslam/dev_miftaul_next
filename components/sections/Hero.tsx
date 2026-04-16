@@ -1,30 +1,45 @@
-"use client";
+﻿"use client";
 
-import { useRef, useEffect, useState } from "react";
+import { useRef, useEffect, useState, type ComponentType } from "react";
 import Image from "next/image";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { Mail, ArrowDown, ExternalLink } from "lucide-react";
+import { ArrowDown, ExternalLink, Globe, Mail } from "lucide-react";
 import { GitHubIcon, LinkedInIcon } from "@/components/ui/SocialIcons";
-import { SOCIAL_LINKS } from "@/lib/data";
+import type { PortfolioSettings } from "@/lib/dashboard/types";
 import { useReducedMotion } from "@/lib/useReducedMotion";
 
 gsap.registerPlugin(ScrollTrigger);
 
-const ROLES = ["Full Stack Developer", "Software Engineer", "Solution Architect"];
+const DEFAULT_ROLES = ["Full Stack Developer", "Software Engineer", "Solution Architect"];
 
-const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
+const iconMap: Record<string, ComponentType<{ className?: string }>> = {
   github: GitHubIcon,
   linkedin: LinkedInIcon,
   mail: Mail,
+  link: Globe,
 };
 
 interface HeroProps {
   portraitSlotRef: React.RefObject<HTMLDivElement | null>;
+  profile: PortfolioSettings;
 }
 
-export default function Hero({ portraitSlotRef }: HeroProps) {
+function splitName(fullName: string) {
+  const tokens = fullName.trim().split(/\s+/).filter(Boolean);
+  if (!tokens.length) {
+    return { firstName: "Miftaul", highlighted: "Islam", remainder: "Shuvro" };
+  }
+
+  return {
+    firstName: tokens[0],
+    highlighted: tokens[1] ?? "Islam",
+    remainder: tokens.slice(2).join(" "),
+  };
+}
+
+export default function Hero({ portraitSlotRef, profile }: HeroProps) {
   const sectionRef = useRef<HTMLDivElement>(null);
   const bgLayerRef = useRef<HTMLDivElement>(null);
   const contentLeftRef = useRef<HTMLDivElement>(null);
@@ -37,26 +52,38 @@ export default function Hero({ portraitSlotRef }: HeroProps) {
   const reduced = useReducedMotion();
   const [roleIndex, setRoleIndex] = useState(0);
 
-  // Role cycling animation with GSAP
+  const roles = profile.designations.length ? profile.designations : DEFAULT_ROLES;
+  const socialLinks = profile.socials.length
+    ? profile.socials
+    : [{ iconName: "mail", link: `mailto:${profile.email}` }];
+  const nameParts = splitName(profile.name);
+  const safeRole = roles[roleIndex % roles.length];
+
   useEffect(() => {
     if (reduced) return;
+
     const cycle = () => {
       const el = roleRef.current;
       if (!el) return;
       gsap.to(el, {
-        y: -20, opacity: 0, duration: 0.35, ease: "power2.in",
+        y: -20,
+        opacity: 0,
+        duration: 0.35,
+        ease: "power2.in",
         onComplete: () => {
-          setRoleIndex((prev) => (prev + 1) % ROLES.length);
-          gsap.fromTo(el,
+          setRoleIndex((prev) => (prev + 1) % roles.length);
+          gsap.fromTo(
+            el,
             { y: 20, opacity: 0 },
-            { y: 0, opacity: 1, duration: 0.4, ease: "power2.out" }
+            { y: 0, opacity: 1, duration: 0.4, ease: "power2.out" },
           );
         },
       });
     };
+
     const id = setInterval(cycle, 2800);
     return () => clearInterval(id);
-  }, [reduced]);
+  }, [reduced, roles]);
 
   useGSAP(
     () => {
@@ -64,62 +91,54 @@ export default function Hero({ portraitSlotRef }: HeroProps) {
 
       const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
 
-      // Heading lines reveal
       const lines = headingRef.current.querySelectorAll(".hero-line");
       tl.fromTo(
         lines,
         { y: 70, opacity: 0, clipPath: "inset(0 0 100% 0)" },
-        { y: 0, opacity: 1, clipPath: "inset(0 0 0% 0)", duration: 0.9, stagger: 0.12 }
+        { y: 0, opacity: 1, clipPath: "inset(0 0 0% 0)", duration: 0.9, stagger: 0.12 },
       );
 
-      // Greeting tag
       tl.fromTo(
         ".hero-greeting",
         { y: 20, opacity: 0 },
         { y: 0, opacity: 1, duration: 0.5 },
-        "-=0.6"
+        "-=0.6",
       );
 
-      // Summary
       tl.fromTo(
         ".hero-summary",
         { y: 20, opacity: 0 },
         { y: 0, opacity: 1, duration: 0.5 },
-        "-=0.3"
+        "-=0.3",
       );
 
-      // CTA buttons
       if (ctaRef.current) {
         tl.fromTo(
           ctaRef.current.children,
           { y: 20, opacity: 0 },
           { y: 0, opacity: 1, duration: 0.45, stagger: 0.1 },
-          "-=0.25"
+          "-=0.25",
         );
       }
 
-      // Social icons
       if (socialsRef.current) {
         tl.fromTo(
           socialsRef.current.children,
           { y: 15, opacity: 0 },
           { y: 0, opacity: 1, duration: 0.4, stagger: 0.08 },
-          "-=0.2"
+          "-=0.2",
         );
       }
 
-      // Right card float in
       if (cardRef.current) {
         tl.fromTo(
           cardRef.current,
-          // Keep slot geometry stable for shared-element measurements on hard refresh.
           { scale: 0.96, opacity: 0 },
           { scale: 1, opacity: 1, duration: 0.8, ease: "power2.out" },
-          0.3
+          0.3,
         );
       }
 
-      // Scroll-out + layered parallax
       const mm = gsap.matchMedia();
 
       mm.add("(min-width: 1024px)", () => {
@@ -214,7 +233,7 @@ export default function Hero({ portraitSlotRef }: HeroProps) {
 
       return () => mm.revert();
     },
-    { scope: sectionRef }
+    { scope: sectionRef },
   );
 
   const scrollToAbout = () => {
@@ -227,10 +246,9 @@ export default function Hero({ portraitSlotRef }: HeroProps) {
       ref={sectionRef}
       className="relative min-h-screen flex items-center overflow-hidden bg-transparent"
     >
-      {/* Background glow blobs */}
       <div ref={bgLayerRef} className="absolute inset-0 pointer-events-none overflow-hidden">
         <Image
-          src="/hero-bg-2.png"
+          src={profile.bannerImage || "/hero-bg-2.png"}
           alt="Hero background"
           fill
           priority
@@ -247,15 +265,11 @@ export default function Hero({ portraitSlotRef }: HeroProps) {
             animation: "drift 16s ease-in-out infinite reverse",
           }}
         />
-        {/* Subtle grid */}
         <div className="absolute inset-0 bg-grid opacity-30" />
       </div>
 
       <div className="relative z-10 max-w-7xl mx-auto px-5 md:px-10 w-full pt-20 pb-16 grid md:grid-cols-2 gap-12 lg:gap-20 items-center min-h-screen">
-
-        {/* ── Left: Text content ── */}
         <div ref={contentLeftRef} className="flex flex-col gap-6">
-          {/* Greeting tag */}
           <div className="hero-greeting opacity-0 inline-flex items-center gap-2 w-fit">
             <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse-glow" />
             <span className="text-xs font-mono text-muted-foreground bg-white/5 border border-white/10 px-3 py-1 rounded-full tracking-wider">
@@ -263,34 +277,25 @@ export default function Hero({ portraitSlotRef }: HeroProps) {
             </span>
           </div>
 
-          {/* Heading */}
           <div ref={headingRef} className="flex flex-col gap-1 overflow-hidden">
             <h1 className="hero-line opacity-0 text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tight text-white leading-[1.05]">
-              Miftaul
+              {nameParts.firstName}
             </h1>
             <h1 className="hero-line opacity-0 text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tight leading-[1.05]">
-              <span className="text-blue-400">Islam</span> Shuvro
+              <span className="text-blue-400">{nameParts.highlighted}</span> {nameParts.remainder}
             </h1>
           </div>
 
-          {/* Animated role */}
           <div className="h-7 overflow-hidden">
-            <span
-              ref={roleRef}
-              className="block text-lg md:text-xl font-medium text-muted-foreground"
-            >
-              {ROLES[roleIndex]}
+            <span ref={roleRef} className="block text-lg md:text-xl font-medium text-muted-foreground">
+              {safeRole}
             </span>
           </div>
 
-          {/* Summary */}
           <p className="hero-summary opacity-0 text-muted-foreground text-base md:text-lg max-w-lg leading-relaxed">
-            I build high-performance full stack applications — from elegant React interfaces
-            to scalable Node.js / NestJS backends. 3+ years shipping production-ready products
-            for global clients.
+            {profile.shortSummary}
           </p>
 
-          {/* CTAs */}
           <div ref={ctaRef} className="flex flex-wrap gap-3">
             <button
               onClick={() => document.getElementById("projects")?.scrollIntoView({ behavior: "smooth" })}
@@ -307,20 +312,20 @@ export default function Hero({ portraitSlotRef }: HeroProps) {
             </button>
           </div>
 
-          {/* Social links */}
           <div ref={socialsRef} className="flex items-center gap-3 pt-1">
-            {SOCIAL_LINKS.map((s) => {
-              const Icon = iconMap[s.icon];
+            {socialLinks.map((social, index) => {
+              const key = social.iconName.toLowerCase();
+              const Icon = iconMap[key] ?? iconMap.link;
               return (
                 <a
-                  key={s.label}
-                  href={s.href}
+                  key={`${social.iconName}-${social.link}-${index}`}
+                  href={social.link}
                   target="_blank"
                   rel="noopener noreferrer"
-                  aria-label={s.label}
+                  aria-label={social.iconName}
                   className="opacity-0 w-10 h-10 rounded-xl flex items-center justify-center text-muted-foreground hover:text-white border border-white/10 hover:border-blue-500/50 hover:bg-blue-500/10 transition-all duration-200"
                 >
-                  {Icon && <Icon className="w-4 h-4" />}
+                  <Icon className="w-4 h-4" />
                 </a>
               );
             })}
@@ -328,15 +333,12 @@ export default function Hero({ portraitSlotRef }: HeroProps) {
           </div>
         </div>
 
-        {/* ── Right: Visual card composition ── */}
         <div ref={cardRef} className="opacity-0 relative hidden md:flex items-center justify-center">
-          {/* Outer glow ring */}
           <div
             className="absolute w-72 h-72 rounded-full opacity-20 blur-2xl"
             style={{ background: "radial-gradient(circle, #3b82f6, transparent 70%)" }}
           />
 
-          {/* Animated rotating ring */}
           <div className="hero-orbit-frame relative w-64 h-64 md:w-80 md:h-80">
             <div className="hero-orbit-ring absolute inset-0 rounded-full border border-blue-500/20 animate-spin-slow" />
             <div
@@ -344,7 +346,6 @@ export default function Hero({ portraitSlotRef }: HeroProps) {
               style={{ animation: "spin-slow 20s linear infinite reverse" }}
             />
 
-            {/* Portrait card */}
             <div
               ref={portraitSlotRef}
               className="portrait-hero absolute inset-4 rounded-2xl glass border border-blue-500/20 pointer-events-none"
@@ -352,7 +353,7 @@ export default function Hero({ portraitSlotRef }: HeroProps) {
             >
               <div className="hero-static-portrait absolute inset-0">
                 <Image
-                  src="/ariyan_2.jpg"
+                  src={profile.primaryAvatar || "/ariyan_2.jpg"}
                   alt="Miftaul Islam Shuvro portrait in hero card"
                   fill
                   sizes="(max-width: 768px) 240px, 320px"
@@ -364,25 +365,23 @@ export default function Hero({ portraitSlotRef }: HeroProps) {
             </div>
           </div>
 
-          {/* Floating stat cards */}
           <div className="hero-floating-chip absolute -top-4 -right-4 md:right-0 glass border border-white/10 rounded-xl px-3 py-2 animate-float" style={{ animationDelay: "0.5s" }}>
             <p className="text-[10px] text-muted-foreground font-mono">experience</p>
-            <p className="text-white font-bold text-sm">3+ Years</p>
+            <p className="text-white font-bold text-sm">{profile.yearsOfExperience}+ Years</p>
           </div>
           <div className="hero-floating-chip absolute -bottom-4 -left-4 md:left-0 glass border border-white/10 rounded-xl px-3 py-2 animate-float" style={{ animationDelay: "1.2s" }}>
             <p className="text-[10px] text-muted-foreground font-mono">projects</p>
-            <p className="text-white font-bold text-sm">7+ Shipped</p>
+            <p className="text-white font-bold text-sm">{profile.totalProjects}+ Shipped</p>
           </div>
           <div className="hero-floating-chip absolute top-1/2 -right-8 md:-right-4 glass border border-green-500/20 rounded-xl px-3 py-2 animate-float" style={{ animationDelay: "0.9s" }}>
             <div className="flex items-center gap-1.5">
               <div className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
-              <p className="text-green-400 font-semibold text-xs">Available</p>
+              <p className="text-green-400 font-semibold text-xs">{profile.availability}</p>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Scroll indicator */}
       <button
         onClick={scrollToAbout}
         className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-muted-foreground hover:text-white transition-colors group"

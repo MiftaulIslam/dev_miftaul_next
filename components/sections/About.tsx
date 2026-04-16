@@ -1,7 +1,6 @@
-"use client";
+﻿"use client";
 
 import { useRef } from "react";
-import type { ReactNode } from "react";
 import Image from "next/image";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
@@ -10,68 +9,32 @@ import { MapPin, Mail, CheckCircle2 } from "lucide-react";
 import CountUp from "react-countup";
 import { useInView } from "framer-motion";
 import SectionHeading from "@/components/ui/SectionHeading";
-import { ABOUT, STATS } from "@/lib/data";
+import type { PortfolioSettings } from "@/lib/dashboard/types";
 import { useReducedMotion } from "@/lib/useReducedMotion";
 
 gsap.registerPlugin(ScrollTrigger);
 
 interface AboutProps {
   portraitTargetRef: React.RefObject<HTMLDivElement | null>;
+  profile: PortfolioSettings;
 }
 
-export default function About({ portraitTargetRef }: AboutProps) {
+export default function About({ portraitTargetRef, profile }: AboutProps) {
   const sectionRef = useRef<HTMLDivElement>(null);
   const statsRef = useRef<HTMLDivElement>(null);
   const reduced = useReducedMotion();
   const statsInView = useInView(statsRef, { once: true, margin: "-100px" });
 
-  const whiteHighlights = [
-    "Miftaul Islam Shuvro",
-    "3+ years",
-    "Web Makers LTD",
-    "clean architecture",
-    "developer experience",
-    "production-ready",
-    "global clients",
+  const bioParagraphs = profile.detailedSummary
+    .split(/\n+/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+
+  const stats = [
+    { value: profile.totalProjects, suffix: "+", label: "Projects Delivered" },
+    { value: profile.yearsOfExperience, suffix: "+", label: "Years Experience" },
+    { value: profile.happyClients, suffix: "+", label: "Happy Clients" },
   ];
-  const accentHighlights = ["React/Next.js", "Node.js/NestJS/Golang", "enterprise SaaS"];
-
-  const renderHighlightedText = (text: string): ReactNode[] => {
-    const allHighlights = [...whiteHighlights, ...accentHighlights].sort((a, b) => b.length - a.length);
-    const escaped = allHighlights.map((w) => w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
-    if (escaped.length === 0) return [text];
-
-    const regex = new RegExp(`(${escaped.join("|")})`, "gi");
-    return text.split(regex).map((chunk, idx) => {
-      const lower = chunk.toLowerCase();
-      const isWhite = whiteHighlights.some((w) => w.toLowerCase() === lower);
-      const isAccent = accentHighlights.some((w) => w.toLowerCase() === lower);
-
-      if (isWhite) {
-        return (
-          <span
-            key={`${chunk}-${idx}`}
-            className="about-hl about-hl-white font-semibold bg-linear-to-r from-white/18 to-white/6 bg-no-repeat [background-position:0_82%]"
-            style={{ backgroundSize: "0% 100%" }}
-          >
-            {chunk}
-          </span>
-        );
-      }
-      if (isAccent) {
-        return (
-          <span
-            key={`${chunk}-${idx}`}
-            className="about-hl about-hl-accent font-medium bg-linear-to-r from-blue-400/24 to-blue-300/8 bg-no-repeat [background-position:0_82%]"
-            style={{ backgroundSize: "0% 100%" }}
-          >
-            {chunk}
-          </span>
-        );
-      }
-      return <span key={`${chunk}-${idx}`}>{chunk}</span>;
-    });
-  };
 
   useGSAP(
     () => {
@@ -93,7 +56,7 @@ export default function About({ portraitTargetRef }: AboutProps) {
               start: "top 65%",
               toggleActions: "play none none none",
             },
-          }
+          },
         );
       }
 
@@ -113,7 +76,7 @@ export default function About({ portraitTargetRef }: AboutProps) {
               start: "top 55%",
               toggleActions: "play none none none",
             },
-          }
+          },
         );
       }
 
@@ -131,63 +94,11 @@ export default function About({ portraitTargetRef }: AboutProps) {
               start: "top 80%",
               toggleActions: "play none none none",
             },
-          }
+          },
         );
       }
-
-      const highlightedBlocks = sectionRef.current?.querySelectorAll(".about-highlight-block");
-      if (highlightedBlocks) {
-        highlightedBlocks.forEach((block) => {
-          const accents = block.querySelectorAll(".about-hl-accent");
-          const whites = block.querySelectorAll(".about-hl-white");
-
-          gsap.fromTo(
-            accents,
-            {
-              color: "#60738f",
-              textShadow: "0 0 0 rgba(96,165,250,0)",
-              backgroundSize: "0% 100%",
-            },
-            {
-              color: "#93c5fd",
-              textShadow: "0 0 14px rgba(96,165,250,0.35)",
-              backgroundSize: "100% 100%",
-              duration: 0.5,
-              stagger: 0.08,
-              ease: "power2.out",
-              scrollTrigger: {
-                trigger: block,
-                start: "top 76%",
-                toggleActions: "play none none reverse",
-              },
-            }
-          );
-
-          gsap.fromTo(
-            whites,
-            {
-              color: "#8fa2ba",
-              textShadow: "0 0 0 rgba(255,255,255,0)",
-              backgroundSize: "0% 100%",
-            },
-            {
-              color: "#f8fafc",
-              textShadow: "0 0 12px rgba(148,163,184,0.25)",
-              backgroundSize: "100% 100%",
-              duration: 0.46,
-              stagger: 0.07,
-              ease: "power2.out",
-              scrollTrigger: {
-                trigger: block,
-                start: "top 76%",
-                toggleActions: "play none none reverse",
-              },
-            }
-          );
-        });
-      }
     },
-    { scope: sectionRef, dependencies: [] }
+    { scope: sectionRef, dependencies: [profile] },
   );
 
   return (
@@ -221,7 +132,7 @@ export default function About({ portraitTargetRef }: AboutProps) {
               >
                 <div className="about-static-portrait absolute inset-0">
                   <Image
-                    src="/ariyan.webp"
+                    src={profile.subAvatar || "/ariyan.webp"}
                     alt="Miftaul Islam Shuvro portrait in about card"
                     fill
                     sizes="(max-width: 768px) 300px, 420px"
@@ -231,22 +142,20 @@ export default function About({ portraitTargetRef }: AboutProps) {
                 </div>
                 <div className="absolute inset-0 bg-linear-to-t from-[#080c14]/45 via-transparent to-[#080c14]/5 pointer-events-none" />
                 <div className="absolute bottom-4 left-4 right-4 z-50 pointer-events-none">
-                  <p className="text-white! font-semibold text-sm">Miftaul Islam Shuvro</p>
-                  <p className="text-white! text-xs">Software Engineer</p>
+                  <p className="text-white! font-semibold text-sm">{profile.name}</p>
+                  <p className="text-white! text-xs">{profile.designations[0] ?? "Software Engineer"}</p>
                 </div>
               </div>
-
-          
             </div>
           </div>
 
           <div className="flex flex-col gap-7">
-            {ABOUT.bio.map((para, i) => (
+            {bioParagraphs.map((paragraph, index) => (
               <p
-                key={i}
-                className="about-text-item about-highlight-block opacity-0 text-muted-foreground leading-relaxed text-base md:text-lg"
+                key={`${paragraph.slice(0, 18)}-${index}`}
+                className="about-text-item opacity-0 text-muted-foreground leading-relaxed text-base md:text-lg"
               >
-                {renderHighlightedText(para)}
+                {paragraph}
               </p>
             ))}
 
@@ -255,24 +164,24 @@ export default function About({ portraitTargetRef }: AboutProps) {
                 <MapPin className="w-4 h-4 text-blue-300 shrink-0 mt-0.5" />
                 <div>
                   <p className="text-[10px] text-subtle uppercase tracking-[0.18em]">Location</p>
-                  <p className="text-sm text-white/95 font-medium">{ABOUT.location}</p>
+                  <p className="text-sm text-white/95 font-medium">{profile.location}</p>
                 </div>
               </div>
               <div className="flex items-start gap-2.5 md:border-l md:border-white/10 md:pl-6">
                 <Mail className="w-4 h-4 text-blue-300 shrink-0 mt-0.5" />
                 <div>
                   <p className="text-[10px] text-subtle uppercase tracking-[0.18em]">Email</p>
-                  <p className="text-sm text-white/95 font-medium break-all">{ABOUT.email}</p>
+                  <p className="text-sm text-white/95 font-medium break-all">{profile.email}</p>
                 </div>
               </div>
               <div className="inline-flex items-center gap-2.5 rounded-full border border-emerald-400/25 bg-emerald-400/8 px-3.5 py-1.5 w-fit md:justify-self-end">
                 <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                <span className="text-xs md:text-sm text-emerald-300 font-semibold">{ABOUT.availability}</span>
+                <span className="text-xs md:text-sm text-emerald-300 font-semibold">{profile.availability}</span>
               </div>
             </div>
 
             <div ref={statsRef} className="about-info-card opacity-0 grid grid-cols-1 sm:grid-cols-3 border-b border-white/10 pb-5 md:pb-6">
-              {STATS.map((stat, idx) => (
+              {stats.map((stat, idx) => (
                 <div
                   key={stat.label}
                   className={`py-3 sm:py-0 text-left sm:text-center ${idx > 0 ? "sm:border-l sm:border-white/10" : ""}`}
@@ -292,7 +201,7 @@ export default function About({ portraitTargetRef }: AboutProps) {
             <div className="about-text-item opacity-0">
               <p className="text-xs uppercase tracking-[0.2em] text-subtle mb-3">Currently Focused On</p>
               <div className="flex flex-wrap gap-2.5">
-                {ABOUT.focusedOn.map((item) => (
+                {profile.currentlyFocusedOn.map((item) => (
                   <span
                     key={item}
                     className="inline-flex items-center gap-2 px-3.5 py-1.5 text-sm rounded-full border border-blue-300/20 text-blue-100/90 bg-linear-to-r from-blue-500/12 to-transparent"

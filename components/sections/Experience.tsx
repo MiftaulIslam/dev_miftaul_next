@@ -4,7 +4,7 @@ import { useRef } from "react";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { motion } from "framer-motion";
+
 import { MapPin, Calendar, Briefcase } from "lucide-react";
 import { experiences } from "@/components/experience-data";
 import SectionHeading from "@/components/ui/SectionHeading";
@@ -44,7 +44,7 @@ export default function Experience() {
       // Timeline dots pulse on enter
       const dots = sectionRef.current?.querySelectorAll(".timeline-dot");
       if (dots) {
-        dots.forEach((dot, i) => {
+        dots.forEach((dot) => {
           gsap.fromTo(
             dot,
             { scale: 0, opacity: 0 },

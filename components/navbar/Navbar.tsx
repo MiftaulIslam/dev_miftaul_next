@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { PencilLine, FileText, Menu, X } from "lucide-react";
+import { usePathname } from "next/navigation";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { ScrollSmoother } from "gsap/ScrollSmoother";
@@ -12,6 +13,7 @@ import CVDialog from "@/components/ui/CVDialog";
 gsap.registerPlugin(ScrollTrigger);
 
 export default function Navbar() {
+  const pathname = usePathname();
   const [introActive, setIntroActive] = useState(true);
   const [scrolled, setScrolled] = useState(false);
   const [activeSection, setActiveSection] = useState("hero");
@@ -71,7 +73,7 @@ export default function Navbar() {
     return () => observerRef.current?.disconnect();
   }, [introActive]);
 
-  if (introActive) return null;
+  if (introActive || pathname.startsWith("/dashboard")) return null;
 
   const scrollTo = (href: string) => {
     const id = href.replace("#", "");

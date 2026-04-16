@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import { useGSAP } from "@gsap/react";
@@ -14,6 +14,8 @@ import Skills from "@/components/sections/Skills";
 import Projects from "@/components/sections/Projects";
 import Experience from "@/components/sections/Experience";
 import Contact from "@/components/sections/Contact";
+import { fallbackProfile } from "@/lib/dashboard/fallback-profile";
+import type { PortfolioSettings } from "@/lib/dashboard/types";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -21,6 +23,7 @@ export default function Home() {
   const [introDone, setIntroDone] = useState(false);
   const [showIntro, setShowIntro] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
+  const [profile, setProfile] = useState<PortfolioSettings>(fallbackProfile);
   const heroPortraitSlotRef = useRef<HTMLDivElement>(null);
   const aboutPortraitSlotRef = useRef<HTMLDivElement>(null);
   const sharedPortraitRef = useRef<HTMLDivElement>(null);
@@ -47,11 +50,11 @@ export default function Home() {
     return () => document.body.classList.remove("intro-active");
   }, [introDone]);
 
-  const handleIntroComplete = () => {
+  const handleIntroComplete = useCallback(() => {
     sessionStorage.setItem("intro-seen", "1");
     setShowIntro(false);
     setIntroDone(true);
-  };
+  }, []);
 
   useEffect(() => {
     const media = window.matchMedia("(max-width: 767px)");
@@ -59,6 +62,20 @@ export default function Home() {
     update();
     media.addEventListener("change", update);
     return () => media.removeEventListener("change", update);
+  }, []);
+
+  useEffect(() => {
+    const loadProfile = async () => {
+      try {
+        const response = await fetch("/api/public/profile", { cache: "no-store" });
+        if (!response.ok) return;
+        const data = (await response.json()) as PortfolioSettings;
+        setProfile(data);
+      } catch {
+        // Keep fallback profile on error
+      }
+    };
+    void loadProfile();
   }, []);
 
   useGSAP(
@@ -378,7 +395,7 @@ export default function Home() {
           >
             <div ref={heroPortraitImageRef} className="absolute inset-0">
               <Image
-                src="/ariyan_2.jpg"
+                src={profile.primaryAvatar || "/ariyan_2.jpg"}
                 alt="Miftaul Islam Shuvro portrait in hero"
                 fill
                 sizes="(max-width: 768px) 240px, 320px"
@@ -388,7 +405,7 @@ export default function Home() {
             </div>
             <div ref={aboutPortraitImageRef} className="absolute inset-0 opacity-0">
               <Image
-                src="/ariyan.webp"
+                src={profile.subAvatar || "/ariyan.webp"}
                 alt="Miftaul Islam Shuvro portrait in about"
                 fill
                 sizes="(max-width: 768px) 240px, 320px"
@@ -399,12 +416,12 @@ export default function Home() {
             <div className="absolute inset-0 bg-linear-to-t from-[#080c14]/60 via-transparent to-[#080c14]/10" />
           </div>
 
-          <Hero portraitSlotRef={heroPortraitSlotRef} />
-          <About portraitTargetRef={aboutPortraitSlotRef} />
+          <Hero portraitSlotRef={heroPortraitSlotRef} profile={profile} />
+          <About portraitTargetRef={aboutPortraitSlotRef} profile={profile} />
           <Skills />
           <Projects />
           <Experience />
-          <Contact />
+          <Contact profile={profile} />
         </div>
       </motion.div>
     </main>

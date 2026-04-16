@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Printer, Download } from "lucide-react";
+import { X, Printer } from "lucide-react";
 import { CV, SKILLS } from "@/lib/data";
 import { experiences } from "@/components/experience-data";
 

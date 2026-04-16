@@ -1,12 +1,15 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useRef, useEffect, useLayoutEffect } from "react";
 import gsap from "gsap";
 import InspectDrawer from "@/components/intro/InspectDrawer";
 
 interface IntroLoaderProps {
   onComplete: () => void;
 }
+
+/** Total intro ~2.4–2.8s; fail-safe if GSAP stalls */
+const INTRO_FAILSAFE_MS = 3800;
 
 const DEBUG_STEPS = [
   { text: "Inspecting <h1.hero-title>...", progress: "12%", width: 12 },
@@ -39,11 +42,19 @@ export default function IntroLoader({ onComplete }: IntroLoaderProps) {
   const brokenClassRef = useRef<HTMLSpanElement>(null);
   const corruptedClassRef = useRef<HTMLSpanElement>(null);
   const subClassRef = useRef<HTMLSpanElement>(null);
+  const onCompleteRef = useRef(onComplete);
   const setLineRef = (idx: number, el: HTMLDivElement | null) => {
     lineRefs.current[idx] = el;
   };
 
   useEffect(() => {
+    onCompleteRef.current = onComplete;
+  }, [onComplete]);
+
+  useLayoutEffect(() => {
+    const notifyComplete = () => {
+      onCompleteRef.current();
+    };
     const setDebug = (idx: number) => {
       const step = DEBUG_STEPS[idx];
       if (!step) return;
@@ -67,15 +78,15 @@ export default function IntroLoader({ onComplete }: IntroLoaderProps) {
       gsap.to(overlayRef.current, {
         opacity: 0,
         duration: 0.45,
-        onComplete,
+        onComplete: notifyComplete,
       });
-    }, 9800);
+    }, INTRO_FAILSAFE_MS);
 
     const tl = gsap.timeline({
       defaults: { ease: "power2.out" },
       onComplete: () => {
         window.clearTimeout(failSafeExit);
-        onComplete();
+        notifyComplete();
       },
     });
     let glitchLoop: gsap.core.Timeline | null = null;
