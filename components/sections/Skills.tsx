@@ -164,89 +164,111 @@ export default function Skills() {
       if (reduced) return;
 
       const mm = gsap.matchMedia();
-
-      mm.add("(min-width: 768px)", () => {
+      const resetSkillsVisual = () => {
         const cards = gsap.utils.toArray<HTMLElement>(".skill-lane-card", sectionRef.current);
+        gsap.set(cards, { opacity: 1, y: 0, scale: 1, filter: "blur(0px)", x: 0, clearProps: "visibility" });
+        cards.forEach((card) => {
+          gsap.set(card.querySelectorAll(".skill-chip"), { opacity: 1, y: 0, scale: 1 });
+          gsap.set(card.querySelector(".skill-lane-glow"), { opacity: 0.24, scale: 1 });
+        });
+      };
+
+      const runStackReveal = () => {
+        const cards = gsap.utils.toArray<HTMLElement>(".skill-lane-card", sectionRef.current);
+        if (!cards.length) return;
+
+        // Keep cards visible by default to avoid blank states on nav jumps.
+        gsap.set(cards, { opacity: 1, y: 0, scale: 1, filter: "blur(0px)", x: 0 });
+        cards.forEach((card) => {
+          const glow = card.querySelector(".skill-lane-glow");
+          if (glow) gsap.set(glow, { opacity: 0.18, scale: 0.92 });
+          gsap.set(card.querySelectorAll(".skill-chip"), { opacity: 0.72, y: 0, scale: 1 });
+        });
+        setActiveLane(0);
 
         cards.forEach((card, idx) => {
           const chips = card.querySelectorAll(".skill-chip");
           const glow = card.querySelector(".skill-lane-glow");
-          const fromX = idx % 2 === 0 ? -180 : 180;
-          const fromRotate = idx % 2 === 0 ? -5 : 5;
-
-          const tl = gsap.timeline({
-            scrollTrigger: {
-              trigger: card,
-              start: "top 82%",
-              end: "top 54%",
-              scrub: 0.75,
-              invalidateOnRefresh: true,
-              onToggle: (self) => {
-                if (self.isActive) setActiveLane(idx);
-              },
-            },
+          ScrollTrigger.create({
+            trigger: card,
+            start: "top center+=40",
+            end: "bottom center",
+            onEnter: () => setActiveLane(idx),
+            onEnterBack: () => setActiveLane(idx),
           });
 
-          tl.fromTo(
+          gsap.fromTo(
             card,
-            {
-              x: fromX,
-              y: 110,
-              rotate: fromRotate,
-              opacity: 0,
-              filter: "blur(8px)",
-            },
-            {
-              x: 0,
-              y: 0,
-              rotate: 0,
-              opacity: 1,
-              filter: "blur(0px)",
-              ease: "power3.out",
-            },
-            0
-          );
-
-          tl.fromTo(
-            chips,
-            { y: 16, opacity: 0, scale: 0.94 },
+            { y: 42, opacity: 0.56, scale: 0.98 },
             {
               y: 0,
               opacity: 1,
               scale: 1,
-              duration: 0.28,
-              stagger: 0.04,
-              ease: "back.out(1.35)",
-            },
-            0.14
+              ease: "none",
+              scrollTrigger: {
+                trigger: card,
+                start: "top 86%",
+                end: "top 56%",
+                scrub: 0.8,
+                invalidateOnRefresh: true,
+              },
+            }
           );
 
+          gsap.to(chips, {
+            opacity: 1,
+            duration: 0.22,
+            stagger: 0.03,
+            ease: "power2.out",
+            scrollTrigger: {
+              trigger: card,
+              start: "top 78%",
+              toggleActions: "play none none reverse",
+            },
+          });
+
           if (glow) {
-            tl.fromTo(glow, { opacity: 0.16, scale: 0.88 }, { opacity: 0.36, scale: 1, duration: 0.4 }, 0);
+            gsap.to(glow, {
+              opacity: 0.34,
+              scale: 1,
+              duration: 0.3,
+              ease: "power2.out",
+              scrollTrigger: {
+                trigger: card,
+                start: "top 78%",
+                toggleActions: "play none none reverse",
+              },
+            });
           }
         });
-      });
+      };
 
-      mm.add("(max-width: 767px)", () => {
-        gsap.fromTo(
-          ".skill-lane-card",
-          { y: 28, opacity: 0 },
-          {
-            y: 0,
-            opacity: 1,
-            duration: 0.45,
-            stagger: 0.1,
-            ease: "power3.out",
-            scrollTrigger: {
-              trigger: sectionRef.current,
-              start: "top 80%",
-              toggleActions: "play none none none",
-            },
-          }
-        );
-      });
+      mm.add("(min-width: 768px)", runStackReveal);
+      mm.add("(max-width: 767px)", runStackReveal);
 
-      return () => mm.revert();
+      const handleNavJump = (event: Event) => {
+        const custom = event as CustomEvent<{ id?: string }>;
+        if (custom.detail?.id !== "skills") return;
+        setActiveLane(0);
+        resetSkillsVisual();
+        requestAnimationFrame(() => ScrollTrigger.refresh());
+      };
+      const handleNavSettled = (event: Event) => {
+        const custom = event as CustomEvent<{ id?: string }>;
+        if (custom.detail?.id !== "skills") return;
+        setActiveLane(0);
+        resetSkillsVisual();
+        ScrollTrigger.refresh();
+      };
+
+      window.addEventListener("nav-section-jump", handleNavJump as EventListener);
+      window.addEventListener("nav-section-settled", handleNavSettled as EventListener);
+
+      return () => {
+        window.removeEventListener("nav-section-jump", handleNavJump as EventListener);
+        window.removeEventListener("nav-section-settled", handleNavSettled as EventListener);
+        mm.revert();
+      };
     },
     { scope: sectionRef }
   );

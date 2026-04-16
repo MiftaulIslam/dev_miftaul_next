@@ -20,6 +20,7 @@ gsap.registerPlugin(ScrollTrigger);
 export default function Home() {
   const [introDone, setIntroDone] = useState(false);
   const [showIntro, setShowIntro] = useState(true);
+  const [isMobile, setIsMobile] = useState(false);
   const heroPortraitSlotRef = useRef<HTMLDivElement>(null);
   const aboutPortraitSlotRef = useRef<HTMLDivElement>(null);
   const sharedPortraitRef = useRef<HTMLDivElement>(null);
@@ -46,9 +47,17 @@ export default function Home() {
     }, 100);
   };
 
+  useEffect(() => {
+    const media = window.matchMedia("(max-width: 767px)");
+    const update = () => setIsMobile(media.matches);
+    update();
+    media.addEventListener("change", update);
+    return () => media.removeEventListener("change", update);
+  }, []);
+
   useGSAP(
     () => {
-      if (!introDone) return;
+      if (!introDone || isMobile) return;
 
       const shared = sharedPortraitRef.current;
       const source = heroPortraitSlotRef.current;
@@ -312,8 +321,13 @@ export default function Home() {
       const handleLoad = () => queueSync();
       const handleResize = () => queueSync();
       const handleScrollEnd = () => syncToCurrentProgress();
+      const handleNavJump = () => {
+        queueSync();
+        requestAnimationFrame(() => syncToCurrentProgress());
+      };
       window.addEventListener("load", handleLoad);
       window.addEventListener("resize", handleResize);
+      window.addEventListener("nav-section-jump", handleNavJump as EventListener);
       ScrollTrigger.addEventListener("scrollEnd", handleScrollEnd);
       gsap.ticker.add(keepEdgeStateLocked);
       document.fonts?.ready.then(queueSync);
@@ -323,11 +337,12 @@ export default function Home() {
         cancelAnimationFrame(rafB);
         window.removeEventListener("load", handleLoad);
         window.removeEventListener("resize", handleResize);
+        window.removeEventListener("nav-section-jump", handleNavJump as EventListener);
         ScrollTrigger.removeEventListener("scrollEnd", handleScrollEnd);
         gsap.ticker.remove(keepEdgeStateLocked);
       };
     },
-    { dependencies: [introDone] }
+    { dependencies: [introDone, isMobile] }
   );
 
   return (
@@ -338,9 +353,9 @@ export default function Home() {
       {/* ── Main portfolio content ── */}
       <motion.div
         className="relative"
-        initial={{ opacity: 0 }}
-        animate={introDone ? { opacity: 1 } : { opacity: 0 }}
-        transition={{ duration: 0.5, ease: "easeOut" }}
+        initial={false}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.25, ease: "easeOut" }}
       >
         <HeroRoadmapPath />
 
@@ -349,7 +364,7 @@ export default function Home() {
         {/* Shared portrait layer used by Hero->About transition */}
         <div
           ref={sharedPortraitRef}
-          className="pointer-events-none absolute left-0 top-0 z-40 overflow-hidden rounded-2xl border border-blue-400/30"
+          className="pointer-events-none absolute left-0 top-0 z-40 hidden md:block overflow-hidden rounded-2xl border border-blue-400/30"
           style={{ opacity: 0, visibility: "hidden" }}
           aria-hidden
         >

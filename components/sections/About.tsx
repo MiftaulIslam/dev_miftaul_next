@@ -49,14 +49,22 @@ export default function About({ portraitTargetRef }: AboutProps) {
 
       if (isWhite) {
         return (
-          <span key={`${chunk}-${idx}`} className="text-white font-semibold">
+          <span
+            key={`${chunk}-${idx}`}
+            className="about-hl about-hl-white font-semibold bg-linear-to-r from-white/18 to-white/6 bg-no-repeat [background-position:0_82%]"
+            style={{ backgroundSize: "0% 100%" }}
+          >
             {chunk}
           </span>
         );
       }
       if (isAccent) {
         return (
-          <span key={`${chunk}-${idx}`} className="text-blue-300 font-medium">
+          <span
+            key={`${chunk}-${idx}`}
+            className="about-hl about-hl-accent font-medium bg-linear-to-r from-blue-400/24 to-blue-300/8 bg-no-repeat [background-position:0_82%]"
+            style={{ backgroundSize: "0% 100%" }}
+          >
             {chunk}
           </span>
         );
@@ -126,6 +134,58 @@ export default function About({ portraitTargetRef }: AboutProps) {
           }
         );
       }
+
+      const highlightedBlocks = sectionRef.current?.querySelectorAll(".about-highlight-block");
+      if (highlightedBlocks) {
+        highlightedBlocks.forEach((block) => {
+          const accents = block.querySelectorAll(".about-hl-accent");
+          const whites = block.querySelectorAll(".about-hl-white");
+
+          gsap.fromTo(
+            accents,
+            {
+              color: "#60738f",
+              textShadow: "0 0 0 rgba(96,165,250,0)",
+              backgroundSize: "0% 100%",
+            },
+            {
+              color: "#93c5fd",
+              textShadow: "0 0 14px rgba(96,165,250,0.35)",
+              backgroundSize: "100% 100%",
+              duration: 0.5,
+              stagger: 0.08,
+              ease: "power2.out",
+              scrollTrigger: {
+                trigger: block,
+                start: "top 76%",
+                toggleActions: "play none none reverse",
+              },
+            }
+          );
+
+          gsap.fromTo(
+            whites,
+            {
+              color: "#8fa2ba",
+              textShadow: "0 0 0 rgba(255,255,255,0)",
+              backgroundSize: "0% 100%",
+            },
+            {
+              color: "#f8fafc",
+              textShadow: "0 0 12px rgba(148,163,184,0.25)",
+              backgroundSize: "100% 100%",
+              duration: 0.46,
+              stagger: 0.07,
+              ease: "power2.out",
+              scrollTrigger: {
+                trigger: block,
+                start: "top 76%",
+                toggleActions: "play none none reverse",
+              },
+            }
+          );
+        });
+      }
     },
     { scope: sectionRef, dependencies: [] }
   );
@@ -182,7 +242,10 @@ export default function About({ portraitTargetRef }: AboutProps) {
 
           <div className="flex flex-col gap-7">
             {ABOUT.bio.map((para, i) => (
-              <p key={i} className="about-text-item opacity-0 text-muted-foreground leading-relaxed text-base md:text-lg">
+              <p
+                key={i}
+                className="about-text-item about-highlight-block opacity-0 text-muted-foreground leading-relaxed text-base md:text-lg"
+              >
                 {renderHighlightedText(para)}
               </p>
             ))}

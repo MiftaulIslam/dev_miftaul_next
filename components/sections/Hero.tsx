@@ -329,7 +329,7 @@ export default function Hero({ portraitSlotRef }: HeroProps) {
         </div>
 
         {/* ── Right: Visual card composition ── */}
-        <div ref={cardRef} className="opacity-0 relative flex items-center justify-center">
+        <div ref={cardRef} className="opacity-0 relative hidden md:flex items-center justify-center">
           {/* Outer glow ring */}
           <div
             className="absolute w-72 h-72 rounded-full opacity-20 blur-2xl"

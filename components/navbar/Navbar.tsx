@@ -3,8 +3,13 @@
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { PencilLine, FileText, Menu, X } from "lucide-react";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { ScrollSmoother } from "gsap/ScrollSmoother";
 import { NAV_LINKS } from "@/lib/data";
 import CVDialog from "@/components/ui/CVDialog";
+
+gsap.registerPlugin(ScrollTrigger);
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
@@ -13,11 +18,20 @@ export default function Navbar() {
   const [cvOpen, setCvOpen] = useState(false);
   const observerRef = useRef<IntersectionObserver | null>(null);
 
-  // Scroll state — add glass bg after first scroll
+  // Scroll state - keep navbar visible; shrink + glass after scroll
   useEffect(() => {
-    const handler = () => setScrolled(window.scrollY > 20);
-    window.addEventListener("scroll", handler, { passive: true });
-    return () => window.removeEventListener("scroll", handler);
+    const update = () => {
+      const smoother = ScrollSmoother.get();
+      const y = smoother ? smoother.scrollTop() : window.scrollY;
+      setScrolled(y > 20);
+    };
+    update();
+    gsap.ticker.add(update);
+    window.addEventListener("scroll", update, { passive: true });
+    return () => {
+      gsap.ticker.remove(update);
+      window.removeEventListener("scroll", update);
+    };
   }, []);
 
   // Active section via IntersectionObserver
@@ -46,7 +60,29 @@ export default function Navbar() {
   const scrollTo = (href: string) => {
     const id = href.replace("#", "");
     const el = document.getElementById(id);
-    if (el) el.scrollIntoView({ behavior: "smooth" });
+    const headerOffset = id === "hero" ? 0 : 84;
+
+    if (el) {
+      window.dispatchEvent(new CustomEvent("nav-section-jump", { detail: { id } }));
+      const smoother = ScrollSmoother.get();
+      if (smoother) {
+        const baseY =
+          typeof smoother.offset === "function"
+            ? smoother.offset(el, "top top")
+            : el.getBoundingClientRect().top + smoother.scrollTop();
+        smoother.scrollTo(Math.max(0, baseY - headerOffset), true);
+      } else {
+        const y = Math.max(0, el.getBoundingClientRect().top + window.scrollY - headerOffset);
+        window.scrollTo({ top: y, behavior: "smooth" });
+      }
+
+      setActiveSection(id);
+      window.setTimeout(() => {
+        ScrollTrigger.refresh();
+        window.dispatchEvent(new CustomEvent("nav-section-settled", { detail: { id } }));
+      }, 420);
+    }
+
     setMobileOpen(false);
   };
 
@@ -56,13 +92,15 @@ export default function Navbar() {
         initial={{ y: -80, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.6, delay: 0.2, ease: [0.4, 0, 0.2, 1] }}
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-          scrolled
-            ? "glass border-b border-white/8 shadow-lg shadow-black/30"
-            : "bg-transparent border-b border-transparent"
-        }`}
+        className="fixed top-0 left-0 right-0 z-[70] pointer-events-none"
       >
-        <div className="max-w-7xl mx-auto px-5 md:px-10 h-16 flex items-center justify-between">
+        <div
+          className={`pointer-events-auto mx-auto mt-0 md:mt-2 px-5 md:px-8 flex items-center justify-between transition-all duration-300 ${
+            scrolled
+              ? "max-w-6xl h-14 rounded-2xl glass border border-white/10 shadow-xl shadow-black/35"
+              : "max-w-7xl h-16 md:h-20 rounded-none bg-transparent border border-transparent"
+          }`}
+        >
           {/* Logo */}
           <button
             onClick={() => scrollTo("#hero")}
@@ -176,14 +214,20 @@ export default function Navbar() {
               </nav>
               <div className="px-6 pb-8 flex flex-col gap-3">
                 <button
-                  onClick={() => { setCvOpen(true); setMobileOpen(false); }}
+                  onClick={() => {
+                    setCvOpen(true);
+                    setMobileOpen(false);
+                  }}
                   className="flex items-center justify-center gap-2 w-full py-2.5 text-sm text-muted-foreground border border-white/10 rounded-xl hover:text-white hover:border-white/20 transition-colors"
                 >
                   <FileText className="w-4 h-4" />
                   Resume
                 </button>
                 <button
-                  onClick={() => { scrollTo("#contact"); setMobileOpen(false); }}
+                  onClick={() => {
+                    scrollTo("#contact");
+                    setMobileOpen(false);
+                  }}
                   className="flex items-center justify-center gap-2 w-full py-2.5 text-sm text-white bg-blue-600 hover:bg-blue-500 rounded-xl font-medium transition-colors"
                 >
                   <PencilLine className="w-4 h-4" />

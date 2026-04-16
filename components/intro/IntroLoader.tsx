@@ -34,6 +34,16 @@ export default function IntroLoader({ onComplete }: IntroLoaderProps) {
   const glitchRefB = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    const failSafe = setTimeout(() => {
+      // Guard against blank intro if animation lifecycle gets interrupted.
+      gsap.set(charRefs.current.filter(Boolean), { y: 0, opacity: 1 });
+      gsap.set(subtitleRef.current, { y: 0, opacity: 1 });
+      gsap.set(statusRef.current, { opacity: 1 });
+      if (statusRef.current && !statusRef.current.textContent) {
+        statusRef.current.textContent = STATUS_LABELS[0];
+      }
+    }, 260);
+
     const tl = gsap.timeline({
       onComplete: () => {
         // Unmount trigger
@@ -157,6 +167,7 @@ export default function IntroLoader({ onComplete }: IntroLoaderProps) {
     );
 
     return () => {
+      clearTimeout(failSafe);
       tl.kill();
     };
   }, [onComplete]);

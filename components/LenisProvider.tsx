@@ -1,28 +1,29 @@
 "use client";
 
 import { useEffect, ReactNode } from "react";
-import Lenis from "lenis";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { ScrollSmoother } from "gsap/ScrollSmoother";
+import { useReducedMotion } from "@/lib/useReducedMotion";
 
-gsap.registerPlugin(ScrollTrigger);
+gsap.registerPlugin(ScrollTrigger, ScrollSmoother);
 
 export default function LenisProvider({ children }: { children: ReactNode }) {
+  const reduced = useReducedMotion();
+
   useEffect(() => {
-    const lenis = new Lenis({
-      duration: 1.2,
-      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-      smoothWheel: true,
+    if (reduced) return;
+
+    const isTouch = window.matchMedia("(pointer: coarse)").matches;
+    const smoother = ScrollSmoother.create({
+      wrapper: "#smooth-wrapper",
+      content: "#smooth-content",
+      smooth: isTouch ? 0.65 : 1.1,
+      smoothTouch: isTouch ? 0.08 : 0,
+      normalizeScroll: true,
+      ignoreMobileResize: true,
+      effects: false,
     });
-
-    // Sync Lenis with GSAP ScrollTrigger
-    lenis.on("scroll", ScrollTrigger.update);
-
-    const raf = gsap.ticker.add((time) => {
-      lenis.raf(time * 1000);
-    });
-
-    gsap.ticker.lagSmoothing(0);
 
     // Refresh ScrollTrigger on resize (debounced)
     let resizeTimer: ReturnType<typeof setTimeout>;
@@ -30,14 +31,22 @@ export default function LenisProvider({ children }: { children: ReactNode }) {
       clearTimeout(resizeTimer);
       resizeTimer = setTimeout(() => ScrollTrigger.refresh(), 200);
     };
+    const handleNavSettled = () => {
+      requestAnimationFrame(() => ScrollTrigger.refresh());
+    };
     window.addEventListener("resize", handleResize);
+    window.addEventListener("nav-section-settled", handleNavSettled);
 
     return () => {
-      gsap.ticker.remove(raf);
       window.removeEventListener("resize", handleResize);
-      lenis.destroy();
+      window.removeEventListener("nav-section-settled", handleNavSettled);
+      smoother.kill();
     };
-  }, []);
+  }, [reduced]);
 
-  return <>{children}</>;
+  return (
+    <div id="smooth-wrapper">
+      <div id="smooth-content">{children}</div>
+    </div>
+  );
 }

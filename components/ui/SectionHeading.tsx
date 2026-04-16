@@ -84,30 +84,29 @@ export default function SectionHeading({
 
       gsap.to(".sh-title", {
         filter: "drop-shadow(0 0 18px rgba(125,211,252,0.68)) drop-shadow(0 0 52px rgba(59,130,246,0.52))",
-        repeat: -1,
-        yoyo: true,
-        duration: 1.9,
-        ease: "sine.inOut",
-      });
-      gsap.to(".sh-title", {
-        backgroundPositionX: "110%",
-        repeat: -1,
-        yoyo: true,
-        duration: 3,
-        ease: "sine.inOut",
+        duration: 0.9,
+        ease: "power2.out",
       });
 
-      gsap.to(ref.current, {
-        yPercent: -14,
-        ease: "none",
-        scrollTrigger: {
-          trigger: ref.current,
-          start: "top bottom",
-          end: "bottom top",
-          scrub: 1,
-          invalidateOnRefresh: true,
-        },
+      const mm = gsap.matchMedia();
+      mm.add("(min-width: 768px)", () => {
+        gsap.to(".sh-title", {
+          filter: "drop-shadow(0 0 18px rgba(125,211,252,0.68)) drop-shadow(0 0 52px rgba(59,130,246,0.52))",
+          repeat: -1,
+          yoyo: true,
+          duration: 1.9,
+          ease: "sine.inOut",
+        });
+        gsap.to(".sh-title", {
+          backgroundPositionX: "110%",
+          repeat: -1,
+          yoyo: true,
+          duration: 3,
+          ease: "sine.inOut",
+        });
       });
+
+      return () => mm.revert();
     },
     { scope: ref }
   );

@@ -38,10 +38,8 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} dark h-full antialiased`}
     >
       <body className="min-h-full bg-background text-foreground overflow-x-hidden">
-        <LenisProvider>
-          <Navbar />
-          {children}
-        </LenisProvider>
+        <Navbar />
+        <LenisProvider>{children}</LenisProvider>
       </body>
     </html>
   );
