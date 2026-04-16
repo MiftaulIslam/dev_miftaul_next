@@ -1,7 +1,10 @@
 export type ProjectDescription = string | string[];
 
 export interface Project {
+  id: number;
   title: string;
+  subtitle: string;
+  role: string;
   description: ProjectDescription;
   image: string;
   images?: string[];
@@ -9,11 +12,16 @@ export interface Project {
   github: string;
   demo: string;
   featured: boolean;
+  accent: string;
+  tag?: string;
 }
 
 export const projects: Project[] = [
   {
+    id: 1,
     title: "CreBrains",
+    subtitle: "Commercial Real Estate Intelligence",
+    role: "Full Stack Developer",
     description: [
       "End-to-end Commercial Real Estate platform enabling buyers, sellers, and brokers to manage properties, documents, and transactions in one place.",
       "Role-based access (Buyer, Seller, Broker, Legal) with automatic task assignment by deal phase—due diligence, pre-closing, and closing.",
@@ -21,16 +29,19 @@ export const projects: Project[] = [
       "Smart LOI generator, time-bound checklists, and file versioning with diff view for P&L and rent roll documents.",
     ],
     image: "/crebrains_landing.png",
-    images: [
-      "/crebrains_dashboard.png",
-      "/crebrains_landing.png",
-    ],
+    images: ["/crebrains_dashboard.png", "/crebrains_landing.png"],
     tech: ["React", "TypeScript", "Node.js", "AI/ML", "Real Estate"],
     github: "#",
     demo: "https://crebrains.com",
     featured: true,
-  },{
+    accent: "#3b82f6",
+    tag: "Real Estate · Geo · Platform",
+  },
+  {
+    id: 2,
     title: "Heobz eCommerce",
+    subtitle: "Fresh Food Delivery — Vietnam",
+    role: "Full Stack Developer",
     description: [
       "Vietnam-based eCommerce platform delivering fresh food to customers.",
       "Responsive design with fast load times and smooth cart and checkout.",
@@ -41,9 +52,14 @@ export const projects: Project[] = [
     github: "#",
     demo: "https://heobz.com/",
     featured: true,
+    accent: "#f59e0b",
+    tag: "eCommerce · Delivery",
   },
   {
+    id: 3,
     title: "Hex housing",
+    subtitle: "Location-Based Rental Search",
+    role: "Full Stack Developer",
     description: [
       "Real estate platform for tenants to search rentals via geolocation without signing in.",
       "Implemented location-based search as full-stack developer.",
@@ -54,9 +70,14 @@ export const projects: Project[] = [
     github: "#",
     demo: "https://hex-housing.vercel.app/login",
     featured: false,
+    accent: "#10b981",
+    tag: "Real Estate · GEO",
   },
   {
+    id: 4,
     title: "VRFY eCommerce",
+    subtitle: "Sneaker Storefront",
+    role: "Frontend Developer",
     description: [
       "Modern eCommerce platform focused on selling sneakers.",
       "Designed clean, user-friendly, and responsive UI using best practices.",
@@ -67,9 +88,14 @@ export const projects: Project[] = [
     github: "#",
     demo: "https://vrfy-react-poject.vercel.app/home",
     featured: false,
+    accent: "#e11d48",
+    tag: "eCommerce · Retail",
   },
   {
+    id: 5,
     title: "Ancient Origins",
+    subtitle: "Landing Page Redesign",
+    role: "Frontend Developer",
     description: [
       "Redesigned landing page using HTML and CSS.",
       "Fixed responsiveness issues and browser incompatibility.",
@@ -80,6 +106,7 @@ export const projects: Project[] = [
     github: "#",
     demo: "https://mazharulislam4.github.io/Ancient_Origins/",
     featured: false,
+    accent: "#8b5cf6",
+    tag: "Marketing · Static",
   },
-
 ];

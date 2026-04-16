@@ -1,32 +1,10 @@
 "use client";
 
 import { useRef, useState } from "react";
+import Image from "next/image";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import type { IconType } from "react-icons";
-import { FaAws, FaDatabase } from "react-icons/fa6";
-import {
-  SiAngular,
-  SiDocker,
-  SiDotnet,
-  SiExpress,
-  SiGithubactions,
-  SiGraphql,
-  SiMongodb,
-  SiMongoose,
-  SiMysql,
-  SiNestjs,
-  SiNextdotjs,
-  SiNodedotjs,
-  SiPostgresql,
-  SiPrisma,
-  SiReact,
-  SiTailwindcss,
-  SiTypescript,
-  SiVercel,
-} from "react-icons/si";
-import { LuCloud, LuNetwork } from "react-icons/lu";
 import SectionHeading from "@/components/ui/SectionHeading";
 import { useReducedMotion } from "@/lib/useReducedMotion";
 
@@ -35,31 +13,32 @@ gsap.registerPlugin(ScrollTrigger);
 type Tool = { name: string; color: string };
 type Lane = { id: string; label: string; accent: string; tools: Tool[] };
 
-const ICONS: Record<string, IconType> = {
-  React: SiReact,
-  "Next.js": SiNextdotjs,
-  TypeScript: SiTypescript,
-  "Tailwind CSS": SiTailwindcss,
-  GSAP: LuNetwork,
-  Angular: SiAngular,
-  "Node.js": SiNodedotjs,
-  "Express.js": SiExpress,
-  NestJS: SiNestjs,
-  GraphQL: SiGraphql,
-  REST: LuNetwork,
-  ".NET MVC": SiDotnet,
-  PostgreSQL: SiPostgresql,
-  MySQL: SiMysql,
-  MSSQL: FaDatabase,
-  MongoDB: SiMongodb,
-  Prisma: SiPrisma,
-  Mongoose: SiMongoose,
-  AWS: FaAws,
-  Docker: SiDocker,
-  Vercel: SiVercel,
-  "CI/CD": LuCloud,
-  CloudWatch: LuCloud,
-  "GitHub Actions": SiGithubactions,
+/** Paths under `/public/tech_icons/` */
+const TECH_ICON_SRC: Record<string, string> = {
+  React: "/tech_icons/React.svg",
+  "Next.js": "/tech_icons/Next.js.svg",
+  TypeScript: "/tech_icons/TypeScript.svg",
+  "Tailwind CSS": "/tech_icons/Tailwind-CSS.svg",
+  GSAP: "/tech_icons/JavaScript.svg",
+  Angular: "/tech_icons/Angular.svg",
+  "Node.js": "/tech_icons/Node.js.svg",
+  "Express.js": "/tech_icons/Express.svg",
+  NestJS: "/tech_icons/Nest.js.svg",
+  GraphQL: "/tech_icons/GraphQL.svg",
+  REST: "/tech_icons/OpenAPI.svg",
+  ".NET MVC": "/tech_icons/.NET-core.svg",
+  PostgreSQL: "/tech_icons/PostgresSQL.svg",
+  MySQL: "/tech_icons/MySQL.svg",
+  MSSQL: "/tech_icons/Microsoft-SQL-Server.svg",
+  MongoDB: "/tech_icons/MongoDB.svg",
+  Prisma: "/tech_icons/Sequelize.svg",
+  Mongoose: "/tech_icons/Mongoose.js.svg",
+  AWS: "/tech_icons/AWS.svg",
+  Docker: "/tech_icons/Docker.svg",
+  Vercel: "/tech_icons/Vercel.svg",
+  "CI/CD": "/tech_icons/Jenkins.svg",
+  CloudWatch: "/tech_icons/AWS.svg",
+  "GitHub Actions": "/tech_icons/GitHub-Actions.svg",
 };
 
 const LANES: Lane[] = [
@@ -118,7 +97,7 @@ const LANES: Lane[] = [
 ];
 
 function ToolChip({ tool }: { tool: Tool }) {
-  const Icon = ICONS[tool.name];
+  const src = TECH_ICON_SRC[tool.name];
 
   return (
     <span
@@ -129,7 +108,11 @@ function ToolChip({ tool }: { tool: Tool }) {
       }}
     >
       <span className="inline-flex h-5 w-5 items-center justify-center rounded-full" style={{ background: `${tool.color}24` }}>
-        {Icon ? <Icon className="h-3.5 w-3.5" style={{ color: tool.color }} /> : <span className="h-1.5 w-1.5 rounded-full" style={{ background: tool.color }} />}
+        {src ? (
+          <Image src={src} alt="" width={14} height={14} className="h-3.5 w-3.5 object-contain" />
+        ) : (
+          <span className="h-1.5 w-1.5 rounded-full" style={{ background: tool.color }} />
+        )}
       </span>
       {tool.name}
     </span>

@@ -6,7 +6,7 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { motion } from "framer-motion";
 import { MapPin, Calendar, Briefcase } from "lucide-react";
-import { EXPERIENCE } from "@/lib/data";
+import { experiences } from "@/components/experience-data";
 import SectionHeading from "@/components/ui/SectionHeading";
 import { useReducedMotion } from "@/lib/useReducedMotion";
 
@@ -140,7 +140,7 @@ export default function Experience() {
               width="2"
               height="100%"
               className="h-full"
-              style={{ minHeight: `${EXPERIENCE.length * 260}px` }}
+              style={{ minHeight: `${experiences.length * 260}px` }}
             >
               <line
                 ref={lineRef}
@@ -162,7 +162,7 @@ export default function Experience() {
           <div className="md:hidden absolute left-5 top-0 bottom-0 w-0.5 bg-gradient-to-b from-blue-500/50 via-purple-500/30 to-blue-500/20" />
 
           <div className="flex flex-col gap-12 md:gap-0">
-            {EXPERIENCE.map((exp, i) => {
+            {experiences.map((exp, i) => {
               const isLeft = i % 2 === 0;
               return (
                 <div
@@ -201,7 +201,7 @@ export default function Experience() {
                       {/* Header */}
                       <div className="flex items-start justify-between gap-2 mb-3">
                         <div>
-                          <h3 className="font-bold text-white text-lg leading-tight">{exp.role}</h3>
+                          <h3 className="font-bold text-white text-lg leading-tight">{exp.title}</h3>
                           <p className="font-semibold text-sm mt-0.5" style={{ color: exp.accent }}>
                             {exp.company}
                           </p>
@@ -218,7 +218,7 @@ export default function Experience() {
                       <div className="flex flex-wrap gap-3 mb-4 text-xs text-muted-foreground">
                         <span className="flex items-center gap-1">
                           <Calendar className="w-3 h-3" />
-                          {exp.period}
+                          {exp.duration}
                         </span>
                         <span className="flex items-center gap-1">
                           <Briefcase className="w-3 h-3" />
@@ -232,20 +232,20 @@ export default function Experience() {
 
                       {/* Achievements */}
                       <ul className="space-y-2 mb-4">
-                        {exp.achievements.map((ach, ai) => (
+                        {exp.description.map((line, ai) => (
                           <li key={ai} className="flex items-start gap-2 text-sm text-muted-foreground">
                             <span
                               className="w-1.5 h-1.5 rounded-full mt-2 flex-shrink-0"
                               style={{ background: exp.accent }}
                             />
-                            {ach}
+                            {line}
                           </li>
                         ))}
                       </ul>
 
                       {/* Stack badges */}
                       <div className="flex flex-wrap gap-1.5">
-                        {exp.stack.map((tech) => (
+                        {exp.tech.map((tech) => (
                           <span
                             key={tech}
                             className="exp-badge opacity-0 px-2 py-0.5 text-xs rounded border border-white/10 bg-white/[0.03] text-muted-foreground font-mono"

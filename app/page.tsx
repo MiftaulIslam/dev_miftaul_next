@@ -2,7 +2,7 @@
 
 import { useRef, useState, useEffect } from "react";
 import Image from "next/image";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -38,13 +38,19 @@ export default function Home() {
     return () => cancelAnimationFrame(raf);
   }, []);
 
+  useEffect(() => {
+    if (introDone) {
+      document.body.classList.remove("intro-active");
+    } else {
+      document.body.classList.add("intro-active");
+    }
+    return () => document.body.classList.remove("intro-active");
+  }, [introDone]);
+
   const handleIntroComplete = () => {
     sessionStorage.setItem("intro-seen", "1");
-    // Small delay so clip-path wipe fully resolves before unmounting
-    setTimeout(() => {
-      setShowIntro(false);
-      setIntroDone(true);
-    }, 100);
+    setShowIntro(false);
+    setIntroDone(true);
   };
 
   useEffect(() => {
@@ -344,59 +350,61 @@ export default function Home() {
     },
     { dependencies: [introDone, isMobile] }
   );
+  if (!introDone || showIntro) {
+    return (
+      <main className="relative min-h-screen">
+        <IntroLoader onComplete={handleIntroComplete} />
+      </main>
+    );
+  }
 
   return (
     <main className="relative">
-      {/* ── Cinematic intro preloader ── */}
-      <AnimatePresence>{showIntro && <IntroLoader onComplete={handleIntroComplete} />}</AnimatePresence>
-
-      {/* ── Main portfolio content ── */}
       <motion.div
         className="relative"
-        initial={false}
+        initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ duration: 0.25, ease: "easeOut" }}
+        transition={{ duration: 0.28, ease: "easeOut" }}
       >
         <HeroRoadmapPath />
 
         <div className="relative z-10">
-
-        {/* Shared portrait layer used by Hero->About transition */}
-        <div
-          ref={sharedPortraitRef}
-          className="pointer-events-none absolute left-0 top-0 z-40 hidden md:block overflow-hidden rounded-2xl border border-blue-400/30"
-          style={{ opacity: 0, visibility: "hidden" }}
-          aria-hidden
-        >
-          <div ref={heroPortraitImageRef} className="absolute inset-0">
-            <Image
-              src="/ariyan_2.jpg"
-              alt="Miftaul Islam Shuvro portrait in hero"
-              fill
-              sizes="(max-width: 768px) 240px, 320px"
-              className="object-cover object-[62%_35%]"
-              priority
-            />
+          {/* Shared portrait layer used by Hero->About transition */}
+          <div
+            ref={sharedPortraitRef}
+            className="pointer-events-none absolute left-0 top-0 z-40 hidden md:block overflow-hidden rounded-2xl border border-blue-400/30"
+            style={{ opacity: 0, visibility: "hidden" }}
+            aria-hidden
+          >
+            <div ref={heroPortraitImageRef} className="absolute inset-0">
+              <Image
+                src="/ariyan_2.jpg"
+                alt="Miftaul Islam Shuvro portrait in hero"
+                fill
+                sizes="(max-width: 768px) 240px, 320px"
+                className="object-cover object-[62%_35%]"
+                priority
+              />
+            </div>
+            <div ref={aboutPortraitImageRef} className="absolute inset-0 opacity-0">
+              <Image
+                src="/ariyan.webp"
+                alt="Miftaul Islam Shuvro portrait in about"
+                fill
+                sizes="(max-width: 768px) 240px, 320px"
+                className="object-cover object-top"
+                priority
+              />
+            </div>
+            <div className="absolute inset-0 bg-linear-to-t from-[#080c14]/60 via-transparent to-[#080c14]/10" />
           </div>
-          <div ref={aboutPortraitImageRef} className="absolute inset-0 opacity-0">
-            <Image
-              src="/ariyan.webp"
-              alt="Miftaul Islam Shuvro portrait in about"
-              fill
-              sizes="(max-width: 768px) 240px, 320px"
-              className="object-cover object-top"
-              priority
-            />
-          </div>
-          <div className="absolute inset-0 bg-linear-to-t from-[#080c14]/60 via-transparent to-[#080c14]/10" />
-        </div>
 
-        <Hero portraitSlotRef={heroPortraitSlotRef} />
-        <About portraitTargetRef={aboutPortraitSlotRef} />
-        <Skills />
-        <Projects />
-        <Experience />
-        <Contact />
+          <Hero portraitSlotRef={heroPortraitSlotRef} />
+          <About portraitTargetRef={aboutPortraitSlotRef} />
+          <Skills />
+          <Projects />
+          <Experience />
+          <Contact />
         </div>
       </motion.div>
     </main>

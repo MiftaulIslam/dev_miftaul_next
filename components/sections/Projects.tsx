@@ -8,14 +8,13 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { ArrowUpRight } from "lucide-react";
 import { GitHubIcon } from "@/components/ui/SocialIcons";
 import SectionHeading from "@/components/ui/SectionHeading";
-import { PROJECTS } from "@/lib/data";
+import { projects as PROJECT_LIST } from "@/components/project-data";
+import type { Project } from "@/components/project-data";
 import { useReducedMotion } from "@/lib/useReducedMotion";
 
 gsap.registerPlugin(ScrollTrigger);
 
-type PortfolioProject = (typeof PROJECTS)[number];
-
-function ProjectCard({ project, isActive }: { project: PortfolioProject; isActive: boolean }) {
+function ProjectCard({ project, isActive }: { project: Project; isActive: boolean }) {
   return (
     <div
       className={`relative w-full rounded-2xl border px-5 py-6 md:px-6 md:py-7 transition-all duration-300 ${
@@ -52,10 +51,18 @@ function ProjectCard({ project, isActive }: { project: PortfolioProject; isActiv
         {project.subtitle}
       </p>
 
-      <p className="mb-5 max-w-xl text-base leading-relaxed text-muted-foreground">{project.description}</p>
+      {Array.isArray(project.description) ? (
+        <ul className="mb-5 max-w-xl list-disc space-y-2 pl-5 text-base leading-relaxed text-muted-foreground marker:text-slate-500">
+          {project.description.map((line, i) => (
+            <li key={i}>{line}</li>
+          ))}
+        </ul>
+      ) : (
+        <p className="mb-5 max-w-xl text-base leading-relaxed text-muted-foreground">{project.description}</p>
+      )}
 
       <div className="mb-5 flex flex-wrap gap-2">
-        {project.stack.map((tech) => (
+        {project.tech.map((tech) => (
           <span key={`${project.id}-${tech}`} className="rounded-lg border border-white/14 bg-white/[0.03] px-2.5 py-1 text-xs font-medium text-slate-300">
             {tech}
           </span>
@@ -64,7 +71,7 @@ function ProjectCard({ project, isActive }: { project: PortfolioProject; isActiv
 
       <div className="flex items-center gap-5">
         <a
-          href={project.links.live}
+          href={project.demo}
           target="_blank"
           rel="noopener noreferrer"
           className="flex items-center gap-1.5 text-sm font-medium"
@@ -74,7 +81,7 @@ function ProjectCard({ project, isActive }: { project: PortfolioProject; isActiv
           <ArrowUpRight className="h-3.5 w-3.5" />
         </a>
         <a
-          href={project.links.github}
+          href={project.github}
           target="_blank"
           rel="noopener noreferrer"
           className="flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-white"
@@ -96,7 +103,10 @@ export default function Projects() {
   const [activeIdx, setActiveIdx] = useState(0);
   const reduced = useReducedMotion();
 
-  const activeProject = useMemo(() => PROJECTS[Math.min(activeIdx, PROJECTS.length - 1)], [activeIdx]);
+  const activeProject = useMemo(
+    () => PROJECT_LIST[Math.min(activeIdx, PROJECT_LIST.length - 1)],
+    [activeIdx]
+  );
 
   useGSAP(
     () => {
@@ -217,7 +227,7 @@ export default function Projects() {
 
         <div className="mt-14 hidden lg:grid lg:grid-cols-[minmax(0,0.48fr)_minmax(0,0.52fr)] lg:gap-12">
           <div ref={leftColumnRef} className="relative">
-            {PROJECTS.map((project, idx) => (
+            {PROJECT_LIST.map((project, idx) => (
               <div
                 key={project.id}
                 ref={(node) => {
@@ -238,7 +248,7 @@ export default function Projects() {
                   style={{ boxShadow: `0 22px 70px ${activeProject.accent}2b` }}
                 >
                   <div className="absolute inset-0">
-                    {PROJECTS.map((project, idx) => (
+                    {PROJECT_LIST.map((project, idx) => (
                       <div
                         key={`${project.id}-${project.image}`}
                         ref={(node) => {
@@ -271,7 +281,7 @@ export default function Projects() {
         </div>
 
         <div className="mt-12 space-y-8 lg:hidden">
-          {PROJECTS.map((project) => (
+          {PROJECT_LIST.map((project) => (
             <article key={`mobile-${project.id}`} className="overflow-hidden rounded-2xl border border-white/12 bg-slate-950/40 p-5">
               <ProjectCard project={project} isActive />
               <div className="relative mt-4 aspect-[16/10] overflow-hidden rounded-xl border border-white/12">

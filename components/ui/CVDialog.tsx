@@ -3,7 +3,8 @@
 import { useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Printer, Download } from "lucide-react";
-import { CV, EXPERIENCE, SKILLS } from "@/lib/data";
+import { CV, SKILLS } from "@/lib/data";
+import { experiences } from "@/components/experience-data";
 
 interface CVDialogProps {
   open: boolean;
@@ -96,27 +97,27 @@ export default function CVDialog({ open, onClose }: CVDialogProps) {
               <section className="mb-8">
                 <h2 className="text-xs font-bold uppercase tracking-widest text-blue-400 mb-4">Experience</h2>
                 <div className="space-y-6">
-                  {EXPERIENCE.map((exp) => (
+                  {experiences.map((exp) => (
                     <div key={exp.id}>
                       <div className="flex items-start justify-between mb-1">
                         <div>
-                          <h3 className="font-semibold text-white">{exp.role}</h3>
+                          <h3 className="font-semibold text-white">{exp.title}</h3>
                           <p className="text-blue-400 text-sm">{exp.company}</p>
                         </div>
                         <div className="text-right text-sm text-muted-foreground">
-                          <p>{exp.period}</p>
+                          <p>{exp.duration}</p>
                           <p>{exp.type}</p>
                         </div>
                       </div>
                       <ul className="mt-2 space-y-1">
-                        {exp.achievements.map((ach, i) => (
+                        {exp.description.map((line, i) => (
                           <li key={i} className="text-sm text-muted-foreground pl-3 border-l border-white/10">
-                            {ach}
+                            {line}
                           </li>
                         ))}
                       </ul>
                       <div className="flex flex-wrap gap-1 mt-3">
-                        {exp.stack.map((t) => (
+                        {exp.tech.map((t) => (
                           <span key={t} className="px-2 py-0.5 text-xs rounded bg-white/5 border border-white/10 text-muted-foreground">
                             {t}
                           </span>

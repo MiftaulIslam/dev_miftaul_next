@@ -12,14 +12,27 @@ import CVDialog from "@/components/ui/CVDialog";
 gsap.registerPlugin(ScrollTrigger);
 
 export default function Navbar() {
+  const [introActive, setIntroActive] = useState(true);
   const [scrolled, setScrolled] = useState(false);
   const [activeSection, setActiveSection] = useState("hero");
   const [mobileOpen, setMobileOpen] = useState(false);
   const [cvOpen, setCvOpen] = useState(false);
   const observerRef = useRef<IntersectionObserver | null>(null);
 
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    const body = document.body;
+    const sync = () => setIntroActive(body.classList.contains("intro-active"));
+    sync();
+
+    const observer = new MutationObserver(sync);
+    observer.observe(body, { attributes: true, attributeFilter: ["class"] });
+    return () => observer.disconnect();
+  }, []);
+
   // Scroll state - keep navbar visible; shrink + glass after scroll
   useEffect(() => {
+    if (introActive) return;
     const update = () => {
       const smoother = ScrollSmoother.get();
       const y = smoother ? smoother.scrollTop() : window.scrollY;
@@ -32,10 +45,11 @@ export default function Navbar() {
       gsap.ticker.remove(update);
       window.removeEventListener("scroll", update);
     };
-  }, []);
+  }, [introActive]);
 
   // Active section via IntersectionObserver
   useEffect(() => {
+    if (introActive) return;
     const sectionIds = NAV_LINKS.map((l) => l.href.replace("#", ""));
 
     observerRef.current = new IntersectionObserver(
@@ -55,7 +69,9 @@ export default function Navbar() {
     });
 
     return () => observerRef.current?.disconnect();
-  }, []);
+  }, [introActive]);
+
+  if (introActive) return null;
 
   const scrollTo = (href: string) => {
     const id = href.replace("#", "");
@@ -89,6 +105,7 @@ export default function Navbar() {
   return (
     <>
       <motion.header
+        data-app-navbar="true"
         initial={{ y: -80, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.6, delay: 0.2, ease: [0.4, 0, 0.2, 1] }}

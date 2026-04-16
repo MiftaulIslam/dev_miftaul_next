@@ -180,6 +180,20 @@ body {
   overflow-x: hidden;
 }
 
+/* Hide app UI while intro overlay is active */
+body.intro-active [data-app-navbar="true"] {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  transform: translateY(-20px) !important;
+}
+
+body.intro-active #smooth-wrapper {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
 /* ── Custom scrollbar ── */
 ::-webkit-scrollbar {
   width: 5px;
