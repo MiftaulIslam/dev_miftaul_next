@@ -65,7 +65,6 @@ export default function HeroRoadmapPath() {
 
   useEffect(() => {
     let raf = 0;
-    let observer: ResizeObserver | null = null;
 
     const updatePath = () => {
       cancelAnimationFrame(raf);
@@ -84,21 +83,16 @@ export default function HeroRoadmapPath() {
     updatePath();
     window.addEventListener("resize", updatePath);
     window.addEventListener("load", updatePath);
+    window.addEventListener("nav-section-settled", updatePath as EventListener);
     document.fonts?.ready.then(updatePath);
     ScrollTrigger.addEventListener("refreshInit", updatePath);
-
-    if (typeof ResizeObserver !== "undefined") {
-      observer = new ResizeObserver(updatePath);
-      observer.observe(document.body);
-      observer.observe(document.documentElement);
-    }
 
     return () => {
       cancelAnimationFrame(raf);
       window.removeEventListener("resize", updatePath);
       window.removeEventListener("load", updatePath);
+      window.removeEventListener("nav-section-settled", updatePath as EventListener);
       ScrollTrigger.removeEventListener("refreshInit", updatePath);
-      observer?.disconnect();
     };
   }, []);
 
@@ -109,6 +103,8 @@ export default function HeroRoadmapPath() {
       const path = baseRef.current;
       const length = path.getTotalLength();
       const segment = Math.max(length * 0.07, 200);
+      const scroller = document.getElementById("smooth-wrapper") ?? window;
+      const trigger = document.getElementById("smooth-content") ?? document.documentElement;
 
       gsap.set(revealRef.current, {
         strokeDasharray: length,
@@ -120,22 +116,33 @@ export default function HeroRoadmapPath() {
         strokeDashoffset: length,
       });
 
+      const applyProgress = (progress: number) => {
+        const normalized = gsap.utils.clamp(0, 1, progress);
+        const offset = length * (1 - normalized);
+        const glowOffset = gsap.utils.clamp(-segment, length, offset - segment * 0.35);
+        const traveled = length - offset;
+        const point = path.getPointAtLength(Math.min(Math.max(traveled, 0), length));
+
+        gsap.set(revealRef.current, { strokeDashoffset: offset });
+        gsap.set(glowRef.current, { strokeDashoffset: glowOffset });
+        gsap.set(dotRef.current, { attr: { cx: point.x, cy: point.y } });
+      };
+
       const st = ScrollTrigger.create({
-        trigger: document.documentElement,
+        trigger,
+        scroller: scroller === window ? undefined : scroller,
         start: "top top",
-        end: "max",
+        end: () => {
+          const max = ScrollTrigger.maxScroll(scroller);
+          return Math.max(max, 1);
+        },
         scrub: 0.95,
         invalidateOnRefresh: true,
-        onUpdate: (self) => {
-          const offset = length * (1 - self.progress);
-          const traveled = length - offset;
-          const point = path.getPointAtLength(Math.min(Math.max(traveled, 0), length));
-
-          gsap.set(revealRef.current, { strokeDashoffset: offset });
-          gsap.set(glowRef.current, { strokeDashoffset: offset - segment * 0.35 });
-          gsap.set(dotRef.current, { attr: { cx: point.x, cy: point.y } });
-        },
+        onUpdate: (self) => applyProgress(self.progress),
+        onRefresh: (self) => applyProgress(self.progress),
       });
+
+      applyProgress(st.progress);
 
       return () => st.kill();
     },
