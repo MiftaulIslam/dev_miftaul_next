@@ -53,3 +53,13 @@ export function arrayToLines(value: string[] | undefined) {
   return (value ?? []).join("\n");
 }
 
+/** Default rows for `useFieldArray` from a string[] (one row with empty value if array is empty). */
+export function lineFieldsFromStrings(values: string[] | undefined): { value: string }[] {
+  const cleaned = (values ?? []).map((s) => s.trim()).filter(Boolean);
+  return cleaned.length ? cleaned.map((value) => ({ value })) : [{ value: "" }];
+}
+
+export function stringsFromLineFields(fields: { value: string }[]): string[] {
+  return fields.map((f) => f.value.trim()).filter(Boolean);
+}
+

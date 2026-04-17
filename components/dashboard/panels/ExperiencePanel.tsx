@@ -1,16 +1,16 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Pencil, Trash2 } from "lucide-react";
-import { Controller, useForm } from "react-hook-form";
+import { Pencil, Plus, Trash2 } from "lucide-react";
+import { Controller, useFieldArray, useForm } from "react-hook-form";
 
-import { arrayToLines, linesToArray, requestJson } from "@/components/dashboard/api";
+import { lineFieldsFromStrings, requestJson, stringsFromLineFields } from "@/components/dashboard/api";
 import { Button } from "@/components/ui/dashboard/Button";
 import { Card } from "@/components/ui/dashboard/Card";
 import { ColorPicker } from "@/components/ui/dashboard/ColorPicker";
 import { ConfirmDialog } from "@/components/ui/dashboard/ConfirmDialog";
+import { Dialog } from "@/components/ui/dashboard/Dialog";
 import { Input } from "@/components/ui/dashboard/Input";
-import { Textarea } from "@/components/ui/dashboard/Textarea";
 import type { ExperienceRecord } from "@/lib/dashboard/types";
 
 type ExperienceForm = {
@@ -20,8 +20,8 @@ type ExperienceForm = {
   location: string;
   duration: string;
   type: string;
-  descriptionText: string;
-  techText: string;
+  descriptionLines: { value: string }[];
+  techLines: { value: string }[];
   current: boolean;
   accent: string;
   sortOrder: number;
@@ -35,8 +35,8 @@ function toFormValues(experience?: ExperienceRecord): ExperienceForm {
       location: "",
       duration: "",
       type: "",
-      descriptionText: "",
-      techText: "",
+      descriptionLines: lineFieldsFromStrings([]),
+      techLines: lineFieldsFromStrings([]),
       current: false,
       accent: "#3b82f6",
       sortOrder: 0,
@@ -63,10 +63,13 @@ export default function ExperiencePanel() {
   const [status, setStatus] = useState("");
   const [error, setError] = useState("");
   const [editingId, setEditingId] = useState<number | null>(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<ExperienceRecord | null>(null);
   const [deletePending, setDeletePending] = useState(false);
 
   const form = useForm<ExperienceForm>({ defaultValues: toFormValues() });
+  const descriptionLines = useFieldArray({ control: form.control, name: "descriptionLines" });
+  const techLines = useFieldArray({ control: form.control, name: "techLines" });
 
   const load = async () => {
     try {
@@ -92,8 +95,8 @@ export default function ExperiencePanel() {
         location: values.location.trim(),
         duration: values.duration.trim(),
         type: values.type.trim(),
-        description: linesToArray(values.descriptionText),
-        tech: linesToArray(values.techText),
+        description: stringsFromLineFields(values.descriptionLines),
+        tech: stringsFromLineFields(values.techLines),
         current: values.current,
         accent: values.accent.trim(),
         sortOrder: Number(values.sortOrder) || 0,
@@ -103,6 +106,7 @@ export default function ExperiencePanel() {
         body: JSON.stringify(payload),
       });
       setStatus(values.id ? "Experience updated." : "Experience created.");
+      setDialogOpen(false);
       form.reset(toFormValues());
       setEditingId(null);
       await load();
@@ -134,6 +138,18 @@ export default function ExperiencePanel() {
     }
   };
 
+  const openCreateDialog = () => {
+    form.reset(toFormValues());
+    setEditingId(null);
+    setDialogOpen(true);
+  };
+
+  const openEditDialog = (record: ExperienceRecord) => {
+    form.reset(toFormValues(record));
+    setEditingId(record.id);
+    setDialogOpen(true);
+  };
+
   return (
     <div className="space-y-8">
       <div>
@@ -149,69 +165,15 @@ export default function ExperiencePanel() {
         {error ? <span className="text-sm text-rose-300">{error}</span> : null}
       </div>
 
-      <Card title={editingId ? "Edit experience" : "New experience"}>
-        <form className="grid gap-4 md:grid-cols-2" onSubmit={onSubmit}>
-          <Input label="Title" placeholder="Full Stack Developer" {...form.register("title", { required: true })} />
-          <Input label="Company" placeholder="Acme Inc." {...form.register("company", { required: true })} />
-          <Input label="Location" placeholder="Remote" {...form.register("location")} />
-          <Input label="Duration" placeholder="Jan 2024 – Present" {...form.register("duration")} />
-          <Input label="Type" placeholder="Full-time" {...form.register("type")} />
-          <Controller
-            name="accent"
-            control={form.control}
-            render={({ field }) => (
-              <ColorPicker label="Accent color" value={field.value} onChange={field.onChange} />
-            )}
-          />
-          <Input
-            label="Sort order"
-            type="number"
-            {...form.register("sortOrder", { valueAsNumber: true })}
-          />
-          <label className="flex items-center gap-2 text-sm text-slate-300 md:col-span-2">
-            <input type="checkbox" {...form.register("current")} className="h-4 w-4 rounded border-white/20" />
-            Current role
-          </label>
-
-          <Textarea
-            label="Highlights (one line per bullet)"
-            placeholder="Led a team of…&#10;Shipped X to production…"
-            className="md:col-span-2"
-            rows={5}
-            {...form.register("descriptionText")}
-          />
-          <Textarea
-            label="Tech stack (one per line)"
-            placeholder="React&#10;AWS"
-            className="md:col-span-2"
-            rows={3}
-            {...form.register("techText")}
-          />
-
-          <div className="md:col-span-2 flex flex-wrap gap-2">
-            <Button type="submit" disabled={form.formState.isSubmitting}>
-              {editingId ? "Update" : "Create"}
-            </Button>
-            {editingId ? (
-              <Button
-                type="button"
-                variant="ghost"
-                onClick={() => {
-                  form.reset(toFormValues());
-                  setEditingId(null);
-                }}
-              >
-                Cancel edit
-              </Button>
-            ) : null}
-          </div>
-        </form>
-      </Card>
-
       <Card>
         <div className="mb-4 flex items-center justify-between">
           <h3 className="text-sm font-semibold text-white">All entries</h3>
-          <span className="text-xs text-slate-500">{records.length} total</span>
+          <div className="flex items-center gap-3">
+            <span className="text-xs text-slate-500">{records.length} total</span>
+            <Button type="button" onClick={openCreateDialog}>
+              Create Experience
+            </Button>
+          </div>
         </div>
         <div className="space-y-2">
           {records.map((record) => (
@@ -235,10 +197,7 @@ export default function ExperiencePanel() {
                 <Button
                   type="button"
                   variant="ghost"
-                  onClick={() => {
-                    form.reset(toFormValues(record));
-                    setEditingId(record.id);
-                  }}
+                  onClick={() => openEditDialog(record)}
                 >
                   <Pencil className="h-4 w-4" />
                 </Button>
@@ -253,6 +212,126 @@ export default function ExperiencePanel() {
           ) : null}
         </div>
       </Card>
+
+      <Dialog
+        open={dialogOpen}
+        onClose={() => setDialogOpen(false)}
+        title={editingId ? "Edit experience" : "Create experience"}
+        description="Timeline entries with accent color, bullets, and tech tags."
+        size="xl"
+      >
+        <form className="grid gap-4 md:grid-cols-2" onSubmit={onSubmit}>
+          <Input label="Title" placeholder="Full Stack Developer" {...form.register("title", { required: true })} />
+          <Input label="Company" placeholder="Acme Inc." {...form.register("company", { required: true })} />
+          <Input label="Location" placeholder="Remote" {...form.register("location")} />
+          <Input label="Duration" placeholder="Jan 2024 – Present" {...form.register("duration")} />
+          <Input label="Type" placeholder="Full-time" {...form.register("type")} />
+          <Controller
+            name="accent"
+            control={form.control}
+            render={({ field }) => (
+              <ColorPicker label="Accent color" value={field.value} onChange={field.onChange} />
+            )}
+          />
+          <Input
+            label="Sort order"
+            type="number"
+            {...form.register("sortOrder", { valueAsNumber: true })}
+          />
+          <label className="flex items-center gap-2 text-sm text-slate-300 md:col-span-2">
+            <input type="checkbox" {...form.register("current")} className="h-4 w-4 rounded border-white/20" />
+            Current role
+          </label>
+
+          <div className="md:col-span-2 space-y-2">
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-xs font-medium uppercase tracking-[0.08em] text-slate-400">Highlights</span>
+              <Button
+                type="button"
+                variant="ghost"
+                className="h-9 px-2"
+                onClick={() => descriptionLines.append({ value: "" })}
+                aria-label="Add highlight"
+              >
+                <Plus className="h-4 w-4" />
+              </Button>
+            </div>
+            <div className="space-y-2">
+              {descriptionLines.fields.map((field, index) => (
+                <div key={field.id} className="flex gap-2">
+                  <div className="min-w-0 flex-1">
+                    <Input
+                      placeholder="Bullet point…"
+                      {...form.register(`descriptionLines.${index}.value`)}
+                    />
+                  </div>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    className="shrink-0 px-2"
+                    disabled={descriptionLines.fields.length <= 1}
+                    onClick={() => descriptionLines.remove(index)}
+                    aria-label="Remove highlight"
+                  >
+                    <Trash2 className="h-4 w-4 text-slate-400" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="md:col-span-2 space-y-2">
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-xs font-medium uppercase tracking-[0.08em] text-slate-400">Tech stack</span>
+              <Button
+                type="button"
+                variant="ghost"
+                className="h-9 px-2"
+                onClick={() => techLines.append({ value: "" })}
+                aria-label="Add tech"
+              >
+                <Plus className="h-4 w-4" />
+              </Button>
+            </div>
+            <div className="space-y-2">
+              {techLines.fields.map((field, index) => (
+                <div key={field.id} className="flex gap-2">
+                  <div className="min-w-0 flex-1">
+                    <Input placeholder="e.g. React" {...form.register(`techLines.${index}.value`)} />
+                  </div>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    className="shrink-0 px-2"
+                    disabled={techLines.fields.length <= 1}
+                    onClick={() => techLines.remove(index)}
+                    aria-label="Remove tech"
+                  >
+                    <Trash2 className="h-4 w-4 text-slate-400" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="md:col-span-2 flex flex-wrap gap-2">
+            <Button type="submit" disabled={form.formState.isSubmitting}>
+              {editingId ? "Update" : "Create"}
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => {
+                setDialogOpen(false);
+                form.reset(toFormValues());
+                setEditingId(null);
+              }}
+            >
+              Cancel
+            </Button>
+          </div>
+        </form>
+      </Dialog>
 
       <ConfirmDialog
         open={Boolean(deleteTarget)}

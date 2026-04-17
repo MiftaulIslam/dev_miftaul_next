@@ -17,11 +17,10 @@ gsap.registerPlugin(ScrollTrigger);
 function ProjectCard({ project, isActive }: { project: Project; isActive: boolean }) {
   return (
     <div
-      className={`relative w-full rounded-2xl border px-5 py-6 md:px-6 md:py-7 transition-all duration-300 ${
-        isActive
-          ? "border-blue-400/55 bg-blue-500/[0.05] shadow-[0_0_0_1px_rgba(59,130,246,0.14),0_14px_55px_rgba(2,8,30,0.3)]"
-          : "border-white/10 bg-slate-950/35"
-      }`}
+      className={`relative w-full rounded-2xl border px-5 py-6 md:px-6 md:py-7 transition-all duration-300 ${isActive
+        ? "border-blue-400/55 bg-blue-500/[0.05] shadow-[0_0_0_1px_rgba(59,130,246,0.14),0_14px_55px_rgba(2,8,30,0.3)]"
+        : "border-white/10 bg-slate-950/35"
+        }`}
     >
       {isActive && (
         <div
@@ -100,9 +99,10 @@ export default function Projects() {
   const rightRailRef = useRef<HTMLDivElement>(null);
   const cardRefs = useRef<Array<HTMLDivElement | null>>([]);
   const imageLayerRefs = useRef<Array<HTMLDivElement | null>>([]);
+  const imageShellRef = useRef<HTMLDivElement>(null);
   const [activeIdx, setActiveIdx] = useState(0);
   const reduced = useReducedMotion();
-
+  const [captured, setCaptured] = useState(false);
   const activeProject = useMemo(
     () => PROJECT_LIST[Math.min(activeIdx, PROJECT_LIST.length - 1)],
     [activeIdx]
@@ -153,15 +153,25 @@ export default function Projects() {
         gsap.set(cards, { opacity: 0.62, y: 24 });
         gsap.set(cards[0], { opacity: 1, y: 0 });
 
+        const imageShell = imageShellRef.current;
+        const secondCard = cards[1];
+
+        if (!imageShell || !secondCard) return;
+
+        gsap.set(imageShell, { y: 0 });
+
         ScrollTrigger.create({
-          trigger: leftColumn,
-          start: "top top+=96",
-          end: "bottom bottom-=96",
+          trigger: secondCard,
+          start: "top center",
+          endTrigger: leftColumn,
+          end: "bottom bottom-=196",
           pin: rightRail,
           pinSpacing: false,
           invalidateOnRefresh: true,
+          onEnter: () => gsap.to(imageShell, { y: 520, duration: 0.45, ease: "power2.out" }),
+          onEnterBack: () => gsap.to(imageShell, { y: 520, duration: 0.45, ease: "power2.out" }),
+          onLeaveBack: () => gsap.to(imageShell, { y: 0, duration: 0.3, ease: "power2.out" }),
         });
-
         cards.forEach((card, idx) => {
           gsap.to(card, {
             opacity: 1,
@@ -241,38 +251,43 @@ export default function Projects() {
           </div>
 
           <div className="relative">
-            <div ref={rightRailRef} className="relative flex h-[calc(100vh-6.5rem)] items-center justify-center">
-              <div className="relative w-full max-w-[720px]">
-                <div
-                  className="relative aspect-[16/10] overflow-hidden rounded-[1.2rem] border border-white/20 bg-slate-950/65 shadow-[0_22px_70px_rgba(2,8,30,0.55)]"
-                  style={{ boxShadow: `0 22px 70px ${activeProject.accent}2b` }}
-                >
-                  <div className="absolute inset-0">
-                    {PROJECT_LIST.map((project, idx) => (
-                      <div
-                        key={`${project.id}-${project.image}`}
-                        ref={(node) => {
-                          imageLayerRefs.current[idx] = node;
-                        }}
-                        className="absolute inset-0"
-                      >
-                        <Image
-                          src={project.image}
-                          alt={`${project.title} showcase image`}
-                          fill
-                          sizes="(max-width: 1024px) 100vw, 48vw"
-                          className="object-cover object-center"
-                          priority={idx === 0}
-                        />
-                      </div>
-                    ))}
-                  </div>
+            <div ref={rightRailRef} className="relative flex h-[calc(100vh-6.5rem)] items-start justify-center">
+              <div
+                ref={imageShellRef}
+                className={`relative w-full max-w-[820px] transition-all duration-500 ${captured ? "translate-y-28" : "translate-y-0"
+                  }`}
+              >
+                <div className="relative w-full max-w-[820px]">
+                  <div
+                    className="relative aspect-16/11 overflow-hidden rounded-[1.2rem] border border-white/20 bg-slate-950/65 shadow-[0_22px_70px_rgba(2,8,30,0.55)]"
+                    style={{ boxShadow: `0 22px 70px ${activeProject.accent}2b` }}
+                  >
+                    <div className="absolute inset-0">
+                      {PROJECT_LIST.map((project, idx) => (
+                        <div
+                          key={`${project.id}-${project.image}`}
+                          ref={(node) => {
+                            imageLayerRefs.current[idx] = node;
+                          }}
+                          className="absolute inset-0"
+                        >
+                          <Image
+                            src={project.image}
+                            alt={`${project.title} showcase image`}
+                            fill
+                            sizes="(max-width: 1224px) 100vw, 48vw"
+                            className="object-cover object-center"
+                            priority={idx === 0}
+                          />
+                        </div>
+                      ))}
+                    </div>
 
-                  <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-background/70 via-background/20 to-transparent" />
+                    <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-background/70 via-background/20 to-transparent" />
 
-                  <div className="absolute bottom-4 left-4 right-4">
-                    <p className="text-[11px] uppercase tracking-[0.18em] text-slate-300/80">{activeProject.subtitle}</p>
-                    <h3 className="mt-1 text-lg font-semibold text-white">{activeProject.title}</h3>
+                    <div className="absolute bottom-0 w-full left-0 right-0 bg-black/40 z-40 rounded-lg rounded-t-none py-2 px-4">
+                      <h3 className="mt-1 text-lg font-semibold text-white">{activeProject.title}</h3>
+                    </div>
                   </div>
                 </div>
               </div>

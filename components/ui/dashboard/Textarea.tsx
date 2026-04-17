@@ -15,7 +15,7 @@ export function Textarea({ className, label, hint, error, ...props }: TextareaPr
       <textarea
         {...props}
         className={cn(
-          "min-h-[88px] w-full rounded-xl border border-white/12 bg-slate-900/70 px-3 py-2 text-sm text-white outline-none transition focus:border-blue-400/55 focus:ring-2 focus:ring-blue-500/20",
+          "min-h-[88px] w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition placeholder:text-slate-500 focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20",
           className,
         )}
       />

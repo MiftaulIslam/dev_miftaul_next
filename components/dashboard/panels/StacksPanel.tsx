@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Pencil, Trash2 } from "lucide-react";
+import { Pencil, Plus, Trash2 } from "lucide-react";
 import { Controller, useForm } from "react-hook-form";
 
 import { requestJson } from "@/components/dashboard/api";
@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/dashboard/Button";
 import { Card } from "@/components/ui/dashboard/Card";
 import { ColorPicker } from "@/components/ui/dashboard/ColorPicker";
 import { ConfirmDialog } from "@/components/ui/dashboard/ConfirmDialog";
+import { Dialog } from "@/components/ui/dashboard/Dialog";
 import { Input } from "@/components/ui/dashboard/Input";
 import { Select } from "@/components/ui/dashboard/Select";
 import type { StackCategory } from "@/lib/dashboard/types";
@@ -34,6 +35,8 @@ export default function StacksPanel() {
   const [error, setError] = useState("");
   const [editingCategoryId, setEditingCategoryId] = useState<number | null>(null);
   const [editingToolId, setEditingToolId] = useState<number | null>(null);
+  const [categoryDialogOpen, setCategoryDialogOpen] = useState(false);
+  const [toolDialogOpen, setToolDialogOpen] = useState(false);
   const [confirm, setConfirm] = useState<{ type: "category" | "tool"; id: number; label: string } | null>(
     null,
   );
@@ -82,6 +85,7 @@ export default function StacksPanel() {
       }
       categoryForm.reset({ key: "", label: "", accent: "#3b82f6" });
       setEditingCategoryId(null);
+      setCategoryDialogOpen(false);
       await load();
     } catch (submitError) {
       setError(submitError instanceof Error ? submitError.message : "Failed to save category.");
@@ -112,6 +116,7 @@ export default function StacksPanel() {
         iconName: "",
       });
       setEditingToolId(null);
+      setToolDialogOpen(false);
       await load();
     } catch (submitError) {
       setError(submitError instanceof Error ? submitError.message : "Failed to save tool.");
@@ -187,92 +192,35 @@ export default function StacksPanel() {
         </p>
       </div>
 
-      <div className="grid gap-4 xl:grid-cols-2">
-        <Card
-          title={editingCategoryId ? "Edit category" : "Create category"}
-          subtitle="Label, optional key, accent."
-          className="border-white/10 bg-slate-950/35"
+      <div className="flex flex-wrap items-center gap-2">
+        <Button
+          type="button"
+          onClick={() => {
+            categoryForm.reset({ key: "", label: "", accent: "#3b82f6" });
+            setEditingCategoryId(null);
+            setCategoryDialogOpen(true);
+          }}
         >
-          <form className="space-y-3" onSubmit={submitCategory}>
-            <Input label="Label" placeholder="Frontend" {...categoryForm.register("label", { required: true })} />
-            <Input label="Key (optional)" placeholder="frontend" {...categoryForm.register("key")} />
-            <Controller
-              name="accent"
-              control={categoryForm.control}
-              render={({ field }) => (
-                <ColorPicker label="Accent color" value={field.value} onChange={field.onChange} />
-              )}
-            />
-            <div className="flex gap-2">
-              <Button type="submit" disabled={categoryForm.formState.isSubmitting}>
-                {editingCategoryId ? "Update Category" : "Create Category"}
-              </Button>
-              {editingCategoryId ? (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  onClick={() => {
-                    categoryForm.reset({ key: "", label: "", accent: "#3b82f6" });
-                    setEditingCategoryId(null);
-                  }}
-                >
-                  Cancel Edit
-                </Button>
-              ) : null}
-            </div>
-          </form>
-        </Card>
-
-        <Card
-          title={editingToolId ? "Edit tool" : "Add tool"}
-          subtitle="Attach to a category."
-          className="border-white/10 bg-slate-950/35"
+          <Plus className="mr-2 h-4 w-4" />
+          Create Category
+        </Button>
+        <Button
+          type="button"
+          variant="ghost"
+          onClick={() => {
+            toolForm.reset({
+              categoryId: categories[0]?.id ?? 0,
+              name: "",
+              color: "#60a5fa",
+              iconName: "",
+            });
+            setEditingToolId(null);
+            setToolDialogOpen(true);
+          }}
         >
-          <form className="space-y-3" onSubmit={submitTool}>
-            <Select
-              label="Category"
-              {...toolForm.register("categoryId", { valueAsNumber: true, required: true })}
-            >
-              <option value={0}>Select category</option>
-              {categories.map((category) => (
-                <option key={category.id} value={category.id}>
-                  {category.label}
-                </option>
-              ))}
-            </Select>
-            <Input label="Tool name" placeholder="React" {...toolForm.register("name", { required: true })} />
-            <Input label="Icon name" placeholder="React.svg base name" {...toolForm.register("iconName")} />
-            <Controller
-              name="color"
-              control={toolForm.control}
-              render={({ field }) => (
-                <ColorPicker label="Chip color" value={field.value} onChange={field.onChange} />
-              )}
-            />
-            <div className="flex gap-2">
-              <Button type="submit" disabled={toolForm.formState.isSubmitting}>
-                {editingToolId ? "Update Tool" : "Add Tool"}
-              </Button>
-              {editingToolId ? (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  onClick={() => {
-                    toolForm.reset({
-                      categoryId: categories[0]?.id ?? 0,
-                      name: "",
-                      color: "#60a5fa",
-                      iconName: "",
-                    });
-                    setEditingToolId(null);
-                  }}
-                >
-                  Cancel Edit
-                </Button>
-              ) : null}
-            </div>
-          </form>
-        </Card>
+          <Plus className="mr-2 h-4 w-4" />
+          Add Tool
+        </Button>
       </div>
 
       <Card title="Categories & tools" className="border-white/10 bg-slate-950/30">
@@ -280,7 +228,7 @@ export default function StacksPanel() {
           {categories.map((category) => (
             <div
               key={category.id}
-              className="rounded-xl border border-white/[0.08] bg-gradient-to-br from-slate-950/90 to-slate-900/40 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
+              className="rounded-xl border border-white/8 bg-linear-to-br from-slate-950/90 to-slate-900/40 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
             >
               <div className="mb-2 flex items-center justify-between gap-2">
                 <div className="flex items-center gap-2">
@@ -300,6 +248,7 @@ export default function StacksPanel() {
                         accent: category.accent,
                       });
                       setEditingCategoryId(category.id);
+                      setCategoryDialogOpen(true);
                     }}
                   >
                     <Pencil className="h-4 w-4" />
@@ -341,6 +290,7 @@ export default function StacksPanel() {
                           iconName: tool.iconName,
                         });
                         setEditingToolId(tool.id);
+                        setToolDialogOpen(true);
                       }}
                     >
                       <Pencil className="h-3.5 w-3.5" />
@@ -397,6 +347,85 @@ export default function StacksPanel() {
         danger
         pending={confirmPending}
       />
+
+      <Dialog
+        open={categoryDialogOpen}
+        onClose={() => setCategoryDialogOpen(false)}
+        title={editingCategoryId ? "Edit category" : "Create category"}
+        description="Label, optional key, and accent color."
+      >
+        <form className="space-y-3" onSubmit={submitCategory}>
+          <Input label="Label" placeholder="Frontend" {...categoryForm.register("label", { required: true })} />
+          <Input label="Key (optional)" placeholder="frontend" {...categoryForm.register("key")} />
+          <Controller
+            name="accent"
+            control={categoryForm.control}
+            render={({ field }) => <ColorPicker label="Accent color" value={field.value} onChange={field.onChange} />}
+          />
+          <div className="flex gap-2">
+            <Button type="submit" disabled={categoryForm.formState.isSubmitting}>
+              {editingCategoryId ? "Update Category" : "Create Category"}
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => {
+                setCategoryDialogOpen(false);
+                categoryForm.reset({ key: "", label: "", accent: "#3b82f6" });
+                setEditingCategoryId(null);
+              }}
+            >
+              Cancel
+            </Button>
+          </div>
+        </form>
+      </Dialog>
+
+      <Dialog
+        open={toolDialogOpen}
+        onClose={() => setToolDialogOpen(false)}
+        title={editingToolId ? "Edit tool" : "Add tool"}
+        description="Attach tools to an existing category."
+      >
+        <form className="space-y-3" onSubmit={submitTool}>
+          <Select label="Category" {...toolForm.register("categoryId", { valueAsNumber: true, required: true })}>
+            <option value={0}>Select category</option>
+            {categories.map((category) => (
+              <option key={category.id} value={category.id}>
+                {category.label}
+              </option>
+            ))}
+          </Select>
+          <Input label="Tool name" placeholder="React" {...toolForm.register("name", { required: true })} />
+          <Input label="Icon name" placeholder="React.svg base name" {...toolForm.register("iconName")} />
+          <Controller
+            name="color"
+            control={toolForm.control}
+            render={({ field }) => <ColorPicker label="Chip color" value={field.value} onChange={field.onChange} />}
+          />
+          <div className="flex gap-2">
+            <Button type="submit" disabled={toolForm.formState.isSubmitting}>
+              {editingToolId ? "Update Tool" : "Add Tool"}
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => {
+                setToolDialogOpen(false);
+                toolForm.reset({
+                  categoryId: categories[0]?.id ?? 0,
+                  name: "",
+                  color: "#60a5fa",
+                  iconName: "",
+                });
+                setEditingToolId(null);
+              }}
+            >
+              Cancel
+            </Button>
+          </div>
+        </form>
+      </Dialog>
     </div>
   );
 }
