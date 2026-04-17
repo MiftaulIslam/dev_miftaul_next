@@ -1,12 +1,14 @@
-"use client";
+﻿"use client";
 
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 import { MapPin, Calendar, Briefcase } from "lucide-react";
-import { experiences } from "@/components/experience-data";
+import ScrollHighlightText from "@/components/ui/ScrollHighlightText";
+import { experiences as EXPERIENCES_FALLBACK } from "@/components/experience-data";
+import type { Experience as ExperienceItem } from "@/components/experience-data";
 import SectionHeading from "@/components/ui/SectionHeading";
 import { useReducedMotion } from "@/lib/useReducedMotion";
 
@@ -17,14 +19,37 @@ export default function Experience() {
   const lineRef = useRef<SVGLineElement>(null);
   const svgRef = useRef<SVGSVGElement>(null);
   const reduced = useReducedMotion();
+  const [experienceList, setExperienceList] = useState<ExperienceItem[]>(EXPERIENCES_FALLBACK);
+
+  useEffect(() => {
+    let mounted = true;
+
+    const loadExperience = async () => {
+      try {
+        const response = await fetch("/api/public/experience", { cache: "no-store" });
+        if (!response.ok) return;
+        const data = (await response.json()) as ExperienceItem[];
+        if (!mounted || !Array.isArray(data) || !data.length) return;
+
+        setExperienceList(data);
+        requestAnimationFrame(() => ScrollTrigger.refresh());
+      } catch {
+        // keep fallback list
+      }
+    };
+
+    void loadExperience();
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   useGSAP(
     () => {
       if (reduced) return;
 
-      // Animate SVG timeline line stroke-dashoffset on scroll
       if (lineRef.current && svgRef.current) {
-        const length = 600; // matches SVG height
+        const length = 600;
         gsap.set(lineRef.current, {
           strokeDasharray: length,
           strokeDashoffset: length,
@@ -41,7 +66,6 @@ export default function Experience() {
         });
       }
 
-      // Timeline dots pulse on enter
       const dots = sectionRef.current?.querySelectorAll(".timeline-dot");
       if (dots) {
         dots.forEach((dot) => {
@@ -58,12 +82,11 @@ export default function Experience() {
                 start: "top 75%",
                 toggleActions: "play none none none",
               },
-            }
+            },
           );
         });
       }
 
-      // Cards alternate left/right reveal
       const cards = sectionRef.current?.querySelectorAll(".exp-card");
       if (cards) {
         cards.forEach((card, i) => {
@@ -81,12 +104,11 @@ export default function Experience() {
                 start: "top 80%",
                 toggleActions: "play none none none",
               },
-            }
+            },
           );
         });
       }
 
-      // Badges animate after cards
       const badges = sectionRef.current?.querySelectorAll(".exp-badge");
       if (badges) {
         gsap.fromTo(
@@ -103,12 +125,14 @@ export default function Experience() {
               start: "top 50%",
               toggleActions: "play none none none",
             },
-          }
+          },
         );
       }
     },
-    { scope: sectionRef }
+    { scope: sectionRef, dependencies: [experienceList.length] },
   );
+
+  if (!experienceList.length) return null;
 
   return (
     <section
@@ -116,7 +140,6 @@ export default function Experience() {
       ref={sectionRef}
       className="relative py-24 md:py-32 bg-transparent overflow-hidden"
     >
-      {/* Background accent */}
       <div
         className="absolute top-1/3 right-0 w-96 h-96 opacity-8 blur-3xl pointer-events-none"
         style={{ background: "radial-gradient(circle, #8b5cf6, transparent 70%)" }}
@@ -130,24 +153,16 @@ export default function Experience() {
           align="center"
         />
 
-        {/* ── Timeline ── */}
         <div className="mt-16 relative">
-
-          {/* SVG vertical line (desktop) */}
           <div className="hidden md:block absolute left-1/2 top-0 bottom-0 -translate-x-1/2">
             <svg
               ref={svgRef}
               width="2"
               height="100%"
               className="h-full"
-              style={{ minHeight: `${experiences.length * 260}px` }}
+              style={{ minHeight: `${experienceList.length * 260}px` }}
             >
-              <line
-                ref={lineRef}
-                x1="1" y1="0" x2="1" y2="100%"
-                stroke="url(#lineGrad)"
-                strokeWidth="2"
-              />
+              <line ref={lineRef} x1="1" y1="0" x2="1" y2="100%" stroke="url(#lineGrad)" strokeWidth="2" />
               <defs>
                 <linearGradient id="lineGrad" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.8" />
@@ -158,11 +173,10 @@ export default function Experience() {
             </svg>
           </div>
 
-          {/* Mobile vertical line */}
           <div className="md:hidden absolute left-5 top-0 bottom-0 w-0.5 bg-gradient-to-b from-blue-500/50 via-purple-500/30 to-blue-500/20" />
 
           <div className="flex flex-col gap-12 md:gap-0">
-            {experiences.map((exp, i) => {
+            {experienceList.map((exp, i) => {
               const isLeft = i % 2 === 0;
               return (
                 <div
@@ -171,15 +185,11 @@ export default function Experience() {
                     isLeft ? "" : "md:flex-row-reverse"
                   }`}
                 >
-                  {/* Mobile dot */}
                   <div
                     className="timeline-dot md:hidden absolute left-3.5 top-6 w-3 h-3 rounded-full border-2 border-primary bg-background z-10"
-                    style={{
-                      boxShadow: `0 0 12px ${exp.accent}60`,
-                    }}
+                    style={{ boxShadow: `0 0 12px ${exp.accent}60` }}
                   />
 
-                  {/* Desktop dot — center */}
                   <div
                     className="timeline-dot hidden md:block absolute left-1/2 top-8 -translate-x-1/2 w-4 h-4 rounded-full border-2 z-10"
                     style={{
@@ -189,16 +199,8 @@ export default function Experience() {
                     }}
                   />
 
-                  {/* Card — left or right col on desktop */}
-                  <div
-                    className={`exp-card w-full md:py-6 ${
-                      isLeft
-                        ? "md:col-start-1 md:pr-12"
-                        : "md:col-start-2 md:pl-12"
-                    }`}
-                  >
+                  <div className={`exp-card w-full md:py-6 ${isLeft ? "md:col-start-1 md:pr-12" : "md:col-start-2 md:pl-12"}`}>
                     <div className="glass border border-white/8 rounded-2xl p-5 md:p-6 hover:border-white/15 transition-all duration-300 group">
-                      {/* Header */}
                       <div className="flex items-start justify-between gap-2 mb-3">
                         <div>
                           <h3 className="font-bold text-white text-lg leading-tight">{exp.title}</h3>
@@ -214,7 +216,6 @@ export default function Experience() {
                         )}
                       </div>
 
-                      {/* Meta */}
                       <div className="flex flex-wrap gap-3 mb-4 text-xs text-muted-foreground">
                         <span className="flex items-center gap-1">
                           <Calendar className="w-3 h-3" />
@@ -230,20 +231,20 @@ export default function Experience() {
                         </span>
                       </div>
 
-                      {/* Achievements */}
                       <ul className="space-y-2 mb-4">
                         {exp.description.map((line, ai) => (
                           <li key={ai} className="flex items-start gap-2 text-sm text-muted-foreground">
-                            <span
-                              className="w-1.5 h-1.5 rounded-full mt-2 flex-shrink-0"
-                              style={{ background: exp.accent }}
+                            <span className="w-1.5 h-1.5 rounded-full mt-2 flex-shrink-0" style={{ background: exp.accent }} />
+                            <ScrollHighlightText
+                              as="span"
+                              text={line}
+                              className="inline leading-relaxed text-muted-foreground"
+                              triggerStart="top 84%"
                             />
-                            {line}
                           </li>
                         ))}
                       </ul>
 
-                      {/* Stack badges */}
                       <div className="flex flex-wrap gap-1.5">
                         {exp.tech.map((tech) => (
                           <span
@@ -257,7 +258,6 @@ export default function Experience() {
                     </div>
                   </div>
 
-                  {/* Empty spacer for opposite column on desktop */}
                   <div className={`hidden md:block ${isLeft ? "md:col-start-2" : "md:col-start-1"}`} />
                 </div>
               );

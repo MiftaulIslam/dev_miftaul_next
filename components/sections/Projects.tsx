@@ -1,12 +1,13 @@
-"use client";
+﻿"use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { ArrowUpRight } from "lucide-react";
 import { GitHubIcon } from "@/components/ui/SocialIcons";
+import ScrollHighlightText from "@/components/ui/ScrollHighlightText";
 import SectionHeading from "@/components/ui/SectionHeading";
 import { projects as PROJECT_LIST } from "@/components/project-data";
 import type { Project } from "@/components/project-data";
@@ -17,10 +18,11 @@ gsap.registerPlugin(ScrollTrigger);
 function ProjectCard({ project, isActive }: { project: Project; isActive: boolean }) {
   return (
     <div
-      className={`relative w-full rounded-2xl border px-5 py-6 md:px-6 md:py-7 transition-all duration-300 ${isActive
-        ? "border-blue-400/55 bg-blue-500/[0.05] shadow-[0_0_0_1px_rgba(59,130,246,0.14),0_14px_55px_rgba(2,8,30,0.3)]"
-        : "border-white/10 bg-slate-950/35"
-        }`}
+      className={`relative w-full rounded-2xl border px-5 py-6 md:px-6 md:py-7 transition-all duration-300 ${
+        isActive
+          ? "border-blue-400/55 bg-blue-500/[0.05] shadow-[0_0_0_1px_rgba(59,130,246,0.14),0_14px_55px_rgba(2,8,30,0.3)]"
+          : "border-white/10 bg-slate-950/35"
+      }`}
     >
       {isActive && (
         <div
@@ -31,21 +33,9 @@ function ProjectCard({ project, isActive }: { project: Project; isActive: boolea
         />
       )}
 
-      <div className="mb-4 flex items-center gap-3">
-        <span
-          className="rounded border px-2 py-0.5 text-xs font-mono font-semibold"
-          style={{
-            color: project.accent,
-            borderColor: `${project.accent}4d`,
-            background: `${project.accent}1f`,
-          }}
-        >
-          {String(project.id).padStart(2, "0")}
-        </span>
-        <span className="rounded border border-white/10 px-2 py-0.5 text-xs text-subtle">{project.role}</span>
-      </div>
-
-      <h3 className={`mb-1 text-3xl font-bold tracking-tight ${isActive ? "text-white" : "text-slate-200"}`}>{project.title}</h3>
+      <h3 className={`mb-1 text-3xl font-bold tracking-tight ${isActive ? "text-white" : "text-slate-200"}`}>
+        {project.title}
+      </h3>
       <p className="mb-4 text-sm font-medium" style={{ color: project.accent }}>
         {project.subtitle}
       </p>
@@ -53,16 +43,31 @@ function ProjectCard({ project, isActive }: { project: Project; isActive: boolea
       {Array.isArray(project.description) ? (
         <ul className="mb-5 max-w-xl list-disc space-y-2 pl-5 text-base leading-relaxed text-muted-foreground marker:text-slate-500">
           {project.description.map((line, i) => (
-            <li key={i}>{line}</li>
+            <li key={i}>
+              <ScrollHighlightText
+                as="span"
+                text={line}
+                className="inline leading-relaxed text-muted-foreground"
+                triggerStart="top 84%"
+              />
+            </li>
           ))}
         </ul>
       ) : (
-        <p className="mb-5 max-w-xl text-base leading-relaxed text-muted-foreground">{project.description}</p>
+        <ScrollHighlightText
+          as="p"
+          text={project.description}
+          className="mb-5 max-w-xl text-base leading-relaxed text-muted-foreground"
+          triggerStart="top 84%"
+        />
       )}
 
       <div className="mb-5 flex flex-wrap gap-2">
         {project.tech.map((tech) => (
-          <span key={`${project.id}-${tech}`} className="rounded-lg border border-white/14 bg-white/[0.03] px-2.5 py-1 text-xs font-medium text-slate-300">
+          <span
+            key={`${project.id}-${tech}`}
+            className="rounded-lg border border-white/14 bg-white/[0.03] px-2.5 py-1 text-xs font-medium text-slate-300"
+          >
             {tech}
           </span>
         ))}
@@ -73,21 +78,25 @@ function ProjectCard({ project, isActive }: { project: Project; isActive: boolea
           href={project.demo}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center gap-1.5 text-sm font-medium"
+          className="flex items-center underline underline-offset-2 gap-1.5 text-sm font-medium"
           style={{ color: project.accent }}
         >
           Live Demo
           <ArrowUpRight className="h-3.5 w-3.5" />
         </a>
-        <a
-          href={project.github}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-white"
-        >
-          <GitHubIcon className="h-3.5 w-3.5" />
-          Source
-        </a>
+        {
+          project.github != '#' && (
+            <a
+              href={project.github}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-white"
+            >
+              <GitHubIcon className="h-3.5 w-3.5" />
+              Source
+            </a>
+          )
+        }
       </div>
     </div>
   );
@@ -100,13 +109,37 @@ export default function Projects() {
   const cardRefs = useRef<Array<HTMLDivElement | null>>([]);
   const imageLayerRefs = useRef<Array<HTMLDivElement | null>>([]);
   const imageShellRef = useRef<HTMLDivElement>(null);
+  const [projectList, setProjectList] = useState<Project[]>(PROJECT_LIST);
   const [activeIdx, setActiveIdx] = useState(0);
   const reduced = useReducedMotion();
-  const [captured, setCaptured] = useState(false);
-  const activeProject = useMemo(
-    () => PROJECT_LIST[Math.min(activeIdx, PROJECT_LIST.length - 1)],
-    [activeIdx]
-  );
+
+  const safeActiveIdx = Math.min(activeIdx, Math.max(projectList.length - 1, 0));
+
+  useEffect(() => {
+    let mounted = true;
+
+    const loadProjects = async () => {
+      try {
+        const response = await fetch("/api/public/projects", { cache: "no-store" });
+        if (!response.ok) return;
+        const data = (await response.json()) as Project[];
+        if (!mounted || !Array.isArray(data) || !data.length) return;
+
+        setProjectList(data);
+        setActiveIdx(0);
+        requestAnimationFrame(() => ScrollTrigger.refresh());
+      } catch {
+        // keep fallback list
+      }
+    };
+
+    void loadProjects();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  const activeProject = useMemo(() => projectList[safeActiveIdx], [projectList, safeActiveIdx]);
 
   useGSAP(
     () => {
@@ -125,7 +158,7 @@ export default function Projects() {
             start: "top 80%",
             toggleActions: "play none none none",
           },
-        }
+        },
       );
 
       if (reduced) return;
@@ -168,10 +201,11 @@ export default function Projects() {
           pin: rightRail,
           pinSpacing: false,
           invalidateOnRefresh: true,
-          onEnter: () => gsap.to(imageShell, { y: 520, duration: 0.45, ease: "power2.out" }),
-          onEnterBack: () => gsap.to(imageShell, { y: 520, duration: 0.45, ease: "power2.out" }),
+          onEnter: () => gsap.to(imageShell, { y: 420, duration: 0.45, ease: "power2.out" }),
+          onEnterBack: () => gsap.to(imageShell, { y: 420, duration: 0.45, ease: "power2.out" }),
           onLeaveBack: () => gsap.to(imageShell, { y: 0, duration: 0.3, ease: "power2.out" }),
         });
+
         cards.forEach((card, idx) => {
           gsap.to(card, {
             opacity: 1,
@@ -215,8 +249,10 @@ export default function Projects() {
 
       return () => mm.revert();
     },
-    { scope: sectionRef }
+    { scope: sectionRef, dependencies: [projectList.length] },
   );
+
+  if (!projectList.length || !activeProject) return null;
 
   return (
     <section id="projects" ref={sectionRef} className="relative overflow-hidden bg-transparent py-24 lg:py-28">
@@ -230,14 +266,14 @@ export default function Projects() {
           <SectionHeading
             eyebrow="Selected Work"
             title="Projects & Case Studies"
-            subtitle="A curated selection of products I\'ve built - from real estate platforms to enterprise SaaS."
+            subtitle="A curated selection of products I've built - from real estate platforms to enterprise SaaS."
             align="left"
           />
         </div>
 
         <div className="mt-14 hidden lg:grid lg:grid-cols-[minmax(0,0.48fr)_minmax(0,0.52fr)] lg:gap-12">
           <div ref={leftColumnRef} className="relative">
-            {PROJECT_LIST.map((project, idx) => (
+            {projectList.map((project, idx) => (
               <div
                 key={project.id}
                 ref={(node) => {
@@ -245,25 +281,21 @@ export default function Projects() {
                 }}
                 className="project-step flex min-h-[52vh] items-center"
               >
-                <ProjectCard project={project} isActive={activeIdx === idx} />
+                <ProjectCard project={project} isActive={safeActiveIdx === idx} />
               </div>
             ))}
           </div>
 
           <div className="relative">
             <div ref={rightRailRef} className="relative flex h-[calc(100vh-6.5rem)] items-start justify-center">
-              <div
-                ref={imageShellRef}
-                className={`relative w-full max-w-[820px] transition-all duration-500 ${captured ? "translate-y-28" : "translate-y-0"
-                  }`}
-              >
+              <div ref={imageShellRef} className="relative w-full max-w-[820px] transition-all duration-500">
                 <div className="relative w-full max-w-[820px]">
                   <div
                     className="relative aspect-16/11 overflow-hidden rounded-[1.2rem] border border-white/20 bg-slate-950/65 shadow-[0_22px_70px_rgba(2,8,30,0.55)]"
                     style={{ boxShadow: `0 22px 70px ${activeProject.accent}2b` }}
                   >
                     <div className="absolute inset-0">
-                      {PROJECT_LIST.map((project, idx) => (
+                      {projectList.map((project, idx) => (
                         <div
                           key={`${project.id}-${project.image}`}
                           ref={(node) => {
@@ -296,7 +328,7 @@ export default function Projects() {
         </div>
 
         <div className="mt-12 space-y-8 lg:hidden">
-          {PROJECT_LIST.map((project) => (
+          {projectList.map((project) => (
             <article key={`mobile-${project.id}`} className="overflow-hidden rounded-2xl border border-white/12 bg-slate-950/40 p-5">
               <ProjectCard project={project} isActive />
               <div className="relative mt-4 aspect-[16/10] overflow-hidden rounded-xl border border-white/12">

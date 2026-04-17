@@ -6,6 +6,7 @@ import type {
   BlogRecord,
   DashboardOverview,
   ExperienceRecord,
+  MessageRecord,
   PortfolioSettings,
   ProjectRecord,
   ReviewRecord,
@@ -135,6 +136,19 @@ function mapReview(row: Row): ReviewRecord {
     quote: parseString(row.quote),
     rating: parseNumber(row.rating, 5),
     featured: parseBoolean(row.featured),
+    updatedAt: toIsoDate(row.updated_at),
+  };
+}
+
+function mapMessage(row: Row): MessageRecord {
+  return {
+    id: parseNumber(row.id),
+    name: parseString(row.name),
+    email: parseString(row.email),
+    subject: parseString(row.subject),
+    message: parseString(row.message),
+    read: parseBoolean(row.read),
+    createdAt: toIsoDate(row.created_at),
     updatedAt: toIsoDate(row.updated_at),
   };
 }
@@ -577,6 +591,43 @@ export async function deleteReview(id: number) {
   await sql`DELETE FROM reviews WHERE id = ${id}`;
 }
 
+export type MessageInput = Omit<MessageRecord, "id" | "read" | "createdAt" | "updatedAt"> & {
+  read?: boolean;
+};
+
+export async function listMessages() {
+  const sql = getSql();
+  const rows = await sql`SELECT * FROM messages ORDER BY created_at DESC, id DESC`;
+  return (rows as Row[]).map(mapMessage);
+}
+
+export async function createMessage(input: MessageInput) {
+  const sql = getSql();
+  const rows = await sql`
+    INSERT INTO messages (name, email, subject, message, read, updated_at)
+    VALUES (${input.name}, ${input.email}, ${input.subject}, ${input.message}, ${Boolean(input.read)}, NOW())
+    RETURNING *
+  `;
+  return mapMessage(rows[0] as Row);
+}
+
+export async function updateMessageRead(id: number, read: boolean) {
+  const sql = getSql();
+  const rows = await sql`
+    UPDATE messages
+    SET read = ${read}, updated_at = NOW()
+    WHERE id = ${id}
+    RETURNING *
+  `;
+  const row = rows[0] as Row | undefined;
+  return row ? mapMessage(row) : null;
+}
+
+export async function deleteMessage(id: number) {
+  const sql = getSql();
+  await sql`DELETE FROM messages WHERE id = ${id}`;
+}
+
 export async function getDashboardOverview(): Promise<DashboardOverview> {
   const sql = getSql();
   const rows = await sql`
@@ -587,6 +638,7 @@ export async function getDashboardOverview(): Promise<DashboardOverview> {
       (SELECT COUNT(*)::int FROM stack_categories) AS skills,
       (SELECT COUNT(*)::int FROM blogs) AS blog_posts,
       (SELECT COUNT(*)::int FROM stack_tools) AS stack_tools,
+      (SELECT COUNT(*)::int FROM messages) AS messages,
       (
         SELECT MAX(updated_at)
         FROM (
@@ -603,6 +655,8 @@ export async function getDashboardOverview(): Promise<DashboardOverview> {
           SELECT updated_at FROM reviews
           UNION ALL
           SELECT updated_at FROM blogs
+          UNION ALL
+          SELECT updated_at FROM messages
         ) updates
       ) AS last_updated
   `;
@@ -615,7 +669,7 @@ export async function getDashboardOverview(): Promise<DashboardOverview> {
     skills: parseNumber(row.skills),
     blogPosts: parseNumber(row.blog_posts),
     stackTools: parseNumber(row.stack_tools),
+    messages: parseNumber(row.messages),
     lastUpdated: row.last_updated ? toIsoDate(row.last_updated) : null,
   };
 }
-

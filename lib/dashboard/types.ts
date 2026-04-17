@@ -91,6 +91,17 @@ export interface ReviewRecord {
   updatedAt: string;
 }
 
+export interface MessageRecord {
+  id: number;
+  name: string;
+  email: string;
+  subject: string;
+  message: string;
+  read: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface DashboardOverview {
   projects: number;
   reviews: number;
@@ -98,6 +109,6 @@ export interface DashboardOverview {
   skills: number;
   blogPosts: number;
   stackTools: number;
+  messages: number;
   lastUpdated: string | null;
 }
-

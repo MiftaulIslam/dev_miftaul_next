@@ -32,7 +32,7 @@ const settings = {
   availability: "Open to Opportunities",
   designations: ["Full Stack Developer", "Software Engineer", "Solution Architect"],
   shortSummary:
-    "I build high-performance full stack applications from elegant React interfaces to scalable Node.js / NestJS backends.",
+    "I build high-performance **full stack applications** from elegant ***React interfaces*** to scalable ***Node.js / NestJS backends***.",
   primaryAvatar: "/ariyan_2.jpg",
   subAvatar: "/ariyan.webp",
   bannerImage: "/hero-bg-2.png",
@@ -47,7 +47,7 @@ const settings = {
   happyClients: 5,
   currentlyFocusedOn: ["NestJS Microservices", "AWS Architecture", "Golang", "System Design"],
   detailedSummary:
-    "I'm a Full Stack Developer with 3+ years of experience crafting high-performance web applications and scalable backend systems.\n\nCurrently building enterprise SaaS at Web Makers LTD while taking on select freelance projects. I care deeply about clean architecture, developer experience, and shipping things that matter to users.",
+    "I'm a Full Stack Developer with **3+ years** of experience crafting high-performance web applications and scalable backend systems.\n\nCurrently building ***enterprise SaaS*** at **Web Makers LTD** while taking on select freelance projects. I care deeply about **clean architecture, developer experience**, and shipping things that matter to users.",
 };
 
 const stackCategories = [
@@ -111,10 +111,10 @@ const projects = [
     subtitle: "Commercial Real Estate Intelligence",
     role: "Full Stack Developer",
     description: [
-      "End-to-end Commercial Real Estate platform enabling buyers, sellers, and brokers to manage properties, documents, and transactions in one place.",
-      "Role-based access (Buyer, Seller, Broker, Legal) with automatic task assignment by deal phase due diligence, pre-closing, and closing.",
-      "AI-powered document analyzer and Truth Engine for lease summarization, rent roll consistency review, and actionable analytics.",
-      "Smart LOI generator, time-bound checklists, and file versioning with diff view for P&L and rent roll documents.",
+      "End-to-end **Commercial Real Estate platform** enabling buyers, sellers, and brokers to manage properties, documents, and transactions in one place.",
+      "***Role-based access*** (Buyer, Seller, Broker, Legal) with automatic task assignment by deal phase due diligence, pre-closing, and closing.",
+      "***AI-powered document analyzer*** and Truth Engine for lease summarization, rent roll consistency review, and actionable analytics.",
+      "Smart LOI generator, time-bound checklists, and file versioning with diff view for **P&L and rent roll documents**.",
     ],
     image: "/crebrains_landing.png",
     images: ["/crebrains_dashboard.png", "/crebrains_landing.png"],
@@ -130,9 +130,9 @@ const projects = [
     subtitle: "Fresh Food Delivery - Vietnam",
     role: "Full Stack Developer",
     description: [
-      "Vietnam-based eCommerce platform delivering fresh food to customers.",
-      "Responsive design with fast load times and smooth cart and checkout.",
-      "Advanced shipping fee system: nearby orders share delivery cost within a set radius.",
+      "Vietnam-based **eCommerce platform** delivering fresh food to customers.",
+      "Responsive design with **fast load times** and smooth cart and checkout.",
+      "Advanced shipping fee system: nearby orders share delivery cost within a **set radius**.",
     ],
     image: "/heobz_image.webp",
     images: ["/heobz_image.webp"],
@@ -148,9 +148,9 @@ const projects = [
     subtitle: "Location-Based Rental Search",
     role: "Full Stack Developer",
     description: [
-      "Real estate platform for tenants to search rentals via geolocation without signing in.",
-      "Implemented location-based search as full-stack developer.",
-      "Optimized performance and reduced latency by 40%.",
+      "Real estate platform for tenants to search rentals via ***geolocation*** without signing in.",
+      "Implemented **location-based search** as full-stack developer.",
+      "Optimized performance and reduced latency by **40%**.",
     ],
     image: "/hexhousing_image.webp",
     images: ["/hexhousing_image.webp"],
@@ -166,9 +166,9 @@ const projects = [
     subtitle: "Sneaker Storefront",
     role: "Frontend Developer",
     description: [
-      "Modern eCommerce platform focused on selling sneakers.",
-      "Designed clean, user-friendly, and responsive UI using best practices.",
-      "Improved page load performance by 35% and enhanced mobile usability.",
+      "Modern eCommerce platform focused on **selling sneakers**.",
+      "Designed clean, user-friendly, and responsive UI using **best practices**.",
+      "Improved page load performance by **35%** and enhanced mobile usability.",
     ],
     image: "/verfy_image.webp",
     images: ["/verfy_image.webp"],
@@ -184,9 +184,9 @@ const projects = [
     subtitle: "Landing Page Redesign",
     role: "Frontend Developer",
     description: [
-      "Redesigned landing page using HTML and CSS.",
-      "Fixed responsiveness issues and browser incompatibility.",
-      "Delivered clean, fully responsive, developer-friendly version for client needs.",
+      "Redesigned landing page using **HTML and CSS**.",
+      "Fixed **responsiveness issues** and browser incompatibility.",
+      "Delivered clean, fully responsive, developer-friendly version for **client needs**.",
     ],
     image: "/image_Ancient_Origins.webp",
     images: ["/image_Ancient_Origins.webp"],
@@ -207,10 +207,10 @@ const experiences = [
     duration: "June 2025 - Present",
     type: "Full-time",
     description: [
-      "Developing SaaS applications in collaboration with a 10+ developer team.",
-      "Architecting scalable microservices on AWS with NestJS and Golang.",
-      "Leading front-end module development with Next.js and React.",
-      "Implementing CI/CD pipelines with Docker and cloud infrastructure.",
+      "Developing ***SaaS applications*** in collaboration with a **10+ developer team**.",
+      "Architecting scalable microservices on ***AWS with NestJS and Golang***.",
+      "Leading front-end module development with **Next.js and React**.",
+      "Implementing **CI/CD pipelines** with Docker and cloud infrastructure.",
     ],
     tech: ["React", "Next.js", "NestJS", "Golang", "AWS", "Docker", "SQL", "NoSQL"],
     current: true,
@@ -223,10 +223,10 @@ const experiences = [
     duration: "Feb 2025 - June 2025",
     type: "Contractual",
     description: [
-      "Developed 3+ sub-projects related to the core insurance application.",
-      "Improved application performance by 40% through optimisation.",
-      "Built responsive UIs with pixel-perfect design implementation.",
-      "Collaborated with 2+ developers on robust application delivery.",
+      "Developed **3+ sub-projects** related to the core insurance application.",
+      "Improved application performance by **40%** through optimisation.",
+      "Built responsive UIs with **pixel-perfect design implementation**.",
+      "Collaborated with **2+ developers** on robust application delivery.",
     ],
     tech: ["React", "Next.js", "Supabase", "TypeScript"],
     current: false,
@@ -239,10 +239,10 @@ const experiences = [
     duration: "2023 - Present",
     type: "Remote · Freelance",
     description: [
-      "Designed 5+ interactive dashboards with real-time data visualisation.",
-      "Integrated GEO location features improving property search for 10K+ users.",
-      "Delivered full-stack solutions for clients across real estate and analytics.",
-      "Built REST and GraphQL APIs with Node.js, NestJS, and Asp.Net Core.",
+      "Designed **5+ interactive dashboards** with real-time data visualisation.",
+      "Integrated ***GEO location features*** improving property search for **10K+ users**.",
+      "Delivered **full-stack solutions** for clients across real estate and analytics.",
+      "Built ***REST and GraphQL APIs*** with Node.js, NestJS, and Asp.Net Core.",
     ],
     tech: ["React", "Next.js", "Node.js", "Asp.Net Core", "SQL", "NoSQL", "Docker"],
     current: true,
@@ -293,6 +293,49 @@ const reviews = [
   },
 ];
 
+const messages = [
+  {
+    name: "Rahim Uddin",
+    email: "rahim@example.com",
+    subject: "SaaS dashboard collaboration",
+    message:
+      "Hi Miftaul, we are planning a B2B analytics dashboard and would like to discuss a 6-week engagement.",
+    read: false,
+  },
+  {
+    name: "Nadia Hoque",
+    email: "nadia@example.com",
+    subject: "Backend consultation",
+    message:
+      "Can we schedule a quick call this week about scaling our NestJS APIs and deployment strategy?",
+    read: true,
+  },
+  {
+    name: "Sabbir Ahmed",
+    email: "sabbir.ahmed@example.com",
+    subject: "Freelance project inquiry",
+    message:
+      "Hello, we need a full stack developer for a property listing and analytics platform. Are you available for a short intro call this week?",
+    read: false,
+  },
+  {
+    name: "Lisa Tran",
+    email: "lisa.tran@example.com",
+    subject: "Job opportunity - Senior Full Stack Engineer",
+    message:
+      "Hi Miftaul, your profile matches a role we are hiring for. Please share your availability and expected joining timeline.",
+    read: false,
+  },
+  {
+    name: "Arif Hasan",
+    email: "arif.hasan@example.com",
+    subject: "System design consultation",
+    message:
+      "Can you help us review our current backend architecture and propose a scalable migration plan over the next quarter?",
+    read: true,
+  },
+];
+
 async function run() {
   loadLocalEnv();
 
@@ -309,7 +352,8 @@ async function run() {
       projects,
       experiences,
       blogs,
-      reviews
+      reviews,
+      messages
     RESTART IDENTITY CASCADE;
   `;
   await sql`DELETE FROM portfolio_settings;`;
@@ -439,6 +483,13 @@ async function run() {
     `;
   }
 
+  for (const msg of messages) {
+    await sql`
+      INSERT INTO messages (name, email, subject, message, read, updated_at)
+      VALUES (${msg.name}, ${msg.email}, ${msg.subject}, ${msg.message}, ${msg.read}, NOW());
+    `;
+  }
+
   console.log("Database seed complete.");
 }
 
@@ -446,4 +497,3 @@ run().catch((error) => {
   console.error("Seeding failed:", error);
   process.exit(1);
 });
-

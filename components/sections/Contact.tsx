@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useRef, useState, type FormEvent, type ComponentType } from "react";
+import { useRef, useState, type ChangeEvent, type FormEvent, type ComponentType } from "react";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -27,11 +27,13 @@ interface ContactProps {
 
 export default function Contact({ profile }: ContactProps) {
   const sectionRef = useRef<HTMLDivElement>(null);
+  const messageRef = useRef<HTMLTextAreaElement>(null);
   const reduced = useReducedMotion();
 
   const [form, setForm] = useState({ name: "", email: "", subject: "", message: "" });
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [submitError, setSubmitError] = useState("");
 
   const socialLinks = profile.socials.length
     ? profile.socials
@@ -87,9 +89,41 @@ export default function Contact({ profile }: ContactProps) {
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
     setLoading(true);
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    setLoading(false);
-    setSubmitted(true);
+    setSubmitError("");
+    try {
+      const response = await fetch("/api/public/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+      const data = (await response.json().catch(() => null)) as { error?: string } | null;
+      if (!response.ok) {
+        throw new Error(data?.error ?? "Failed to send message.");
+      }
+
+      setSubmitted(true);
+      setForm({ name: "", email: "", subject: "", message: "" });
+      if (messageRef.current) {
+        messageRef.current.style.height = "auto";
+      }
+    } catch {
+      setSubmitted(false);
+      setSubmitError("Could not send right now. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const autoResizeMessage = (nextValue: string) => {
+    if (messageRef.current) {
+      messageRef.current.style.height = "auto";
+      messageRef.current.style.height = `${Math.max(messageRef.current.scrollHeight, 128)}px`;
+    }
+    setForm((prev) => ({ ...prev, message: nextValue }));
+  };
+
+  const handleMessageChange = (event: ChangeEvent<HTMLTextAreaElement>) => {
+    autoResizeMessage(event.target.value);
   };
 
   const inputClass =
@@ -101,6 +135,7 @@ export default function Contact({ profile }: ContactProps) {
       ref={sectionRef}
       className="relative py-24 md:py-32 bg-transparent overflow-hidden"
     >
+      
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
@@ -244,11 +279,13 @@ export default function Contact({ profile }: ContactProps) {
                       Message
                     </label>
                     <textarea
+                      ref={messageRef}
                       className={`${inputClass} resize-none`}
                       rows={5}
                       placeholder="Tell me about your project or opportunity..."
                       value={form.message}
-                      onChange={(event) => setForm({ ...form, message: event.target.value })}
+                      onChange={handleMessageChange}
+                      style={{ overflowY: "hidden" }}
                       required
                     />
                   </div>
@@ -270,6 +307,7 @@ export default function Contact({ profile }: ContactProps) {
                       </>
                     )}
                   </MagneticButton>
+                  {submitError ? <p className="text-xs text-rose-300">{submitError}</p> : null}
                 </motion.form>
               ) : (
                 <motion.div
@@ -297,14 +335,8 @@ export default function Contact({ profile }: ContactProps) {
           </div>
         </div>
 
-        <div className="mt-24 pt-8 border-t border-white/8 flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-subtle">
+        <div className="mt-24 pt-8 text-center text-sm text-subtle">
           <p>© {new Date().getFullYear()} {profile.name}. Crafted with care.</p>
-          <p className="flex items-center gap-2">
-            Built with
-            <span className="text-white font-medium">Next.js</span>•
-            <span className="text-white font-medium">Tailwind</span>•
-            <span className="text-white font-medium">GSAP</span>
-          </p>
         </div>
       </div>
     </section>

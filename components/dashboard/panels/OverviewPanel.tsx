@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Activity, Briefcase, Layers3, MessageSquare, NotepadText, Sparkles, Star } from "lucide-react";
+import { Activity, Briefcase, Inbox, Layers3, MessageSquare, NotepadText, Sparkles, Star } from "lucide-react";
 
 import { requestJson } from "@/components/dashboard/api";
 import { Card } from "@/components/ui/dashboard/Card";
@@ -55,6 +55,14 @@ const kpiConfig = [
     gradient: "from-pink-500/18 to-pink-600/5",
     ring: "shadow-[0_0_0_1px_rgba(236,72,153,0.2)]",
     iconBg: "bg-pink-500/15 text-pink-300",
+  },
+  {
+    key: "messages" as const,
+    label: "Messages",
+    icon: Inbox,
+    gradient: "from-sky-500/20 to-sky-600/5",
+    ring: "shadow-[0_0_0_1px_rgba(14,165,233,0.24)]",
+    iconBg: "bg-sky-500/15 text-sky-300",
   },
 ] as const;
 

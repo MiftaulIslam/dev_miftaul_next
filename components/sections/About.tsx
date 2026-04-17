@@ -160,13 +160,16 @@ export default function About({ portraitTargetRef, profile }: AboutProps) {
                 triggerStart="top 76%"
               />
             ))}
-
-            <div className="about-info-card opacity-0 border-y border-white/10 py-4 md:py-5 grid grid-cols-1 md:grid-cols-[1fr_1fr_auto] gap-4 md:gap-6 items-center">
+            <div className="inline-flex items-center gap-2.5 rounded-full border border-emerald-400/25 bg-emerald-400/8 px-3.5 py-1.5 w-fit md:justify-self-end">
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+              <span className="text-xs md:text-sm text-emerald-300 font-semibold">{profile.availability}</span>
+            </div>
+            <div className="about-info-card opacity-0 border-y border-white/10 py-4 md:py-5 grid grid-cols-1 md:grid-cols-[1fr_2fr_auto] gap-4 md:gap-6 items-center">
               <div className="flex items-start gap-2.5">
                 <MapPin className="w-4 h-4 text-blue-300 shrink-0 mt-0.5" />
                 <div>
                   <p className="text-[10px] text-subtle uppercase tracking-[0.18em]">Location</p>
-                  <p className="text-sm text-white/95 font-medium">{profile.location}</p>
+                  <p className="text-sm text-white font-medium">{profile.location}</p>
                 </div>
               </div>
               <div className="flex items-start gap-2.5 md:border-l md:border-white/10 md:pl-6">
@@ -176,10 +179,7 @@ export default function About({ portraitTargetRef, profile }: AboutProps) {
                   <p className="text-sm text-white/95 font-medium break-all">{profile.email}</p>
                 </div>
               </div>
-              <div className="inline-flex items-center gap-2.5 rounded-full border border-emerald-400/25 bg-emerald-400/8 px-3.5 py-1.5 w-fit md:justify-self-end">
-                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                <span className="text-xs md:text-sm text-emerald-300 font-semibold">{profile.availability}</span>
-              </div>
+
             </div>
 
             <div ref={statsRef} className="about-info-card opacity-0 grid grid-cols-1 sm:grid-cols-3 border-b border-white/10 pb-5 md:pb-6">
