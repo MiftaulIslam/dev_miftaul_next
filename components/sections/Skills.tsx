@@ -1,19 +1,20 @@
-"use client";
+﻿"use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import SectionHeading from "@/components/ui/SectionHeading";
+import type { StackCategory } from "@/lib/dashboard/types";
 import { useReducedMotion } from "@/lib/useReducedMotion";
 
 gsap.registerPlugin(ScrollTrigger);
 
-type Tool = { name: string; color: string };
+type Tool = { name: string; color: string; iconName?: string };
 type Lane = { id: string; label: string; accent: string; tools: Tool[] };
 
-/** Paths under `/public/tech_icons/` */
+/** Name-based fallbacks under `/public/tech_icons/` */
 const TECH_ICON_SRC: Record<string, string> = {
   React: "/tech_icons/React.svg",
   "Next.js": "/tech_icons/Next.js.svg",
@@ -41,18 +42,18 @@ const TECH_ICON_SRC: Record<string, string> = {
   "GitHub Actions": "/tech_icons/GitHub-Actions.svg",
 };
 
-const LANES: Lane[] = [
+const FALLBACK_LANES: Lane[] = [
   {
     id: "frontend",
     label: "Frontend",
     accent: "#60a5fa",
     tools: [
-      { name: "React", color: "#61dafb" },
-      { name: "Next.js", color: "#e2e8f0" },
-      { name: "TypeScript", color: "#3178c6" },
-      { name: "Tailwind CSS", color: "#38bdf8" },
-      { name: "GSAP", color: "#8bc34a" },
-      { name: "Angular", color: "#dd0031" },
+      { name: "React", color: "#61dafb", iconName: "React" },
+      { name: "Next.js", color: "#e2e8f0", iconName: "Next.js" },
+      { name: "TypeScript", color: "#3178c6", iconName: "TypeScript" },
+      { name: "Tailwind CSS", color: "#38bdf8", iconName: "Tailwind-CSS" },
+      { name: "GSAP", color: "#8bc34a", iconName: "JavaScript" },
+      { name: "Angular", color: "#dd0031", iconName: "Angular" },
     ],
   },
   {
@@ -60,12 +61,12 @@ const LANES: Lane[] = [
     label: "Backend",
     accent: "#a78bfa",
     tools: [
-      { name: "Node.js", color: "#8cc84b" },
-      { name: "Express.js", color: "#d1d5db" },
-      { name: "NestJS", color: "#e0234e" },
-      { name: "GraphQL", color: "#e10098" },
-      { name: "REST", color: "#3b82f6" },
-      { name: ".NET MVC", color: "#8b5cf6" },
+      { name: "Node.js", color: "#8cc84b", iconName: "Node.js" },
+      { name: "Express.js", color: "#d1d5db", iconName: "Express" },
+      { name: "NestJS", color: "#e0234e", iconName: "Nest.js" },
+      { name: "GraphQL", color: "#e10098", iconName: "GraphQL" },
+      { name: "REST", color: "#3b82f6", iconName: "OpenAPI" },
+      { name: ".NET MVC", color: "#8b5cf6", iconName: "C#-(CSharp)" },
     ],
   },
   {
@@ -73,12 +74,12 @@ const LANES: Lane[] = [
     label: "Database",
     accent: "#34d399",
     tools: [
-      { name: "PostgreSQL", color: "#336791" },
-      { name: "MySQL", color: "#4479a1" },
-      { name: "MSSQL", color: "#cc2927" },
-      { name: "MongoDB", color: "#47a248" },
-      { name: "Prisma", color: "#5a67d8" },
-      { name: "Mongoose", color: "#b91c1c" },
+      { name: "PostgreSQL", color: "#336791", iconName: "PostgresSQL" },
+      { name: "MySQL", color: "#4479a1", iconName: "MySQL" },
+      { name: "MSSQL", color: "#cc2927", iconName: "Microsoft-SQL-Server" },
+      { name: "MongoDB", color: "#47a248", iconName: "MongoDB" },
+      { name: "Prisma", color: "#5a67d8", iconName: "Prisma" },
+      { name: "Mongoose", color: "#b91c1c", iconName: "Mongoose.js" },
     ],
   },
   {
@@ -86,18 +87,40 @@ const LANES: Lane[] = [
     label: "Cloud / DevOps",
     accent: "#f59e0b",
     tools: [
-      { name: "AWS", color: "#ff9900" },
-      { name: "Docker", color: "#2496ed" },
-      { name: "Vercel", color: "#e2e8f0" },
-      { name: "CI/CD", color: "#60a5fa" },
-      { name: "CloudWatch", color: "#f59e0b" },
-      { name: "GitHub Actions", color: "#818cf8" },
+      { name: "AWS", color: "#ff9900", iconName: "AWS" },
+      { name: "Docker", color: "#2496ed", iconName: "Docker" },
+      { name: "Vercel", color: "#e2e8f0", iconName: "Vercel" },
+      { name: "CI/CD", color: "#60a5fa", iconName: "Jenkins" },
+      { name: "CloudWatch", color: "#f59e0b", iconName: "AWS" },
+      { name: "GitHub Actions", color: "#818cf8", iconName: "GitHub-Actions" },
     ],
   },
 ];
 
+function mapCategoryToLane(category: StackCategory): Lane {
+  return {
+    id: category.key || String(category.id),
+    label: category.label,
+    accent: category.accent,
+    tools: category.tools.map((tool) => ({
+      name: tool.name,
+      color: tool.color,
+      iconName: tool.iconName,
+    })),
+  };
+}
+
+function resolveIconSrc(tool: Tool) {
+  if (tool.iconName) {
+    if (tool.iconName.startsWith("/")) return tool.iconName;
+    return `/tech_icons/${tool.iconName.endsWith(".svg") ? tool.iconName : `${tool.iconName}.svg`}`;
+  }
+
+  return TECH_ICON_SRC[tool.name] ?? null;
+}
+
 function ToolChip({ tool }: { tool: Tool }) {
-  const src = TECH_ICON_SRC[tool.name];
+  const src = resolveIconSrc(tool);
 
   return (
     <span
@@ -122,7 +145,36 @@ function ToolChip({ tool }: { tool: Tool }) {
 export default function Skills() {
   const sectionRef = useRef<HTMLDivElement>(null);
   const reduced = useReducedMotion();
+  const [lanes, setLanes] = useState<Lane[]>(FALLBACK_LANES);
   const [activeLane, setActiveLane] = useState(0);
+  const safeActiveLane = Math.min(activeLane, Math.max(lanes.length - 1, 0));
+
+  useEffect(() => {
+    let mounted = true;
+
+    const loadSkills = async () => {
+      try {
+        const response = await fetch("/api/public/skills", { cache: "no-store" });
+        if (!response.ok) return;
+        const categories = (await response.json()) as StackCategory[];
+        if (!mounted || !Array.isArray(categories) || !categories.length) return;
+
+        const nextLanes = categories.map(mapCategoryToLane).filter((lane) => lane.tools.length > 0);
+        if (nextLanes.length) {
+          setLanes(nextLanes);
+          setActiveLane(0);
+          requestAnimationFrame(() => ScrollTrigger.refresh());
+        }
+      } catch {
+        // keep fallback lanes
+      }
+    };
+
+    void loadSkills();
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   useGSAP(
     () => {
@@ -141,7 +193,7 @@ export default function Skills() {
             start: "top 82%",
             toggleActions: "play none none none",
           },
-        }
+        },
       );
 
       if (reduced) return;
@@ -160,7 +212,6 @@ export default function Skills() {
         const cards = gsap.utils.toArray<HTMLElement>(".skill-lane-card", sectionRef.current);
         if (!cards.length) return;
 
-        // Keep cards visible by default to avoid blank states on nav jumps.
         gsap.set(cards, { opacity: 1, y: 0, scale: 1, filter: "blur(0px)", x: 0 });
         cards.forEach((card) => {
           const glow = card.querySelector(".skill-lane-glow");
@@ -195,7 +246,7 @@ export default function Skills() {
                 scrub: 0.8,
                 invalidateOnRefresh: true,
               },
-            }
+            },
           );
 
           gsap.to(chips, {
@@ -253,7 +304,7 @@ export default function Skills() {
         mm.revert();
       };
     },
-    { scope: sectionRef }
+    { scope: sectionRef, dependencies: [lanes.length] },
   );
 
   return (
@@ -274,11 +325,11 @@ export default function Skills() {
         </div>
 
         <div className="mt-12 flex flex-col gap-5 md:gap-6">
-          {LANES.map((lane, idx) => (
+          {lanes.map((lane, idx) => (
             <article
               key={lane.id}
               className={`skill-lane-card relative rounded-2xl border p-4 md:p-5 overflow-hidden transition-all duration-300 ${
-                idx === activeLane ? "border-white/20 bg-slate-900/65" : "border-white/10 bg-slate-950/45"
+                idx === safeActiveLane ? "border-white/20 bg-slate-900/65" : "border-white/10 bg-slate-950/45"
               }`}
             >
               <div
@@ -288,9 +339,8 @@ export default function Skills() {
 
               <div className="relative z-10 flex flex-col md:flex-row md:items-center gap-4 md:gap-5">
                 <div className="flex items-center gap-3 md:w-56 md:shrink-0">
-                 
                   <div>
-                    <p className="text-sm md:text-base font-semibold" style={{ color: idx === activeLane ? "#f8fafc" : lane.accent }}>
+                    <p className="text-sm md:text-base font-semibold" style={{ color: idx === safeActiveLane ? "#f8fafc" : lane.accent }}>
                       {lane.label}
                     </p>
                   </div>
