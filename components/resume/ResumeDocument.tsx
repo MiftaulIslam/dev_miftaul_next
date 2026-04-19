@@ -6,14 +6,19 @@ function ResumeHeading({ entry }: { entry: ResumeEntry }) {
       {entry.headingPrefix}
       {entry.headingEmphasis ? (
         entry.link ? (
-          <a
-            href={entry.link}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="underline hover:text-[#3758cf] transition-colors"
-          >
-            {entry.headingEmphasis}
-          </a>
+          <>
+            <a
+              href={entry.link}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline hover:text-[#3758cf] transition-colors"
+            >
+              {entry.headingEmphasis}
+            </a>
+            <span className="hidden print:inline font-normal text-gray-500 ml-1">
+              ({entry.link.replace(/^https?:\/\//, "")})
+            </span>
+          </>
         ) : (
           <span className="underline">{entry.headingEmphasis}</span>
         )
@@ -46,7 +51,7 @@ function ResumeEntryBlock({ entry }: { entry: ResumeEntry }) {
 
 export default function ResumeDocument() {
   const basePaperClass =
-    "mx-auto w-full max-w-[1200px] bg-white px-[58px] py-[40px] text-[#111111] shadow-[0_16px_42px_rgba(15,23,42,0.16)] print:max-w-none print:min-h-[297mm] print:shadow-none print:p-4";
+    "mx-auto w-full max-w-[1200px] bg-white px-[78px] py-[40px] text-[#111111] shadow-[0_16px_42px_rgba(15,23,42,0.16)] print:max-w-none print:min-h-[297mm] print:shadow-none print:p-4";
 
   return (
     <div id="cv-print-root" className="space-y-8 print:space-y-0">
