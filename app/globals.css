@@ -1,7 +1,7 @@
 @import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap");
 @import "tailwindcss";
 
-/* ── Semantic Theme Tokens ─────────────────────────────────────────────── */
+/* Semantic Theme Tokens */
 :root {
   --background: oklch(0.98 0.01 250);
   --foreground: oklch(0.2 0.02 250);
@@ -159,7 +159,7 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
-/* ── Base ── */
+/* Base */
 *,
 *::before,
 *::after {
@@ -192,7 +192,7 @@ body.intro-active {
   overflow: hidden;
 }
 
-/* ── Custom scrollbar ── */
+/* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 5px;
 }
@@ -207,7 +207,7 @@ body.intro-active {
   background: oklch(0.76 0.18 250);
 }
 
-/* ── Typography ── */
+/* Typography */
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-display);
   font-weight: 700;
@@ -219,7 +219,7 @@ p {
   line-height: 1.7;
 }
 
-/* ── Utility: glass card ── */
+/* Utility: glass card */
 .glass {
   background: var(--bg-glass);
   border: 1px solid var(--border-glass);
@@ -227,19 +227,19 @@ p {
   -webkit-backdrop-filter: blur(12px);
 }
 
-/* ── Utility: accent glow ── */
+/* Utility: accent glow */
 .glow-blue {
   box-shadow: 0 0 40px var(--accent-glow), 0 0 80px rgba(59, 130, 246, 0.08);
 }
 
-/* ── Background grid / noise ── */
+/* Background grid / noise */
 .bg-grid {
   background-image: linear-gradient(oklch(1 0 0 / 0.02) 1px, transparent 1px),
                     linear-gradient(90deg, oklch(1 0 0 / 0.02) 1px, transparent 1px);
   background-size: 64px 64px;
 }
 
-/* ── Scanlines overlay ── */
+/* Scanlines overlay */
 .scanlines::before {
   content: "";
   position: absolute;
@@ -283,7 +283,7 @@ p {
   );
 }
 
-/* ── Animations ── */
+/* Animations */
 @keyframes drift {
   0%, 100% { transform: translate(0, 0) scale(1); }
   33%       { transform: translate(30px, -20px) scale(1.05); }
@@ -322,13 +322,13 @@ p {
 .animate-spin-slow { animation: spin-slow 12s linear infinite; }
 .animate-blink     { animation: blink 1.1s step-end infinite; }
 
-/* ── Selection ── */
+/* Selection */
 ::selection {
   background: var(--primary);
   color: var(--primary-foreground);
 }
 
-/* ── Theme utility aliases ─────────────────────────────────────────────── */
+/* Theme utility aliases */
 .bg-app {
   background-color: var(--background);
 }
@@ -350,12 +350,22 @@ p {
   background-color: var(--nav-surface);
 }
 
-/* ── Print: show only CV content ── */
+/* Print helpers */
 @media print {
-  body > *:not(#cv-print-root) {
+  html,
+  body {
+    background: #ffffff !important;
+  }
+
+  [data-app-navbar="true"],
+  [data-resume-toolbar] {
     display: none !important;
   }
-  #cv-print-root {
-    display: block !important;
+
+  #smooth-wrapper,
+  #smooth-content {
+    transform: none !important;
+    overflow: visible !important;
   }
 }
+

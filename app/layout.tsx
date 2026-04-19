@@ -20,8 +20,19 @@ export const metadata: Metadata = {
   title: "Miftaul Islam Shuvro — Full Stack Developer",
   description:
     "Full Stack Developer with 3+ years of experience building high-performance web applications, SaaS platforms, and microservices. React, Next.js, Node.js, NestJS, AWS.",
-  keywords: ["Full Stack Developer", "React", "Next.js", "NestJS", "AWS", "Miftaul Islam Shuvro"],
+  keywords: [
+    "Full Stack Developer",
+    "React",
+    "Next.js",
+    "NestJS",
+    "AWS",
+    "Miftaul Islam Shuvro",
+  ],
   authors: [{ name: "Miftaul Islam Shuvro", url: "https://miftaul.dev" }],
+  icons: {
+    icon: "/ariyan.webp",
+    apple: "/ariyan.webp",
+  },
   openGraph: {
     title: "Miftaul Islam Shuvro — Full Stack Developer",
     description: "Premium portfolio — React, Next.js, NestJS, AWS and more.",

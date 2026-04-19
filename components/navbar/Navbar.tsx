@@ -1,14 +1,14 @@
 "use client";
-
+import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { PencilLine, FileText, Menu, X } from "lucide-react";
+import Link from "next/link";
 import { usePathname } from "next/navigation";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { ScrollSmoother } from "gsap/ScrollSmoother";
 import { NAV_LINKS } from "@/lib/data";
-import CVDialog from "@/components/ui/CVDialog";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -18,8 +18,8 @@ export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [activeSection, setActiveSection] = useState("hero");
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [cvOpen, setCvOpen] = useState(false);
   const observerRef = useRef<IntersectionObserver | null>(null);
+  const isPortfolioRoute = pathname === "/";
 
   useEffect(() => {
     if (typeof document === "undefined") return;
@@ -34,7 +34,7 @@ export default function Navbar() {
 
   // Scroll state - keep navbar visible; shrink + glass after scroll
   useEffect(() => {
-    if (introActive) return;
+    if (introActive || !isPortfolioRoute) return;
     const update = () => {
       const smoother = ScrollSmoother.get();
       const y = smoother ? smoother.scrollTop() : window.scrollY;
@@ -47,11 +47,11 @@ export default function Navbar() {
       gsap.ticker.remove(update);
       window.removeEventListener("scroll", update);
     };
-  }, [introActive]);
+  }, [introActive, isPortfolioRoute]);
 
   // Active section via IntersectionObserver
   useEffect(() => {
-    if (introActive) return;
+    if (introActive || !isPortfolioRoute) return;
     const sectionIds = NAV_LINKS.map((l) => l.href.replace("#", ""));
 
     observerRef.current = new IntersectionObserver(
@@ -62,7 +62,7 @@ export default function Navbar() {
           }
         });
       },
-      { rootMargin: "-40% 0px -55% 0px", threshold: 0 }
+      { rootMargin: "-40% 0px -55% 0px", threshold: 0 },
     );
 
     sectionIds.forEach((id) => {
@@ -71,9 +71,14 @@ export default function Navbar() {
     });
 
     return () => observerRef.current?.disconnect();
-  }, [introActive]);
+  }, [introActive, isPortfolioRoute]);
 
-  if (introActive || pathname.startsWith("/dashboard")) return null;
+  if (
+    introActive ||
+    pathname.startsWith("/dashboard") ||
+    pathname.startsWith("/resume")
+  )
+    return null;
 
   const scrollTo = (href: string) => {
     const id = href.replace("#", "");
@@ -81,7 +86,9 @@ export default function Navbar() {
     const headerOffset = id === "hero" ? 0 : 84;
 
     if (el) {
-      window.dispatchEvent(new CustomEvent("nav-section-jump", { detail: { id } }));
+      window.dispatchEvent(
+        new CustomEvent("nav-section-jump", { detail: { id } }),
+      );
       const smoother = ScrollSmoother.get();
       if (smoother) {
         const baseY =
@@ -90,14 +97,19 @@ export default function Navbar() {
             : el.getBoundingClientRect().top + smoother.scrollTop();
         smoother.scrollTo(Math.max(0, baseY - headerOffset), true);
       } else {
-        const y = Math.max(0, el.getBoundingClientRect().top + window.scrollY - headerOffset);
+        const y = Math.max(
+          0,
+          el.getBoundingClientRect().top + window.scrollY - headerOffset,
+        );
         window.scrollTo({ top: y, behavior: "smooth" });
       }
 
       setActiveSection(id);
       window.setTimeout(() => {
         ScrollTrigger.refresh();
-        window.dispatchEvent(new CustomEvent("nav-section-settled", { detail: { id } }));
+        window.dispatchEvent(
+          new CustomEvent("nav-section-settled", { detail: { id } }),
+        );
       }, 420);
     }
 
@@ -125,12 +137,13 @@ export default function Navbar() {
             onClick={() => scrollTo("#hero")}
             className="flex items-center gap-2 group"
           >
-            <div className="w-8 h-8 rounded-lg bg-blue-500 flex items-center justify-center text-white font-bold text-sm shadow-lg shadow-blue-500/30">
-              M
-            </div>
-            <span className="font-semibold text-white tracking-tight hidden sm:block">
-              Miftaul<span className="text-blue-400">.</span>
-            </span>
+            <Image
+              src="/miftaul.svg"
+              alt="Logo"
+              width={32}
+              height={32}
+              className="w-8 h-8"
+            />
           </button>
 
           {/* Desktop Nav */}
@@ -151,7 +164,11 @@ export default function Navbar() {
                     <motion.span
                       layoutId="nav-indicator"
                       className="absolute inset-0 rounded-lg bg-white/8 border border-white/10"
-                      transition={{ type: "spring", stiffness: 350, damping: 30 }}
+                      transition={{
+                        type: "spring",
+                        stiffness: 350,
+                        damping: 30,
+                      }}
                     />
                   )}
                   <span className="relative z-10">{link.label}</span>
@@ -162,15 +179,13 @@ export default function Navbar() {
 
           {/* CTA Buttons */}
           <div className="hidden md:flex items-center gap-2">
-            <motion.button
-              onClick={() => setCvOpen(true)}
-              whileHover={{ scale: 1.03 }}
-              whileTap={{ scale: 0.97 }}
+            <Link
+              href="/resume"
               className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-muted-foreground hover:text-white border border-white/10 hover:border-white/20 rounded-lg transition-colors"
             >
               <FileText className="w-4 h-4" />
               Resume
-            </motion.button>
+            </Link>
             <motion.button
               onClick={() => scrollTo("#contact")}
               whileHover={{ scale: 1.03 }}
@@ -187,7 +202,11 @@ export default function Navbar() {
             onClick={() => setMobileOpen((p) => !p)}
             className="md:hidden p-2 rounded-lg text-muted-foreground hover:text-white hover:bg-white/10 transition-colors"
           >
-            {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            {mobileOpen ? (
+              <X className="w-5 h-5" />
+            ) : (
+              <Menu className="w-5 h-5" />
+            )}
           </button>
         </div>
       </motion.header>
@@ -232,16 +251,14 @@ export default function Navbar() {
                 })}
               </nav>
               <div className="px-6 pb-8 flex flex-col gap-3">
-                <button
-                  onClick={() => {
-                    setCvOpen(true);
-                    setMobileOpen(false);
-                  }}
+                <Link
+                  href="/resume"
+                  onClick={() => setMobileOpen(false)}
                   className="flex items-center justify-center gap-2 w-full py-2.5 text-sm text-muted-foreground border border-white/10 rounded-xl hover:text-white hover:border-white/20 transition-colors"
                 >
                   <FileText className="w-4 h-4" />
                   Resume
-                </button>
+                </Link>
                 <button
                   onClick={() => {
                     scrollTo("#contact");
@@ -257,8 +274,6 @@ export default function Navbar() {
           </>
         )}
       </AnimatePresence>
-
-      <CVDialog open={cvOpen} onClose={() => setCvOpen(false)} />
     </>
   );
 }

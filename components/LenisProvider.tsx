@@ -12,10 +12,10 @@ gsap.registerPlugin(ScrollTrigger, ScrollSmoother);
 export default function LenisProvider({ children }: { children: ReactNode }) {
   const reduced = useReducedMotion();
   const pathname = usePathname();
-  const isDashboardRoute = pathname.startsWith("/dashboard");
+  const disableSmootherRoute = pathname.startsWith("/dashboard") || pathname.startsWith("/resume");
 
   useEffect(() => {
-    if (reduced || isDashboardRoute) return;
+    if (reduced || disableSmootherRoute) return;
 
     const isTouch = window.matchMedia("(pointer: coarse)").matches;
     const smoother = ScrollSmoother.create({
@@ -45,9 +45,9 @@ export default function LenisProvider({ children }: { children: ReactNode }) {
       window.removeEventListener("nav-section-settled", handleNavSettled);
       smoother.kill();
     };
-  }, [reduced, isDashboardRoute]);
+  }, [reduced, disableSmootherRoute]);
 
-  if (isDashboardRoute) {
+  if (disableSmootherRoute) {
     return <>{children}</>;
   }
 
