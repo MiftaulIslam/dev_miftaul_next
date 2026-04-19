@@ -1,6 +1,7 @@
-﻿"use client";
+"use client";
 
 import { useRef, useEffect, useState, type ComponentType } from "react";
+import dynamic from "next/dynamic";
 import Image from "next/image";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
@@ -13,6 +14,19 @@ import { useReducedMotion } from "@/lib/useReducedMotion";
 
 gsap.registerPlugin(ScrollTrigger);
 
+const HERO_SPLINE_SCENE =
+  "https://prod.spline.design/BUcAtsyRRFQOgBGG/scene.splinecode";
+
+const SplineScene = dynamic(() => import("@splinetool/react-spline").then((mod) => mod.default), {
+  ssr: false,
+  loading: () => (
+    <div
+      className="absolute inset-0 flex items-center justify-center rounded-[inherit] bg-blue-500/5 ring-1 ring-inset ring-blue-500/10"
+      aria-hidden
+    />
+  ),
+});
+
 const DEFAULT_ROLES = ["Full Stack Developer", "Software Engineer", "Solution Architect"];
 
 const iconMap: Record<string, ComponentType<{ className?: string }>> = {
@@ -23,7 +37,6 @@ const iconMap: Record<string, ComponentType<{ className?: string }>> = {
 };
 
 interface HeroProps {
-  portraitSlotRef: React.RefObject<HTMLDivElement | null>;
   profile: PortfolioSettings;
 }
 
@@ -40,7 +53,7 @@ function splitName(fullName: string) {
   };
 }
 
-export default function Hero({ portraitSlotRef, profile }: HeroProps) {
+export default function Hero({ profile }: HeroProps) {
   const sectionRef = useRef<HTMLDivElement>(null);
   const bgLayerRef = useRef<HTMLDivElement>(null);
   const contentLeftRef = useRef<HTMLDivElement>(null);
@@ -245,7 +258,7 @@ export default function Hero({ portraitSlotRef, profile }: HeroProps) {
     <section
       id="hero"
       ref={sectionRef}
-      className="relative min-h-screen flex items-center overflow-hidden bg-transparent"
+      className="relative min-h-screen flex items-center overflow-x-hidden overflow-y-visible bg-transparent"
     >
       <div ref={bgLayerRef} className="absolute inset-0 pointer-events-none overflow-hidden">
         <Image
@@ -337,47 +350,40 @@ export default function Hero({ portraitSlotRef, profile }: HeroProps) {
           </div>
         </div>
 
-        <div ref={cardRef} className="opacity-0 relative hidden md:flex items-center justify-center">
+        <div
+          ref={cardRef}
+          className="opacity-0 relative hidden md:flex items-center justify-center overflow-visible"
+        >
           <div
             className="absolute w-72 h-72 rounded-full opacity-20 blur-2xl"
             style={{ background: "radial-gradient(circle, #3b82f6, transparent 70%)" }}
           />
 
-          <div className="hero-orbit-frame relative w-64 h-64 md:w-80 md:h-80">
-            <div className="hero-orbit-ring absolute inset-0 rounded-full border border-blue-500/20 animate-spin-slow" />
+          <div className="hero-orbit-frame relative w-[19rem] h-[19rem] md:w-[24rem] md:h-[24rem] lg:w-[28rem] lg:h-[28rem] overflow-visible">
             <div
-              className="hero-orbit-ring absolute inset-2 rounded-full border border-blue-500/10"
+              className="absolute left-1/2 top-[55%] z-0 h-[145%] w-[145%] -translate-x-1/2 -translate-y-1/2 md:h-[150%] md:w-[150%]"
+              role="img"
+              aria-label="Interactive 3D robot scene"
+            >
+              <SplineScene scene={HERO_SPLINE_SCENE} className="size-full min-h-[20rem] md:min-h-[26rem]" />
+            </div>
+
+            <div className="hero-orbit-ring pointer-events-none absolute inset-0 z-10 rounded-full border border-blue-500/20 animate-spin-slow" />
+            <div
+              className="hero-orbit-ring pointer-events-none absolute inset-2 z-10 rounded-full border border-blue-500/10"
               style={{ animation: "spin-slow 20s linear infinite reverse" }}
             />
-
-            <div
-              ref={portraitSlotRef}
-              className="portrait-hero absolute inset-4 rounded-2xl glass border border-blue-500/20 pointer-events-none"
-              aria-hidden
-            >
-              <div className="hero-static-portrait absolute inset-0">
-                <Image
-                  src={profile.primaryAvatar || "/ariyan_2.jpg"}
-                  alt="Miftaul Islam Shuvro portrait in hero card"
-                  fill
-                  sizes="(max-width: 768px) 240px, 320px"
-                  className="object-cover object-[62%_35%] rounded-2xl"
-                  priority
-                />
-              </div>
-              <div className="absolute inset-0 bg-linear-to-t from-background/55 via-transparent to-background/10 rounded-2xl" />
-            </div>
           </div>
 
-          <div className="hero-floating-chip absolute -top-4 -right-4 md:right-0 glass border border-white/10 rounded-xl px-3 py-2 animate-float" style={{ animationDelay: "0.5s" }}>
+          <div className="hero-floating-chip absolute -top-4 -right-4 z-20 md:right-0 glass border border-white/10 rounded-xl px-3 py-2 animate-float" style={{ animationDelay: "0.5s" }}>
             <p className="text-[10px] text-muted-foreground font-mono">experience</p>
             <p className="text-white font-bold text-sm">{profile.yearsOfExperience}+ Years</p>
           </div>
-          <div className="hero-floating-chip absolute -bottom-4 -left-4 md:left-0 glass border border-white/10 rounded-xl px-3 py-2 animate-float" style={{ animationDelay: "1.2s" }}>
+          <div className="hero-floating-chip absolute -bottom-4 -left-4 z-20 md:left-0 glass border border-white/10 rounded-xl px-3 py-2 animate-float" style={{ animationDelay: "1.2s" }}>
             <p className="text-[10px] text-muted-foreground font-mono">projects</p>
             <p className="text-white font-bold text-sm">{profile.totalProjects}+ Shipped</p>
           </div>
-          <div className="hero-floating-chip absolute top-1/2 -right-8 md:-right-4 glass border border-green-500/20 rounded-xl px-3 py-2 animate-float" style={{ animationDelay: "0.9s" }}>
+          <div className="hero-floating-chip absolute top-1/2 -right-8 z-20 md:-right-4 glass border border-green-500/20 rounded-xl px-3 py-2 animate-float" style={{ animationDelay: "0.9s" }}>
             <div className="flex items-center gap-1.5">
               <div className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
               <p className="text-green-400 font-semibold text-xs">{profile.availability}</p>

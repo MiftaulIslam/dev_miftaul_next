@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import ResumeDocument from "@/components/resume/ResumeDocument";
 import ResumeToolbar from "@/components/resume/ResumeToolbar";
+import ResumeIntroReset from "@/components/resume/ResumeIntroReset";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://miftaul.com";
 const RESUME_URL = `${SITE_URL}/resume`;
@@ -76,6 +77,7 @@ export default function ResumePage() {
 
   return (
     <main className="min-h-screen bg-slate-200 print:bg-white">
+      <ResumeIntroReset />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
