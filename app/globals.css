@@ -169,6 +169,8 @@
 html {
   scroll-behavior: auto; /* Lenis handles smooth scroll */
   background-color: var(--background);
+  overflow-x: hidden;
+  max-width: 100%;
 }
 
 body {

@@ -144,7 +144,7 @@ export default function Contact({ profile }: ContactProps) {
         }}
       />
 
-      <div className="max-w-7xl mx-auto px-5 md:px-10">
+      <div className="mx-auto max-w-[88rem] px-5 md:px-10">
         <SectionHeading
           eyebrow="Contact"
           title="Let's Build Something"

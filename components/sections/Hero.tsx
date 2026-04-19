@@ -258,7 +258,7 @@ export default function Hero({ profile }: HeroProps) {
     <section
       id="hero"
       ref={sectionRef}
-      className="relative min-h-screen flex items-center overflow-x-hidden overflow-y-visible bg-transparent"
+      className="relative isolate flex min-h-screen w-full min-w-0 items-center overflow-x-clip bg-transparent"
     >
       <div ref={bgLayerRef} className="absolute inset-0 pointer-events-none overflow-hidden">
         <Image
@@ -282,8 +282,8 @@ export default function Hero({ profile }: HeroProps) {
         <div className="absolute inset-0 bg-grid opacity-30" />
       </div>
 
-      <div className="relative z-10 max-w-7xl mx-auto px-5 md:px-10 w-full pt-20 pb-16 grid md:grid-cols-2 gap-12 lg:gap-20 items-center min-h-screen">
-        <div ref={contentLeftRef} className="flex flex-col gap-6">
+      <div className="relative z-10 mx-auto grid min-h-screen w-full min-w-0 max-w-[88rem] grid-cols-1 items-center gap-12 px-5 pt-20 pb-16 md:grid-cols-[minmax(0,1fr)_minmax(0,1.22fr)] md:px-10 lg:gap-24">
+        <div ref={contentLeftRef} className="flex min-w-0 flex-col gap-6">
           <div className="hero-greeting opacity-0 inline-flex items-center gap-2 w-fit">
             <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse-glow" />
             <span className="text-xs font-mono text-muted-foreground bg-white/5 border border-white/10 px-3 py-1 rounded-full tracking-wider">
@@ -352,7 +352,7 @@ export default function Hero({ profile }: HeroProps) {
 
         <div
           ref={cardRef}
-          className="opacity-0 relative hidden md:flex items-center justify-center overflow-visible"
+          className="relative hidden min-w-0 items-center justify-center overflow-visible opacity-0 md:flex md:justify-end lg:pr-2"
         >
           <div
             className="absolute w-72 h-72 rounded-full opacity-20 blur-2xl"
@@ -383,7 +383,7 @@ export default function Hero({ profile }: HeroProps) {
             <p className="text-[10px] text-muted-foreground font-mono">projects</p>
             <p className="text-white font-bold text-sm">{profile.totalProjects}+ Shipped</p>
           </div>
-          <div className="hero-floating-chip absolute top-1/2 -right-8 z-20 md:-right-4 glass border border-green-500/20 rounded-xl px-3 py-2 animate-float" style={{ animationDelay: "0.9s" }}>
+          <div className="hero-floating-chip absolute top-1/2 right-0 z-20 -translate-y-1/2 glass border border-green-500/20 rounded-xl px-3 py-2 animate-float" style={{ animationDelay: "0.9s" }}>
             <div className="flex items-center gap-1.5">
               <div className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
               <p className="text-green-400 font-semibold text-xs">{profile.availability}</p>

@@ -261,7 +261,7 @@ export default function Projects() {
         style={{ background: "radial-gradient(circle, #3b82f6, transparent 70%)" }}
       />
 
-      <div className="mx-auto max-w-7xl px-5 md:px-10">
+      <div className="mx-auto max-w-[88rem] px-5 md:px-10">
         <div className="projects-heading opacity-0">
           <SectionHeading
             eyebrow="Selected Work"
@@ -279,7 +279,7 @@ export default function Projects() {
                 ref={(node) => {
                   cardRefs.current[idx] = node;
                 }}
-                className="project-step flex min-h-[52vh] items-center"
+                className="project-step flex min-h-[42vh] items-center"
               >
                 <ProjectCard project={project} isActive={safeActiveIdx === idx} />
               </div>

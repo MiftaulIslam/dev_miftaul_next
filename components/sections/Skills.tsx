@@ -314,7 +314,7 @@ export default function Skills() {
         style={{ background: "radial-gradient(ellipse at top, rgba(59,130,246,0.42), transparent 70%)" }}
       />
 
-      <div className="max-w-7xl mx-auto px-5 md:px-10">
+      <div className="mx-auto max-w-[88rem] px-5 md:px-10">
         <div className="skills-heading opacity-0">
           <SectionHeading
             eyebrow="Tech Stack"

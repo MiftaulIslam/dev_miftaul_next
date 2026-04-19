@@ -52,8 +52,10 @@ export default function LenisProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <div id="smooth-wrapper">
-      <div id="smooth-content">{children}</div>
+    <div id="smooth-wrapper" className="min-w-0 max-w-full overflow-x-hidden">
+      <div id="smooth-content" className="min-w-0 max-w-full">
+        {children}
+      </div>
     </div>
   );
 }

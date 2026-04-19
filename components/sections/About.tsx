@@ -109,7 +109,7 @@ export default function About({ portraitTargetRef, profile }: AboutProps) {
         style={{ background: "radial-gradient(circle, #3b82f6, transparent 70%)" }}
       />
 
-      <div className="max-w-7xl mx-auto px-5 md:px-10">
+      <div className="mx-auto max-w-[88rem] px-5 md:px-10">
         <div className="about-text-item opacity-0">
           <SectionHeading
             eyebrow="About Me"

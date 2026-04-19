@@ -152,8 +152,16 @@ export default function HeroRoadmapPath() {
   if (!pathD) return null;
 
   return (
-    <div ref={rootRef} className="pointer-events-none absolute inset-0 z-0 hidden md:block" aria-hidden>
-      <svg viewBox={`0 0 ${size.width} ${size.height}`} preserveAspectRatio="none" className="h-full w-full">
+    <div
+      ref={rootRef}
+      className="pointer-events-none absolute inset-0 z-0 hidden min-w-0 overflow-x-clip md:block"
+      aria-hidden
+    >
+      <svg
+        viewBox={`0 0 ${size.width} ${size.height}`}
+        preserveAspectRatio="none"
+        className="h-full w-full overflow-hidden"
+      >
         <defs>
           <filter id="roadGlow" x="-80%" y="-80%" width="260%" height="260%">
             <feGaussianBlur stdDeviation="4" result="blur" />

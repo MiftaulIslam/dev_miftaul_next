@@ -128,8 +128,8 @@ export default function Navbar() {
         <div
           className={`pointer-events-auto mx-auto mt-0 md:mt-2 px-5 md:px-8 flex items-center justify-between transition-all duration-300 ${
             scrolled
-              ? "max-w-6xl h-14 rounded-2xl glass border border-white/10 shadow-xl shadow-black/35"
-              : "max-w-7xl h-16 md:h-20 rounded-none bg-transparent border border-transparent"
+              ? "max-w-[76rem] h-14 rounded-2xl glass border border-white/10 shadow-xl shadow-black/35"
+              : "max-w-[88rem] h-16 md:h-20 rounded-none bg-transparent border border-transparent"
           }`}
         >
           {/* Logo */}
