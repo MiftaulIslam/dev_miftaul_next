@@ -42,8 +42,30 @@ export const SparkleCursor = ({ distance = 50, glow = true }: SparkleCursorProps
     };
     img.src = url;
 
-    let parts: any[] = [];
-    let glows: any[] = [];
+    interface Sparkle {
+      id: number;
+      x: number;
+      y: number;
+      /** Vertical flip, animated back and forth to fake a spin. */
+      sy: number;
+      b: number;
+      r: number;
+      hue: number;
+      size: number;
+      scale: number;
+      alpha: number;
+    }
+
+    interface Glow {
+      id: string;
+      size: number;
+      scale: number;
+      x: number;
+      y: number;
+    }
+
+    let parts: Sparkle[] = [];
+    let glows: Glow[] = [];
 
     const render = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);

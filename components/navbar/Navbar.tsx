@@ -12,6 +12,7 @@ import { ScrollSmoother } from "gsap/ScrollSmoother";
 
 import { NAV_LINKS } from "@/lib/data";
 import ThemeToggle from "@/components/ui/ThemeToggle";
+import { LimelightNav } from "@/components/ui/limelight-nav";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -179,39 +180,21 @@ export default function Navbar() {
             </span>
           </button>
 
-          {/* Desktop Nav */}
-          <nav className="hidden items-center gap-0.5 md:flex">
-            {NAV_LINKS.map((link) => {
-              const isActive = activeSection === link.href.replace("#", "");
-              return (
-                <button
-                  key={link.href}
-                  onClick={() => scrollTo(link.href)}
-                  aria-current={isActive ? "page" : undefined}
-                  className={`relative rounded-lg px-3 py-1.5 text-sm transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
-                    isActive ? "text-foreground" : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  {isActive && (
-                    <motion.span
-                      layoutId="nav-indicator"
-                      className="absolute inset-0 rounded-lg border border-hairline bg-tint-strong"
-                      transition={{ type: "spring", stiffness: 380, damping: 32 }}
-                    />
-                  )}
-                  <span className="relative z-10">{link.label}</span>
-                  {/* Underglow, keyed to the same active item */}
-                  {isActive && (
-                    <motion.span
-                      layoutId="nav-indicator-glow"
-                      className="absolute -bottom-px left-1/2 h-px w-8 -translate-x-1/2 bg-primary shadow-[0_0_10px_2px_var(--accent-glow-strong)]"
-                      transition={{ type: "spring", stiffness: 380, damping: 32 }}
-                    />
-                  )}
-                </button>
-              );
-            })}
-          </nav>
+          {/* Desktop Nav — tubelight beam tracks the section in view */}
+          <LimelightNav
+            className="hidden h-full items-center gap-0.5 md:flex"
+            activeIndex={Math.max(
+              0,
+              NAV_LINKS.findIndex(
+                (link) => link.href.replace("#", "") === activeSection
+              )
+            )}
+            items={NAV_LINKS.map((link) => ({
+              id: link.href,
+              label: link.label,
+              onClick: () => scrollTo(link.href),
+            }))}
+          />
 
           {/* Actions */}
           <div className="flex shrink-0 items-center gap-2">

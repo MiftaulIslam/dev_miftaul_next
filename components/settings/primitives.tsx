@@ -168,11 +168,17 @@ export function SettingsRail<T extends string>({
   options,
   value,
   onChange,
+  renderAction,
 }: {
   label: string;
   options: SettingsOption<T>[];
   value: T;
   onChange: (next: T) => void;
+  /**
+   * Optional control rendered next to each chip — e.g. a gear that configures
+   * that option. Rendered as a sibling, never nested inside the radio button.
+   */
+  renderAction?: (option: SettingsOption<T>) => ReactNode;
 }) {
   const trackRef = useRef<HTMLDivElement>(null);
   const [canScrollStart, setCanScrollStart] = useState(false);
@@ -245,34 +251,46 @@ export function SettingsRail<T extends string>({
       >
         {options.map((option, index) => {
           const active = option.value === value;
+          const action = renderAction?.(option);
           return (
-            <button
+            <div
               key={option.value}
-              type="button"
-              role="radio"
-              data-value={option.value}
-              aria-checked={active}
-              tabIndex={active || (activeIndex === -1 && index === 0) ? 0 : -1}
-              onClick={() => onChange(option.value)}
               className={cn(
-                "flex min-h-10 shrink-0 snap-start items-center gap-2 rounded-xl border px-3.5 py-2",
-                "whitespace-nowrap text-sm transition-colors",
-                FOCUS_RING,
+                "flex shrink-0 snap-start items-center gap-1 rounded-xl border transition-colors",
                 active
-                  ? "border-primary/50 bg-primary/15 text-foreground"
-                  : "border-foreground/10 text-muted-foreground hover:border-primary/30 hover:text-foreground"
+                  ? "border-primary/50 bg-primary/15"
+                  : "border-foreground/10 hover:border-primary/30",
+                action ? "pr-1" : ""
               )}
             >
-              {/* Selection is carried by the dot too, not by colour alone. */}
-              <span
-                aria-hidden
+              <button
+                type="button"
+                role="radio"
+                data-value={option.value}
+                aria-checked={active}
+                tabIndex={active || (activeIndex === -1 && index === 0) ? 0 : -1}
+                onClick={() => onChange(option.value)}
                 className={cn(
-                  "h-1.5 w-1.5 shrink-0 rounded-full transition-colors",
-                  active ? "bg-primary" : "bg-foreground/20"
+                  "flex min-h-10 items-center gap-2 rounded-xl px-3.5 py-2",
+                  "whitespace-nowrap text-sm transition-colors",
+                  FOCUS_RING,
+                  active
+                    ? "text-foreground"
+                    : "text-muted-foreground hover:text-foreground"
                 )}
-              />
-              {option.label}
-            </button>
+              >
+                {/* Selection is carried by the dot too, not by colour alone. */}
+                <span
+                  aria-hidden
+                  className={cn(
+                    "h-1.5 w-1.5 shrink-0 rounded-full transition-colors",
+                    active ? "bg-primary" : "bg-foreground/20"
+                  )}
+                />
+                {option.label}
+              </button>
+              {action}
+            </div>
           );
         })}
       </div>
@@ -310,5 +328,232 @@ function RailArrow({
     >
       <Icon className="h-4 w-4" />
     </button>
+  );
+}
+
+/* ──────────────────────────── Config controls ─────────────────────────── */
+
+/** Labelled numeric slider with its current value shown alongside. */
+export function SettingsSlider({
+  label,
+  value,
+  min,
+  max,
+  step = 1,
+  suffix,
+  onChange,
+}: {
+  label: string;
+  value: number;
+  min: number;
+  max: number;
+  step?: number;
+  suffix?: string;
+  onChange: (next: number) => void;
+}) {
+  const id = `settings-slider-${label.toLowerCase().replace(/\s+/g, "-")}`;
+  return (
+    <div className="py-2">
+      <div className="flex items-baseline justify-between gap-3">
+        <label htmlFor={id} className="text-sm text-foreground">
+          {label}
+        </label>
+        {/* Tabular figures so the row does not shift as the number changes. */}
+        <span className="text-xs tabular-nums text-muted-foreground">
+          {value}
+          {suffix}
+        </span>
+      </div>
+      <input
+        id={id}
+        type="range"
+        min={min}
+        max={max}
+        step={step}
+        value={value}
+        onChange={(event) => onChange(Number(event.target.value))}
+        className={cn(
+          "mt-2 h-1.5 w-full cursor-pointer appearance-none rounded-full bg-foreground/15",
+          "accent-[var(--primary)]",
+          FOCUS_RING
+        )}
+      />
+    </div>
+  );
+}
+
+/** Labelled on/off switch. */
+export function SettingsSwitch({
+  label,
+  description,
+  checked,
+  onChange,
+}: {
+  label: string;
+  description?: string;
+  checked: boolean;
+  onChange: (next: boolean) => void;
+}) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      onClick={() => onChange(!checked)}
+      className={cn(
+        "flex w-full items-center justify-between gap-4 rounded-lg py-2.5 text-left transition-colors",
+        FOCUS_RING
+      )}
+    >
+      <span className="min-w-0">
+        <span className="block text-sm text-foreground">{label}</span>
+        {description && (
+          <span className="mt-0.5 block text-xs leading-relaxed text-muted-foreground/80">
+            {description}
+          </span>
+        )}
+      </span>
+      <span
+        aria-hidden
+        className={cn(
+          "relative h-5 w-9 shrink-0 rounded-full transition-colors",
+          checked ? "bg-primary" : "bg-foreground/20"
+        )}
+      >
+        <span
+          className={cn(
+            "absolute top-0.5 h-4 w-4 rounded-full bg-background shadow transition-transform duration-200",
+            checked ? "translate-x-[1.125rem]" : "translate-x-0.5"
+          )}
+        />
+      </span>
+    </button>
+  );
+}
+
+/* ─────────────────────────────────── Tabs ─────────────────────────────── */
+
+/**
+ * Tab strip for dialogs whose options exceed one comfortable screen.
+ *
+ * Follows the ARIA tabs pattern: a roving tabindex plus Left/Right (and
+ * Home/End) to move between tabs, so the whole strip is a single tab stop.
+ */
+export function SettingsTabs<T extends string>({
+  label,
+  tabs,
+  value,
+  onChange,
+}: {
+  label: string;
+  tabs: { value: T; label: string }[];
+  value: T;
+  onChange: (next: T) => void;
+}) {
+  const listRef = useRef<HTMLDivElement>(null);
+  const index = tabs.findIndex((tab) => tab.value === value);
+
+  const move = (to: number) => {
+    const next = tabs[(to + tabs.length) % tabs.length];
+    onChange(next.value);
+    listRef.current
+      ?.querySelector<HTMLButtonElement>(`[data-tab="${next.value}"]`)
+      ?.focus();
+  };
+
+  return (
+    <div
+      ref={listRef}
+      role="tablist"
+      aria-label={label}
+      onKeyDown={(event) => {
+        if (event.key === "ArrowRight") {
+          event.preventDefault();
+          move(index + 1);
+        } else if (event.key === "ArrowLeft") {
+          event.preventDefault();
+          move(index - 1);
+        } else if (event.key === "Home") {
+          event.preventDefault();
+          move(0);
+        } else if (event.key === "End") {
+          event.preventDefault();
+          move(tabs.length - 1);
+        }
+      }}
+      className={cn(
+        "flex gap-1 overflow-x-auto rounded-xl bg-foreground/5 p-1",
+        "[scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      )}
+    >
+      {tabs.map((tab) => {
+        const active = tab.value === value;
+        return (
+          <button
+            key={tab.value}
+            type="button"
+            role="tab"
+            data-tab={tab.value}
+            aria-selected={active}
+            tabIndex={active ? 0 : -1}
+            onClick={() => onChange(tab.value)}
+            className={cn(
+              "flex-1 whitespace-nowrap rounded-lg px-3 py-1.5 text-xs font-medium transition-colors",
+              FOCUS_RING,
+              active
+                ? "bg-primary text-primary-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            {tab.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+/** Small heading used to group controls inside a dialog tab. */
+export function SettingsGroupLabel({ children }: { children: ReactNode }) {
+  return (
+    <p className="mb-1 mt-4 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground first:mt-0">
+      {children}
+    </p>
+  );
+}
+
+/** Colour swatch backed by the platform colour picker. */
+export function SettingsColor({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  onChange: (next: string) => void;
+}) {
+  const id = `settings-color-${label.toLowerCase().replace(/\s+/g, "-")}`;
+  return (
+    <div className="flex items-center justify-between gap-4 py-2.5">
+      <label htmlFor={id} className="text-sm text-foreground">
+        {label}
+      </label>
+      <span className="flex items-center gap-2">
+        {/* The hex is shown as text so the value is not conveyed by colour alone. */}
+        <span className="text-xs uppercase tabular-nums text-muted-foreground">
+          {value}
+        </span>
+        <input
+          id={id}
+          type="color"
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+          className={cn(
+            "h-8 w-10 cursor-pointer rounded-lg border border-foreground/15 bg-transparent p-0.5",
+            FOCUS_RING
+          )}
+        />
+      </span>
+    </div>
   );
 }

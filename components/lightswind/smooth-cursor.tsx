@@ -1,27 +1,40 @@
-"use client";
-
+import React, { useEffect, useRef, useState } from "react";
 import { motion, useSpring } from "framer-motion";
-import { FC, useEffect, useRef, useState } from "react";
-// Utility function 'cn' (classnames) - implemented directly to resolve import error
-function cn(...inputs: (string | undefined | null | boolean)[]) {
-  return inputs.filter(Boolean).join(" ");
-}
+import { cn } from "@/lib/utils";
 
-interface Position {
-  x: number;
-  y: number;
-}
-
-interface SpringConfig {
-  damping: number;
-  stiffness: number;
-  mass: number;
-  restDelta: number;
-}
+const DefaultCursorSVG = ({ size = 25, color = "currentColor", className }: { size?: number; color?: string; className?: string }) => {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width={size * 2}
+      height={size * 2.16}
+      viewBox="0 0 50 54"
+      fill="none"
+      className={cn("pointer-events-none drop-shadow-md", className)}
+    >
+      <g filter="url(#filter0_d_91_7928)">
+        <path
+          d="M42.6817 41.1495L27.5103 6.79925C26.7269 5.02557 24.2082 5.02558 23.3927 6.79925L7.59814 41.1495C6.75833 42.9759 8.52712 44.8902 10.4125 44.1954L24.3757 39.0496C24.8829 38.8627 25.4385 38.8627 25.9422 39.0496L39.8121 44.1954C41.6849 44.8902 43.4884 42.9759 42.6817 41.1495Z"
+          fill={color}
+        />
+        <path
+          d="M43.7146 40.6933L28.5431 6.34306C27.3556 3.65428 23.5772 3.69516 22.3668 6.32755L6.57226 40.6778C5.3134 43.4156 7.97238 46.298 10.803 45.2549L24.7662 40.109C25.0221 40.0147 25.2999 40.0156 25.5494 40.1082L39.4193 45.254C42.2261 46.2953 44.9254 43.4347 43.7146 40.6933Z"
+          stroke="currentColor"
+          strokeWidth={1.5}
+        />
+      </g>
+    </svg>
+  );
+};
 
 export interface SmoothCursorProps {
   cursor?: React.ReactNode;
-  springConfig?: SpringConfig;
+  springConfig?: {
+    damping?: number;
+    stiffness?: number;
+    mass?: number;
+    restDelta?: number;
+  };
   className?: string;
   size?: number;
   color?: string;
@@ -33,89 +46,23 @@ export interface SmoothCursorProps {
   glowEffect?: boolean;
   magneticDistance?: number;
   magneticElements?: string;
-  onCursorMove?: (position: Position) => void;
+  onCursorMove?: (pos: { x: number; y: number }) => void;
   onCursorEnter?: () => void;
   onCursorLeave?: () => void;
   disabled?: boolean;
 }
 
-const DefaultCursorSVG: FC<{ size?: number; color?: string; className?: string }> = ({
-  size = 25,
-  color = "black",
-  className
-}) => {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width={size * 2}
-      height={size * 2.16}
-      viewBox="0 0 50 54"
-      fill="none"
-      className={cn("pointer-events-none", className)}
-    >
-      <g filter="url(#filter0_d_91_7928)">
-        <path
-          d="M42.6817 41.1495L27.5103 6.79925C26.7269 5.02557 24.2082 5.02558 23.3927 6.79925L7.59814 41.1495C6.75833 42.9759 8.52712 44.8902 10.4125 44.1954L24.3757 39.0496C24.8829 38.8627 25.4385 38.8627 25.9422 39.0496L39.8121 44.1954C41.6849 44.8902 43.4884 42.9759 42.6817 41.1495Z"
-          fill={color}
-        />
-        <path
-          d="M43.7146 40.6933L28.5431 6.34306C27.3556 3.65428 23.5772 3.69516 22.3668 6.32755L6.57226 40.6778C5.3134 43.4156 7.97238 46.298 10.803 45.2549L24.7662 40.109C25.0221 40.0147 25.2999 40.0156 25.5494 40.1082L39.4193 45.254C42.2261 46.2953 44.9254 43.4347 43.7146 40.6933Z"
-          stroke="white"
-          strokeWidth={2.25825}
-        />
-      </g>
-      <defs>
-        <filter
-          id="filter0_d_91_7928"
-          x={0.602397}
-          y={0.952444}
-          width={49.0584}
-          height={52.428}
-          filterUnits="userSpaceOnUse"
-          colorInterpolationFilters="sRGB"
-        >
-          <feFlood floodOpacity={0} result="BackgroundImageFix" />
-          <feColorMatrix
-            in="SourceAlpha"
-            type="matrix"
-            values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0"
-            result="hardAlpha"
-          />
-          <feOffset dy={2.25825} />
-          <feGaussianBlur stdDeviation={2.25825} />
-          <feComposite in2="hardAlpha" operator="out" />
-          <feColorMatrix
-            type="matrix"
-            values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.08 0"
-          />
-          <feBlend
-            mode="normal"
-            in2="BackgroundImageFix"
-            result="effect1_dropShadow_91_7928"
-          />
-          <feBlend
-            mode="normal"
-            in="SourceGraphic"
-            in2="effect1_dropShadow_91_7928"
-            result="shape"
-          />
-        </filter>
-      </defs>
-    </svg>
-  );
-};
-
 export function SmoothCursor({
   cursor,
   springConfig = {
-    damping: 45,
-    stiffness: 400,
-    mass: 1,
+    damping: 35,
+    stiffness: 350,
+    mass: 0.8,
     restDelta: 0.001,
   },
   className,
-  size = 25,
-  color = "black",
+  size = 22,
+  color = "currentColor",
   hideOnLeave = true,
   trailLength = 5,
   showTrail = false,
@@ -123,20 +70,19 @@ export function SmoothCursor({
   scaleOnClick = true,
   glowEffect = false,
   magneticDistance = 50,
-  magneticElements = "[data-magnetic]",
+  magneticElements = "a, button, [role='button'], input, textarea, select, .cursor-pointer, [data-magnetic]",
   onCursorMove,
   onCursorEnter,
   onCursorLeave,
   disabled = false,
 }: SmoothCursorProps) {
-  const [isMoving, setIsMoving] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
-  const [isClicking, setIsClicking] = useState(false);
-  const [trail, setTrail] = useState<Position[]>([]);
-
-  const lastMousePos = useRef<Position>({ x: 0, y: 0 });
-  const velocity = useRef<Position>({ x: 0, y: 0 });
-  const lastUpdateTime = useRef(Date.now());
+  const [isHoveringInteractive, setIsHoveringInteractive] = useState(false);
+  const [trail, setTrail] = useState<{ x: number; y: number }[]>([]);
+  const lastMousePos = useRef({ x: 0, y: 0 });
+  const velocity = useRef({ x: 0, y: 0 });
+  // Seeded in the effect below — reading the clock during render is impure.
+  const lastUpdateTime = useRef(0);
   const previousAngle = useRef(0);
   const accumulatedRotation = useRef(0);
 
@@ -144,13 +90,13 @@ export function SmoothCursor({
   const cursorY = useSpring(0, springConfig);
   const rotation = useSpring(0, {
     ...springConfig,
-    damping: 60,
-    stiffness: 300,
+    damping: 50,
+    stiffness: 250,
   });
   const scale = useSpring(1, {
     ...springConfig,
-    stiffness: 500,
-    damping: 35,
+    stiffness: 450,
+    damping: 30,
   });
 
   const defaultCursor = <DefaultCursorSVG size={size} color={color} />;
@@ -159,42 +105,37 @@ export function SmoothCursor({
   useEffect(() => {
     if (disabled) return;
 
-    const updateVelocity = (currentPos: Position) => {
+    // Only activate custom cursor on fine pointer devices (desktops)
+    const hasPointer = window.matchMedia("(pointer: fine)").matches;
+    if (!hasPointer) return;
+
+    lastUpdateTime.current = Date.now();
+
+    const updateVelocity = (currentPos: { x: number; y: number }) => {
       const currentTime = Date.now();
       const deltaTime = currentTime - lastUpdateTime.current;
-
       if (deltaTime > 0) {
         velocity.current = {
           x: (currentPos.x - lastMousePos.current.x) / deltaTime,
           y: (currentPos.y - lastMousePos.current.y) / deltaTime,
         };
       }
-
       lastUpdateTime.current = currentTime;
       lastMousePos.current = currentPos;
     };
 
-    const updateTrail = (pos: Position) => {
-      if (!showTrail) return;
-
-      setTrail(function (prev) {
-        var newTrail = [pos].concat(prev.slice(0, trailLength - 1));
-        return newTrail;
-      });
+    const updateTrail = (pos: { x: number; y: number }) => {
+      if (!showTrail || isHoveringInteractive) return;
+      setTrail((prev) => [pos, ...prev.slice(0, trailLength - 1)]);
     };
 
     const findMagneticElement = (x: number, y: number) => {
       const elements = document.querySelectorAll(magneticElements);
-
-      // Fix: Convert NodeListOf<Element> to an array for reliable iteration
       for (const element of Array.from(elements)) {
         const rect = element.getBoundingClientRect();
         const centerX = rect.left + rect.width / 2;
         const centerY = rect.top + rect.height / 2;
-        const distance = Math.sqrt(
-          Math.pow(x - centerX, 2) + Math.pow(y - centerY, 2)
-        );
-
+        const distance = Math.sqrt(Math.pow(x - centerX, 2) + Math.pow(y - centerY, 2));
         if (distance < magneticDistance) {
           return { x: centerX, y: centerY, distance };
         }
@@ -205,85 +146,77 @@ export function SmoothCursor({
     const smoothMouseMove = (e: MouseEvent) => {
       let currentPos = { x: e.clientX, y: e.clientY };
 
-      // Check for magnetic elements
+      // Detect if hovering over clickable/pointer element
+      const target = e.target as HTMLElement | null;
+      const interactiveTarget = target?.closest(magneticElements);
+      const isInteractive = Boolean(interactiveTarget);
+
+      setIsHoveringInteractive(isInteractive);
+
+      if (isInteractive) {
+        document.body.style.cursor = "pointer";
+      } else {
+        document.body.style.cursor = "none";
+      }
+
       const magneticTarget = findMagneticElement(currentPos.x, currentPos.y);
+
       if (magneticTarget) {
-        const strength = 1 - (magneticTarget.distance / magneticDistance);
+        const strength = 1 - magneticTarget.distance / magneticDistance;
         currentPos = {
-          x: currentPos.x + (magneticTarget.x - currentPos.x) * strength * 0.3,
-          y: currentPos.y + (magneticTarget.y - currentPos.y) * strength * 0.3,
+          x: currentPos.x + (magneticTarget.x - currentPos.x) * strength * 0.35,
+          y: currentPos.y + (magneticTarget.y - currentPos.y) * strength * 0.35,
         };
       }
 
       updateVelocity(currentPos);
       updateTrail(currentPos);
 
-      const speed = Math.sqrt(
-        Math.pow(velocity.current.x, 2) + Math.pow(velocity.current.y, 2),
-      );
-
+      const speed = Math.sqrt(Math.pow(velocity.current.x, 2) + Math.pow(velocity.current.y, 2));
       cursorX.set(currentPos.x);
       cursorY.set(currentPos.y);
-
       onCursorMove?.(currentPos);
 
       if (speed > 0.1 && rotateOnMove) {
-        const currentAngle =
-          Math.atan2(velocity.current.y, velocity.current.x) * (180 / Math.PI) +
-          90;
-
+        const currentAngle = Math.atan2(velocity.current.y, velocity.current.x) * (180 / Math.PI) + 90;
         let angleDiff = currentAngle - previousAngle.current;
         if (angleDiff > 180) angleDiff -= 360;
         if (angleDiff < -180) angleDiff += 360;
         accumulatedRotation.current += angleDiff;
         rotation.set(accumulatedRotation.current);
         previousAngle.current = currentAngle;
-
-        scale.set(0.95);
-        setIsMoving(true);
-
-        const timeout = setTimeout(function () {
-          scale.set(1);
-          setIsMoving(false);
-        }, 150);
-
-        return function () {
-          return clearTimeout(timeout);
-        };
       }
     };
 
-    const handleMouseEnter = function () {
+    const handleMouseEnter = () => {
       setIsVisible(true);
       onCursorEnter?.();
     };
 
-    const handleMouseLeave = function () {
+    const handleMouseLeave = () => {
       if (hideOnLeave) {
         setIsVisible(false);
       }
+      document.body.style.cursor = "auto";
       onCursorLeave?.();
     };
 
-    const handleMouseDown = function () {
+    const handleMouseDown = () => {
       if (scaleOnClick) {
-        setIsClicking(true);
-        scale.set(0.8);
+        scale.set(0.75);
       }
     };
 
-    const handleMouseUp = function () {
+    const handleMouseUp = () => {
       if (scaleOnClick) {
-        setIsClicking(false);
         scale.set(1);
       }
     };
 
     let rafId: number;
-    const throttledMouseMove = function (e: MouseEvent) {
+    const throttledMouseMove = (e: MouseEvent) => {
       if (rafId) return;
-
-      rafId = requestAnimationFrame(function () {
+      rafId = requestAnimationFrame(() => {
         smoothMouseMove(e);
         rafId = 0;
       });
@@ -296,7 +229,7 @@ export function SmoothCursor({
     document.addEventListener("mousedown", handleMouseDown);
     document.addEventListener("mouseup", handleMouseUp);
 
-    return function () {
+    return () => {
       window.removeEventListener("mousemove", throttledMouseMove);
       document.removeEventListener("mouseenter", handleMouseEnter);
       document.removeEventListener("mouseleave", handleMouseLeave);
@@ -320,16 +253,17 @@ export function SmoothCursor({
     magneticElements,
     onCursorMove,
     onCursorEnter,
-    onCursorLeave
+    onCursorLeave,
+    isHoveringInteractive,
   ]);
 
-  if (disabled || !isVisible) return null;
+  if (disabled || !isVisible || isHoveringInteractive) return null;
 
   return (
     <>
-      {/* Trail Effect */}
-      {showTrail && trail.map(function (pos, index) {
-        return (
+      {showTrail &&
+        !isHoveringInteractive &&
+        trail.map((pos, index) => (
           <motion.div
             key={index}
             style={{
@@ -338,17 +272,15 @@ export function SmoothCursor({
               top: pos.y,
               translateX: "-50%",
               translateY: "-50%",
-              zIndex: 99 - index,
+              zIndex: 9998 - index,
               pointerEvents: "none",
-              opacity: (trailLength - index) / trailLength * 0.5,
-              scale: (trailLength - index) / trailLength * 0.8,
+              opacity: ((trailLength - index) / trailLength) * 0.4,
+              scale: ((trailLength - index) / trailLength) * 0.7,
             }}
-            className="w-2 h-2 bg-current rounded-full"
+            className="w-2.5 h-2.5 bg-primary rounded-full pointer-events-none"
           />
-        );
-      })}
+        ))}
 
-      {/* Main Cursor */}
       <motion.div
         style={{
           position: "fixed",
@@ -358,10 +290,10 @@ export function SmoothCursor({
           translateY: "-50%",
           rotate: rotateOnMove ? rotation : 0,
           scale: scale,
-          zIndex: 100,
+          zIndex: 9999,
           pointerEvents: "none",
           willChange: "transform",
-          filter: glowEffect ? "drop-shadow(0 0 10px " + color + "40)" : "none", // String concatenation
+          filter: glowEffect ? "drop-shadow(0 0 10px rgba(139, 92, 246, 0.5))" : "none",
         }}
         initial={{ scale: 0, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
@@ -371,7 +303,7 @@ export function SmoothCursor({
           stiffness: 400,
           damping: 30,
         }}
-        className={cn("select-none", className)}
+        className={cn("select-none text-primary pointer-events-none hidden md:block", className)}
       >
         {cursorElement}
       </motion.div>

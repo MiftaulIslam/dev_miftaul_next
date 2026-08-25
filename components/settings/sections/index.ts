@@ -1,6 +1,7 @@
 import type { ComponentType } from "react";
 
 import { ThemeSection } from "./AppearanceSection";
+import { CursorSection } from "./CursorSection";
 
 /**
  * The panel's contents, in render order.
@@ -19,4 +20,5 @@ export interface SettingsEntry {
 
 export const SETTINGS_SECTIONS: SettingsEntry[] = [
   { id: "theme", Section: ThemeSection },
+  { id: "cursor", Section: CursorSection },
 ];

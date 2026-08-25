@@ -4,6 +4,7 @@ import "./globals.css";
 import LenisProvider from "@/components/LenisProvider";
 import Navbar from "@/components/navbar/Navbar";
 import SettingsPanel from "@/components/settings/SettingsPanel";
+import CursorLayer from "@/components/cursor/CursorLayer";
 import { THEME_BOOTSTRAP_SCRIPT } from "@/lib/theme";
 
 const geistSans = Geist({
@@ -59,6 +60,7 @@ export default function RootLayout({
         <Navbar />
         <LenisProvider>{children}</LenisProvider>
         <SettingsPanel />
+        <CursorLayer />
       </body>
     </html>
   );
