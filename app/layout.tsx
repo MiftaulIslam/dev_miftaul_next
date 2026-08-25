@@ -3,6 +3,8 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import LenisProvider from "@/components/LenisProvider";
 import Navbar from "@/components/navbar/Navbar";
+import SettingsPanel from "@/components/settings/SettingsPanel";
+import { THEME_BOOTSTRAP_SCRIPT } from "@/lib/theme";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -46,11 +48,17 @@ export default function RootLayout({
   return (
     <html
       lang="en"
+      suppressHydrationWarning
       className={`${geistSans.variable} ${geistMono.variable} dark h-full antialiased`}
     >
+      <head>
+        {/* Resolve the stored theme before first paint: no flash, no mismatch. */}
+        <script dangerouslySetInnerHTML={{ __html: THEME_BOOTSTRAP_SCRIPT }} />
+      </head>
       <body className="min-h-full bg-background text-foreground overflow-x-hidden intro-active">
         <Navbar />
         <LenisProvider>{children}</LenisProvider>
+        <SettingsPanel />
       </body>
     </html>
   );

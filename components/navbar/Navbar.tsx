@@ -1,4 +1,5 @@
 "use client";
+
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -8,14 +9,22 @@ import { usePathname } from "next/navigation";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { ScrollSmoother } from "gsap/ScrollSmoother";
+
 import { NAV_LINKS } from "@/lib/data";
+import ThemeToggle from "@/components/ui/ThemeToggle";
 
 gsap.registerPlugin(ScrollTrigger);
+
+/** Past this scroll depth the shell tightens into its compact pill. */
+const COMPACT_AT = 20;
+/** Past this depth, scrolling down parks the shell off-screen. */
+const AUTOHIDE_AT = 160;
 
 export default function Navbar() {
   const pathname = usePathname();
   const [introActive, setIntroActive] = useState(true);
   const [scrolled, setScrolled] = useState(false);
+  const [hidden, setHidden] = useState(false);
   const [activeSection, setActiveSection] = useState("hero");
   const [mobileOpen, setMobileOpen] = useState(false);
   const observerRef = useRef<IntersectionObserver | null>(null);
@@ -32,15 +41,25 @@ export default function Navbar() {
     return () => observer.disconnect();
   }, []);
 
-  // Scroll state - keep navbar visible; shrink + glass after scroll
+  // Compact-on-scroll, plus reveal-on-scroll-up (adapted from the reference header).
   useEffect(() => {
     if (introActive || !isPortfolioRoute) return;
+
+    let lastY = 0;
     const update = () => {
       const smoother = ScrollSmoother.get();
       const y = smoother ? smoother.scrollTop() : window.scrollY;
-      setScrolled(y > 20);
+
+      setScrolled(y > COMPACT_AT);
+      // Ignore sub-pixel jitter so the shell does not flicker.
+      if (Math.abs(y - lastY) > 4) {
+        setHidden(y > lastY && y > AUTOHIDE_AT);
+        lastY = y;
+      }
     };
+
     update();
+    lastY = ScrollSmoother.get()?.scrollTop() ?? window.scrollY;
     gsap.ticker.add(update);
     window.addEventListener("scroll", update, { passive: true });
     return () => {
@@ -79,6 +98,8 @@ export default function Navbar() {
     pathname.startsWith("/resume")
   )
     return null;
+
+  const parked = hidden && !mobileOpen;
 
   const scrollTo = (href: string) => {
     const id = href.replace("#", "");
@@ -120,94 +141,109 @@ export default function Navbar() {
     <>
       <motion.header
         data-app-navbar="true"
-        initial={{ y: -80, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.6, delay: 0.2, ease: [0.4, 0, 0.2, 1] }}
-        className="fixed top-0 left-0 right-0 z-[70] pointer-events-none"
+        initial={{ y: -90, opacity: 0 }}
+        // The shell can never be parked off-screen while the drawer is open.
+        animate={{ y: parked ? -110 : 0, opacity: parked ? 0 : 1 }}
+        transition={{ type: "spring", stiffness: 260, damping: 30, mass: 0.7 }}
+        className="pointer-events-none fixed inset-x-0 top-0 z-[70] flex justify-center px-3 sm:px-5"
       >
         <div
-          className={`pointer-events-auto mx-auto mt-0 md:mt-2 px-5 md:px-8 flex items-center justify-between transition-all duration-300 ${
+          className={`pointer-events-auto flex w-full items-center justify-between gap-3 rounded-2xl border transition-[max-width,height,padding,background-color,border-color,box-shadow] duration-500 ease-out ${
             scrolled
-              ? "max-w-[76rem] h-14 rounded-2xl glass border border-white/10 shadow-xl shadow-black/35"
-              : "max-w-[88rem] h-16 md:h-20 rounded-none bg-transparent border border-transparent"
+              ? "mt-2 h-14 max-w-[72rem] border-hairline bg-nav-surface px-4 shadow-xl shadow-black/20 backdrop-blur-xl md:px-6"
+              : "mt-4 h-16 max-w-[84rem] border-hairline bg-nav-surface/60 px-4 shadow-lg shadow-black/10 backdrop-blur-md md:h-[4.25rem] md:px-7"
           }`}
         >
           {/* Logo */}
           <button
             onClick={() => scrollTo("#hero")}
-            className="flex items-center gap-2 group"
+            aria-label="Back to top"
+            className="group flex shrink-0 items-center gap-2.5 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
           >
-            <Image
-              src="/miftaul.svg"
-              alt="Logo"
-              width={32}
-              height={32}
-              className="w-8 h-8"
-            />
+            <span className="relative grid h-9 w-9 place-items-center rounded-xl border border-hairline bg-tint-soft transition-all duration-300 group-hover:border-primary/40 group-hover:shadow-[0_0_18px_var(--accent-glow)]">
+              <Image
+                src="/miftaul.svg"
+                alt="Miftaul Islam Shuvro"
+                width={22}
+                height={22}
+                className="h-[22px] w-[22px] transition-transform duration-300 group-hover:scale-110"
+              />
+            </span>
+            <span className="hidden flex-col text-left sm:flex">
+              <span className="text-sm font-semibold leading-none tracking-tight text-foreground transition-colors group-hover:text-primary">
+                Miftaul Islam
+              </span>
+              <span className="mt-1 font-mono text-[9px] uppercase tracking-[0.18em] text-muted-foreground">
+                Full Stack Developer
+              </span>
+            </span>
           </button>
 
           {/* Desktop Nav */}
-          <nav className="hidden md:flex items-center gap-1">
+          <nav className="hidden items-center gap-0.5 md:flex">
             {NAV_LINKS.map((link) => {
               const isActive = activeSection === link.href.replace("#", "");
               return (
                 <button
                   key={link.href}
                   onClick={() => scrollTo(link.href)}
-                  className={`relative px-3 py-1.5 text-sm rounded-lg transition-colors duration-200 ${
-                    isActive
-                      ? "text-white"
-                      : "text-muted-foreground hover:text-white"
+                  aria-current={isActive ? "page" : undefined}
+                  className={`relative rounded-lg px-3 py-1.5 text-sm transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+                    isActive ? "text-foreground" : "text-muted-foreground hover:text-foreground"
                   }`}
                 >
                   {isActive && (
                     <motion.span
                       layoutId="nav-indicator"
-                      className="absolute inset-0 rounded-lg bg-white/8 border border-white/10"
-                      transition={{
-                        type: "spring",
-                        stiffness: 350,
-                        damping: 30,
-                      }}
+                      className="absolute inset-0 rounded-lg border border-hairline bg-tint-strong"
+                      transition={{ type: "spring", stiffness: 380, damping: 32 }}
                     />
                   )}
                   <span className="relative z-10">{link.label}</span>
+                  {/* Underglow, keyed to the same active item */}
+                  {isActive && (
+                    <motion.span
+                      layoutId="nav-indicator-glow"
+                      className="absolute -bottom-px left-1/2 h-px w-8 -translate-x-1/2 bg-primary shadow-[0_0_10px_2px_var(--accent-glow-strong)]"
+                      transition={{ type: "spring", stiffness: 380, damping: 32 }}
+                    />
+                  )}
                 </button>
               );
             })}
           </nav>
 
-          {/* CTA Buttons */}
-          <div className="hidden md:flex items-center gap-2">
+          {/* Actions */}
+          <div className="flex shrink-0 items-center gap-2">
+            <ThemeToggle />
+
             <Link
               href="/resume"
-              className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-muted-foreground hover:text-white border border-white/10 hover:border-white/20 rounded-lg transition-colors"
+              className="hidden items-center gap-1.5 rounded-lg border border-hairline px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:border-hairline-strong hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:flex"
             >
-              <FileText className="w-4 h-4" />
+              <FileText className="h-4 w-4" />
               Resume
             </Link>
             <motion.button
               onClick={() => scrollTo("#contact")}
               whileHover={{ scale: 1.03 }}
               whileTap={{ scale: 0.97 }}
-              className="flex items-center gap-1.5 px-4 py-1.5 text-sm text-white bg-blue-600 hover:bg-blue-500 rounded-lg font-medium transition-colors shadow-lg shadow-blue-500/20"
+              className="hidden items-center gap-1.5 rounded-lg bg-primary px-4 py-1.5 text-sm font-medium text-primary-foreground shadow-lg shadow-primary/20 transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background md:flex"
             >
-              <PencilLine className="w-4 h-4" />
+              <PencilLine className="h-4 w-4" />
               Hire Me
             </motion.button>
-          </div>
 
-          {/* Mobile Hamburger */}
-          <button
-            onClick={() => setMobileOpen((p) => !p)}
-            className="md:hidden p-2 rounded-lg text-muted-foreground hover:text-white hover:bg-white/10 transition-colors"
-          >
-            {mobileOpen ? (
-              <X className="w-5 h-5" />
-            ) : (
-              <Menu className="w-5 h-5" />
-            )}
-          </button>
+            {/* Mobile Hamburger */}
+            <button
+              onClick={() => setMobileOpen((p) => !p)}
+              aria-label={mobileOpen ? "Close menu" : "Open menu"}
+              aria-expanded={mobileOpen}
+              className="rounded-lg p-2 text-muted-foreground transition-colors hover:bg-tint-strong hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:hidden"
+            >
+              {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </button>
+          </div>
         </div>
       </motion.header>
 
@@ -216,20 +252,20 @@ export default function Navbar() {
         {mobileOpen && (
           <>
             <motion.div
-              className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm md:hidden"
+              className="fixed inset-0 z-40 bg-background/70 backdrop-blur-sm md:hidden"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setMobileOpen(false)}
             />
             <motion.div
-              className="fixed top-16 right-0 bottom-0 z-40 w-72 bg-card border-l border-white/10 md:hidden flex flex-col"
+              className="fixed bottom-0 right-0 top-20 z-40 flex w-72 flex-col rounded-l-3xl border-y border-l border-hairline bg-card/95 backdrop-blur-xl md:hidden"
               initial={{ x: "100%" }}
               animate={{ x: 0 }}
               exit={{ x: "100%" }}
-              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+              transition={{ type: "spring", stiffness: 300, damping: 32 }}
             >
-              <nav className="flex-1 px-6 py-8 flex flex-col gap-2">
+              <nav className="flex flex-1 flex-col gap-2 px-6 py-8">
                 {NAV_LINKS.map((link, i) => {
                   const isActive = activeSection === link.href.replace("#", "");
                   return (
@@ -239,10 +275,10 @@ export default function Navbar() {
                       initial={{ x: 30, opacity: 0 }}
                       animate={{ x: 0, opacity: 1 }}
                       transition={{ delay: i * 0.06, duration: 0.3 }}
-                      className={`text-left px-4 py-3 rounded-xl text-base transition-colors ${
+                      className={`rounded-xl px-4 py-3 text-left text-base transition-colors ${
                         isActive
-                          ? "text-white bg-white/8 border border-white/10"
-                          : "text-muted-foreground hover:text-white hover:bg-white/5"
+                          ? "border border-hairline bg-tint-strong text-foreground"
+                          : "text-muted-foreground hover:bg-tint-soft hover:text-foreground"
                       }`}
                     >
                       {link.label}
@@ -250,13 +286,13 @@ export default function Navbar() {
                   );
                 })}
               </nav>
-              <div className="px-6 pb-8 flex flex-col gap-3">
+              <div className="flex flex-col gap-3 px-6 pb-8">
                 <Link
                   href="/resume"
                   onClick={() => setMobileOpen(false)}
-                  className="flex items-center justify-center gap-2 w-full py-2.5 text-sm text-muted-foreground border border-white/10 rounded-xl hover:text-white hover:border-white/20 transition-colors"
+                  className="flex w-full items-center justify-center gap-2 rounded-xl border border-hairline py-2.5 text-sm text-muted-foreground transition-colors hover:border-hairline-strong hover:text-foreground"
                 >
-                  <FileText className="w-4 h-4" />
+                  <FileText className="h-4 w-4" />
                   Resume
                 </Link>
                 <button
@@ -264,9 +300,9 @@ export default function Navbar() {
                     scrollTo("#contact");
                     setMobileOpen(false);
                   }}
-                  className="flex items-center justify-center gap-2 w-full py-2.5 text-sm text-white bg-blue-600 hover:bg-blue-500 rounded-xl font-medium transition-colors"
+                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-2.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
                 >
-                  <PencilLine className="w-4 h-4" />
+                  <PencilLine className="h-4 w-4" />
                   Hire Me
                 </button>
               </div>

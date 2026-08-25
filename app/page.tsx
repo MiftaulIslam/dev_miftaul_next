@@ -61,14 +61,14 @@ export default function Home() {
 
   if (!introDone || showIntro) {
     return (
-      <main className="relative min-h-screen">
+      <main className="portfolio-surface relative min-h-screen">
         <IntroLoader onComplete={handleIntroComplete} />
       </main>
     );
   }
 
   return (
-    <main className="relative">
+    <main className="portfolio-surface relative">
       <motion.div
         className="relative"
         initial={{ opacity: 0 }}

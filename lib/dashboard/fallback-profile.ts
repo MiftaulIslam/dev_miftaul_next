@@ -11,7 +11,7 @@ export const fallbackProfile: PortfolioSettings = {
     "I build high-performance full stack applications from elegant React interfaces to scalable Node.js / NestJS backends.",
   primaryAvatar: "/ariyan_2.jpg",
   subAvatar: "/ariyan.webp",
-  bannerImage: "/hero-bg-2.png",
+  bannerImage: "/hero-bg-2.webp",
   location: "Dhaka, Bangladesh",
   email: "miftaulislam005@gmail.com",
   phone: "+880 1XXXXXXXXX",

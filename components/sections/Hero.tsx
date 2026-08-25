@@ -1,31 +1,21 @@
 "use client";
 
 import { useRef, useEffect, useState, type ComponentType } from "react";
-import dynamic from "next/dynamic";
 import Image from "next/image";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { ArrowDown, ExternalLink, Globe, Mail } from "lucide-react";
+import { ArrowDown, ArrowUpRight, Globe, Mail } from "lucide-react";
+
 import { GitHubIcon, LinkedInIcon } from "@/components/ui/SocialIcons";
 import ScrollHighlightText from "@/components/ui/ScrollHighlightText";
+import HeroAmbience from "@/components/hero/HeroAmbience";
+import DeveloperIdCard from "@/components/hero/DeveloperIdCard";
 import type { PortfolioSettings } from "@/lib/dashboard/types";
 import { useReducedMotion } from "@/lib/useReducedMotion";
+import { usePointerField } from "@/lib/usePointerField";
 
 gsap.registerPlugin(ScrollTrigger);
-
-const HERO_SPLINE_SCENE =
-  "https://prod.spline.design/BUcAtsyRRFQOgBGG/scene.splinecode";
-
-const SplineScene = dynamic(() => import("@splinetool/react-spline").then((mod) => mod.default), {
-  ssr: false,
-  loading: () => (
-    <div
-      className="absolute inset-0 flex items-center justify-center rounded-[inherit] bg-blue-500/5 ring-1 ring-inset ring-blue-500/10"
-      aria-hidden
-    />
-  ),
-});
 
 const DEFAULT_ROLES = ["Full Stack Developer", "Software Engineer", "Solution Architect"];
 
@@ -54,7 +44,7 @@ function splitName(fullName: string) {
 }
 
 export default function Hero({ profile }: HeroProps) {
-  const sectionRef = useRef<HTMLDivElement>(null);
+  const sectionRef = useRef<HTMLElement>(null);
   const bgLayerRef = useRef<HTMLDivElement>(null);
   const contentLeftRef = useRef<HTMLDivElement>(null);
   const headingRef = useRef<HTMLDivElement>(null);
@@ -64,6 +54,7 @@ export default function Hero({ profile }: HeroProps) {
   const cardRef = useRef<HTMLDivElement>(null);
 
   const reduced = useReducedMotion();
+  const pointer = usePointerField(sectionRef);
   const [roleIndex, setRoleIndex] = useState(0);
 
   const roles = profile.designations.length ? profile.designations : DEFAULT_ROLES;
@@ -144,12 +135,19 @@ export default function Hero({ profile }: HeroProps) {
         );
       }
 
+      // The badge drops in on its lanyard rather than fading up.
       if (cardRef.current) {
         tl.fromTo(
           cardRef.current,
-          { scale: 0.96, opacity: 0 },
-          { scale: 1, opacity: 1, duration: 0.8, ease: "power2.out" },
-          0.3,
+          { y: -46, opacity: 0, filter: "blur(10px)" },
+          {
+            y: 0,
+            opacity: 1,
+            filter: "blur(0px)",
+            duration: 1.1,
+            ease: "power3.out",
+          },
+          0.35,
         );
       }
 
@@ -203,8 +201,8 @@ export default function Hero({ profile }: HeroProps) {
         if (cardRef.current) {
           gsap.to(cardRef.current, {
             y: 95,
-            x: 42,
-            scale: 1.08,
+            x: 26,
+            scale: 1.05,
             ease: "none",
             scrollTrigger: {
               trigger: sectionRef.current,
@@ -250,58 +248,58 @@ export default function Hero({ profile }: HeroProps) {
     { scope: sectionRef },
   );
 
-  const scrollToAbout = () => {
-    document.getElementById("about")?.scrollIntoView({ behavior: "smooth" });
+  const scrollToId = (id: string) => {
+    document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
   };
 
   return (
     <section
       id="hero"
       ref={sectionRef}
-      className="relative isolate flex min-h-screen w-full min-w-0 items-center overflow-x-clip bg-transparent"
+      className="relative isolate flex min-h-svh w-full min-w-0 items-center overflow-x-clip bg-transparent"
     >
-      <div ref={bgLayerRef} className="absolute inset-0 pointer-events-none overflow-hidden">
-        <Image
-          src={profile.bannerImage || "/hero-bg-2.png"}
-          alt="Hero background"
-          fill
-          priority
-          className="object-cover opacity-20"
-        />
+      <div ref={bgLayerRef} className="pointer-events-none absolute inset-0 overflow-hidden">
+        {/* Existing banner art, kept as ambient texture only: heavily blurred and
+            dimmed so it reads as depth rather than a legible screenshot, and
+            hidden on the light surface where it reads as grime. */}
         <div
-          className="absolute top-1/4 left-1/4 w-96 h-96 rounded-full opacity-20 blur-3xl animate-drift"
-          style={{ background: "radial-gradient(circle, #3b82f6 0%, transparent 70%)" }}
-        />
-        <div
-          className="absolute bottom-1/4 right-1/4 w-64 h-64 rounded-full opacity-10 blur-3xl"
-          style={{
-            background: "radial-gradient(circle, #8b5cf6 0%, transparent 70%)",
-            animation: "drift 16s ease-in-out infinite reverse",
-          }}
-        />
-        <div className="absolute inset-0 bg-grid opacity-30" />
+          className="absolute -inset-8 hidden opacity-[0.09] blur-2xl saturate-150 dark:block"
+          aria-hidden
+        >
+          <Image
+            src={profile.bannerImage || "/hero-bg-2.webp"}
+            alt=""
+            fill
+            sizes="100vw"
+            className="object-cover"
+          />
+        </div>
+        <HeroAmbience pointer={pointer} />
       </div>
 
-      <div className="relative z-10 mx-auto grid min-h-screen w-full min-w-0 max-w-[88rem] grid-cols-1 items-center gap-12 px-5 pt-20 pb-16 md:grid-cols-[minmax(0,1fr)_minmax(0,1.22fr)] md:px-10 lg:gap-24">
+      <div className="relative z-10 mx-auto grid w-full min-w-0 max-w-[88rem] grid-cols-1 items-center gap-12 px-5 pb-16 pt-24 md:px-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,26rem)] lg:gap-20 lg:pb-16 lg:pt-24">
         <div ref={contentLeftRef} className="flex min-w-0 flex-col gap-6">
-          <div className="hero-greeting opacity-0 inline-flex items-center gap-2 w-fit">
-            <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse-glow" />
-            <span className="text-xs font-mono text-muted-foreground bg-white/5 border border-white/10 px-3 py-1 rounded-full tracking-wider">
+          <div className="hero-greeting inline-flex w-fit items-center gap-2 opacity-0">
+            <span className="h-2 w-2 animate-pulse-glow rounded-full bg-emerald-400" />
+            <span className="rounded-full border border-hairline bg-tint-soft px-3 py-1 font-mono text-xs tracking-wider text-muted-foreground">
               &lt;available for work /&gt;
             </span>
           </div>
 
           <div ref={headingRef} className="flex flex-col gap-1 overflow-hidden">
-            <h1 className="hero-line opacity-0 text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tight text-white leading-[1.05]">
+            <h1 className="hero-line text-5xl font-bold leading-[1.05] tracking-tight text-foreground opacity-0 sm:text-6xl lg:text-7xl">
               {nameParts.firstName}
             </h1>
-            <h1 className="hero-line opacity-0 text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tight leading-[1.05]">
-              <span className="text-blue-400">{nameParts.highlighted}</span> {nameParts.remainder}
+            <h1 className="hero-line text-5xl font-bold leading-[1.05] tracking-tight text-foreground opacity-0 sm:text-6xl lg:text-7xl">
+              <span className="text-primary">{nameParts.highlighted}</span> {nameParts.remainder}
             </h1>
           </div>
 
           <div className="h-7 overflow-hidden">
-            <span ref={roleRef} className="block text-lg md:text-xl font-medium text-muted-foreground">
+            <span
+              ref={roleRef}
+              className="block text-lg font-medium text-muted-foreground md:text-xl"
+            >
               {safeRole}
             </span>
           </div>
@@ -309,21 +307,26 @@ export default function Hero({ profile }: HeroProps) {
           <ScrollHighlightText
             as="p"
             text={profile.shortSummary}
-            className="hero-summary opacity-0 text-muted-foreground text-base md:text-lg max-w-lg leading-relaxed"
+            className="hero-summary max-w-lg text-base leading-relaxed text-muted-foreground opacity-0 md:text-lg"
             triggerStart="top 82%"
           />
 
           <div ref={ctaRef} className="flex flex-wrap gap-3">
             <button
-              onClick={() => document.getElementById("projects")?.scrollIntoView({ behavior: "smooth" })}
-              className="opacity-0 flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white font-medium rounded-xl transition-all duration-200 shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 hover:-translate-y-0.5"
+              onClick={() => scrollToId("projects")}
+              className="group relative flex items-center gap-2 overflow-hidden rounded-xl bg-primary px-6 py-3 font-medium text-primary-foreground opacity-0 shadow-lg shadow-primary/25 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-primary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
             >
-              View Projects
-              <ExternalLink className="w-4 h-4" />
+              {/* Sheen sweep on hover */}
+              <span
+                aria-hidden
+                className="pointer-events-none absolute inset-y-0 -left-full w-1/2 skew-x-[-20deg] bg-white/25 transition-[left] duration-700 ease-out group-hover:left-[150%] motion-reduce:hidden"
+              />
+              <span className="relative">View Projects</span>
+              <ArrowUpRight className="relative h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
             </button>
             <button
-              onClick={scrollToAbout}
-              className="opacity-0 flex items-center gap-2 px-6 py-3 text-white border border-white/15 hover:border-white/30 rounded-xl transition-all duration-200 hover:-translate-y-0.5 backdrop-blur"
+              onClick={() => scrollToId("about")}
+              className="glass flex items-center gap-2 rounded-xl px-6 py-3 text-foreground opacity-0 transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
             >
               About Me
             </button>
@@ -340,65 +343,38 @@ export default function Hero({ profile }: HeroProps) {
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label={social.iconName}
-                  className="opacity-0 w-10 h-10 rounded-xl flex items-center justify-center text-muted-foreground hover:text-white border border-white/10 hover:border-blue-500/50 hover:bg-blue-500/10 transition-all duration-200"
+                  className="flex h-10 w-10 items-center justify-center rounded-xl border border-hairline text-muted-foreground opacity-0 transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/50 hover:bg-primary/10 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                 >
-                  <Icon className="w-4 h-4" />
+                  <Icon className="h-4 w-4" />
                 </a>
               );
             })}
-            <div className="h-px flex-1 max-w-16 bg-linear-to-r from-white/10 to-transparent" />
+            <div className="h-px max-w-16 flex-1 bg-linear-to-r from-hairline-strong to-transparent" />
           </div>
         </div>
 
         <div
           ref={cardRef}
-          className="relative hidden min-w-0 items-center justify-center overflow-visible opacity-0 md:flex md:justify-end lg:pr-2"
+          className="relative flex min-w-0 items-center justify-center opacity-0 lg:justify-end"
         >
+          {/* Restrained halo behind the badge */}
           <div
-            className="absolute w-72 h-72 rounded-full opacity-20 blur-2xl"
-            style={{ background: "radial-gradient(circle, #3b82f6, transparent 70%)" }}
+            aria-hidden
+            className="pointer-events-none absolute h-72 w-72 rounded-full blur-3xl"
+            style={{ background: "radial-gradient(circle, var(--hero-halo) 0%, transparent 70%)" }}
           />
-
-          <div className="hero-orbit-frame relative w-[19rem] h-[19rem] md:w-[24rem] md:h-[24rem] lg:w-[28rem] lg:h-[28rem] overflow-visible">
-            <div
-              className="absolute left-1/2 top-[55%] z-0 h-[145%] w-[145%] -translate-x-1/2 -translate-y-1/2 md:h-[150%] md:w-[150%]"
-              role="img"
-              aria-label="Interactive 3D robot scene"
-            >
-              <SplineScene scene={HERO_SPLINE_SCENE} className="size-full min-h-[20rem] md:min-h-[26rem]" />
-            </div>
-
-            <div className="hero-orbit-ring pointer-events-none absolute inset-0 z-10 rounded-full border border-blue-500/20 animate-spin-slow" />
-            <div
-              className="hero-orbit-ring pointer-events-none absolute inset-2 z-10 rounded-full border border-blue-500/10"
-              style={{ animation: "spin-slow 20s linear infinite reverse" }}
-            />
-          </div>
-
-          <div className="hero-floating-chip absolute -top-4 -right-4 z-20 md:right-0 glass border border-white/10 rounded-xl px-3 py-2 animate-float" style={{ animationDelay: "0.5s" }}>
-            <p className="text-[10px] text-muted-foreground font-mono">experience</p>
-            <p className="text-white font-bold text-sm">{profile.yearsOfExperience}+ Years</p>
-          </div>
-          <div className="hero-floating-chip absolute -bottom-4 -left-4 z-20 md:left-0 glass border border-white/10 rounded-xl px-3 py-2 animate-float" style={{ animationDelay: "1.2s" }}>
-            <p className="text-[10px] text-muted-foreground font-mono">projects</p>
-            <p className="text-white font-bold text-sm">{profile.totalProjects}+ Shipped</p>
-          </div>
-          <div className="hero-floating-chip absolute top-1/2 right-0 z-20 -translate-y-1/2 glass border border-green-500/20 rounded-xl px-3 py-2 animate-float" style={{ animationDelay: "0.9s" }}>
-            <div className="flex items-center gap-1.5">
-              <div className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
-              <p className="text-green-400 font-semibold text-xs">{profile.availability}</p>
-            </div>
-          </div>
+          <DeveloperIdCard profile={profile} pointer={pointer} className="relative" />
         </div>
       </div>
 
       <button
-        onClick={scrollToAbout}
-        className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-muted-foreground hover:text-white transition-colors group"
+        onClick={() => scrollToId("about")}
+        aria-label="Scroll to about section"
+        className="group absolute bottom-6 left-1/2 hidden -translate-x-1/2 flex-col items-center gap-2 text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background lg:flex"
       >
-        <span className="text-xs font-mono tracking-widest uppercase">scroll</span>
-        <div className="w-px h-8 bg-linear-to-b from-muted-foreground to-transparent group-hover:from-white transition-colors" />
-        <ArrowDown className="w-3 h-3 animate-bounce" />
+        <span className="font-mono text-xs uppercase tracking-widest">scroll</span>
+        <div className="h-8 w-px bg-linear-to-b from-muted-foreground to-transparent transition-colors group-hover:from-foreground" />
+        <ArrowDown className="h-3 w-3 animate-bounce" />
       </button>
     </section>
   );

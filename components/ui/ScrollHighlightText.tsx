@@ -6,6 +6,7 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 import { useReducedMotion } from "@/lib/useReducedMotion";
+import { useTheme } from "@/lib/theme";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -73,6 +74,8 @@ export default function ScrollHighlightText({
 }: ScrollHighlightTextProps) {
   const rootRef = useRef<HTMLElement>(null);
   const reduced = useReducedMotion();
+  // The tween bakes colours into inline styles, so it must re-run on theme change.
+  const { theme } = useTheme();
   const segments = useMemo(() => parseMarkedText(text), [text]);
 
   useGSAP(
@@ -84,41 +87,59 @@ export default function ScrollHighlightText({
 
       if (!white.length && !blue.length) return;
 
+      // The tween writes `color` inline, so CSS cannot re-theme it afterwards.
+      // Read the endpoints from tokens instead; the dark values are unchanged.
+      const tokens = getComputedStyle(document.documentElement);
+      const token = (name: string, fallback: string) =>
+        tokens.getPropertyValue(name).trim() || fallback;
+
       const commonTrigger = {
         trigger: rootRef.current,
         start: triggerStart,
         toggleActions: "play none none reverse",
       };
 
-      gsap.fromTo(
-        white,
-        { backgroundSize: "0% 100%", color: "#9fb0c7", textShadow: "0 0 0 rgba(255,255,255,0)" },
-        {
-          backgroundSize: "100% 100%",
-          color: "#f8fafc",
-          textShadow: "0 0 12px rgba(255,255,255,0.22)",
-          duration: 0.45,
-          stagger: 0.07,
-          ease: "power2.out",
-          scrollTrigger: commonTrigger,
-        },
-      );
+      if (white.length) {
+        gsap.fromTo(
+          white,
+          {
+            backgroundSize: "0% 100%",
+            color: token("--sh-ink-from", "#9fb0c7"),
+            textShadow: "0 0 0 rgba(255,255,255,0)",
+          },
+          {
+            backgroundSize: "100% 100%",
+            color: token("--sh-ink-to", "#f8fafc"),
+            textShadow: `0 0 12px ${token("--sh-ink-shadow", "rgba(255,255,255,0.22)")}`,
+            duration: 0.45,
+            stagger: 0.07,
+            ease: "power2.out",
+            scrollTrigger: commonTrigger,
+          },
+        );
+      }
 
-      gsap.fromTo(
-        blue,
-        { backgroundSize: "0% 100%", color: "#6f829d", textShadow: "0 0 0 rgba(96,165,250,0)" },
-        {
-          backgroundSize: "100% 100%",
-          color: "#93c5fd",
-          textShadow: "0 0 14px rgba(96,165,250,0.35)",
-          duration: 0.5,
-          stagger: 0.08,
-          ease: "power2.out",
-          scrollTrigger: commonTrigger,
-        },
-      );
+      if (blue.length) {
+        gsap.fromTo(
+          blue,
+          {
+            backgroundSize: "0% 100%",
+            color: token("--sh-blue-from", "#6f829d"),
+            textShadow: "0 0 0 rgba(96,165,250,0)",
+          },
+          {
+            backgroundSize: "100% 100%",
+            color: token("--sh-blue-to", "#93c5fd"),
+            textShadow: `0 0 14px ${token("--sh-blue-shadow", "rgba(96,165,250,0.35)")}`,
+            duration: 0.5,
+            stagger: 0.08,
+            ease: "power2.out",
+            scrollTrigger: commonTrigger,
+          },
+        );
+      }
     },
-    { scope: rootRef, dependencies: [segments, reduced, triggerStart] },
+    { scope: rootRef, dependencies: [segments, reduced, triggerStart, theme] },
   );
 
   const rendered: ReactNode[] = segments.map((segment, index) => {
@@ -135,13 +156,13 @@ export default function ScrollHighlightText({
         ? segment.tone === "blue"
           ? {
               backgroundSize: "100% 100%",
-              color: "#93c5fd",
-              textShadow: "0 0 14px rgba(96,165,250,0.35)",
+              color: "var(--sh-blue-to)",
+              textShadow: "0 0 14px var(--sh-blue-shadow)",
             }
           : {
               backgroundSize: "100% 100%",
-              color: "#f8fafc",
-              textShadow: "0 0 12px rgba(255,255,255,0.22)",
+              color: "var(--sh-ink-to)",
+              textShadow: "0 0 12px var(--sh-ink-shadow)",
             }
         : undefined;
 

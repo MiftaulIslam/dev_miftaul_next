@@ -1,5 +1,8 @@
 @import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap");
 @import "tailwindcss";
+/* Theme is driven by a `.dark` class on <html> (see lib/theme.ts), not by the
+   OS preference, so point Tailwind's `dark:` variant at that class. */
+@custom-variant dark (&:where(.dark, .dark *));
 
 /* Semantic Theme Tokens */
 :root {
@@ -46,13 +49,32 @@
   --sidebar-ring: oklch(0.6 0.18 250);
 
   /* App-specific aliases */
-  --bg-glass: oklch(1 0 0 / 0.04);
-  --border-glass: oklch(1 0 0 / 0.08);
-  --surface-soft: oklch(0.95 0.01 250 / 0.15);
-  --text-subtle: oklch(0.85 0.01 250);
-  --accent-glow: oklch(0.7 0.18 250 / 0.20);
-  --accent-glow-strong: oklch(0.7 0.18 250 / 0.35);
-  --nav-surface: oklch(1 0 0 / 0.95);
+  --bg-glass: oklch(1 0 0 / 0.66);
+  --border-glass: oklch(0.28 0.03 250 / 0.12);
+  --surface-soft: oklch(0.97 0.01 250 / 0.7);
+  --text-subtle: oklch(0.42 0.02 250);
+  --accent-glow: oklch(0.6 0.18 250 / 0.16);
+  --accent-glow-strong: oklch(0.6 0.18 250 / 0.28);
+  --nav-surface: oklch(1 0 0 / 0.85);
+
+  /* Hero / ambience tokens (see components/hero/*) */
+  --grid-line: oklch(0.28 0.03 250 / 0.07);
+  --hairline: oklch(0.28 0.03 250 / 0.12);
+  --hairline-strong: oklch(0.28 0.03 250 / 0.2);
+  --tint-soft: oklch(0.28 0.03 250 / 0.04);
+  --tint-strong: oklch(0.28 0.03 250 / 0.08);
+  --hero-halo: oklch(0.62 0.19 255 / 0.3);
+  --hero-halo-alt: oklch(0.6 0.2 300 / 0.18);
+  --hero-spot: oklch(0.62 0.19 255 / 0.16);
+  --card-sheen: oklch(1 0 0 / 0.75);
+
+  /* Scroll-highlight tween endpoints (read by ScrollHighlightText). */
+  --sh-ink-from: #7c8aa0;
+  --sh-ink-to: #1e293b;
+  --sh-ink-shadow: rgba(255, 255, 255, 0);
+  --sh-blue-from: #7d97c4;
+  --sh-blue-to: #1d4ed8;
+  --sh-blue-shadow: rgba(37, 99, 235, 0.18);
 
   --font-display: "Space Grotesk", var(--font-geist-sans), sans-serif;
   --font-body: var(--font-geist-sans), sans-serif;
@@ -109,6 +131,25 @@
   --accent-glow: oklch(0.7 0.18 250 / 0.20);
   --accent-glow-strong: oklch(0.7 0.18 250 / 0.35);
   --nav-surface: oklch(0.16 0.02 250 / 0.95);
+
+  /* Hero / ambience tokens (see components/hero/*) */
+  --grid-line: oklch(1 0 0 / 0.048);
+  --hairline: oklch(1 0 0 / 0.1);
+  --hairline-strong: oklch(1 0 0 / 0.18);
+  --tint-soft: oklch(1 0 0 / 0.04);
+  --tint-strong: oklch(1 0 0 / 0.08);
+  --hero-halo: oklch(0.68 0.19 255 / 0.34);
+  --hero-halo-alt: oklch(0.6 0.2 300 / 0.2);
+  --hero-spot: oklch(0.72 0.18 255 / 0.14);
+  --card-sheen: oklch(1 0 0 / 0.14);
+
+  /* Scroll-highlight tween endpoints (read by ScrollHighlightText). */
+  --sh-ink-from: #9fb0c7;
+  --sh-ink-to: #f8fafc;
+  --sh-ink-shadow: rgba(255, 255, 255, 0.22);
+  --sh-blue-from: #6f829d;
+  --sh-blue-to: #93c5fd;
+  --sh-blue-shadow: rgba(96, 165, 250, 0.35);
 }
 
 @theme inline {
@@ -148,6 +189,10 @@
   --color-sidebar-ring: var(--sidebar-ring);
   --color-text-subtle: var(--text-subtle);
   --color-nav-surface: var(--nav-surface);
+  --color-hairline: var(--hairline);
+  --color-hairline-strong: var(--hairline-strong);
+  --color-tint-soft: var(--tint-soft);
+  --color-tint-strong: var(--tint-strong);
 
   --font-sans: var(--font-geist-sans);
   --radius-sm: calc(var(--radius) * 0.6);
@@ -236,8 +281,8 @@ p {
 
 /* Background grid / noise */
 .bg-grid {
-  background-image: linear-gradient(oklch(1 0 0 / 0.02) 1px, transparent 1px),
-                    linear-gradient(90deg, oklch(1 0 0 / 0.02) 1px, transparent 1px);
+  background-image: linear-gradient(var(--grid-line) 1px, transparent 1px),
+                    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
   background-size: 64px 64px;
 }
 
@@ -270,13 +315,31 @@ p {
 .scroll-highlight-token-white {
   background-image: linear-gradient(
     90deg,
+    oklch(0.28 0.03 250 / 0.14) 0%,
+    oklch(0.28 0.03 250 / 0.07) 55%,
+    oklch(0.28 0.03 250 / 0.02) 100%
+  );
+}
+
+.scroll-highlight-token-blue {
+  background-image: linear-gradient(
+    90deg,
+    oklch(0.6 0.18 250 / 0.2) 0%,
+    oklch(0.6 0.18 250 / 0.1) 58%,
+    oklch(0.6 0.18 250 / 0.03) 100%
+  );
+}
+
+.dark .scroll-highlight-token-white {
+  background-image: linear-gradient(
+    90deg,
     rgba(248, 250, 252, 0.26) 0%,
     rgba(148, 163, 184, 0.12) 55%,
     rgba(2, 6, 23, 0.28) 100%
   );
 }
 
-.scroll-highlight-token-blue {
+.dark .scroll-highlight-token-blue {
   background-image: linear-gradient(
     90deg,
     rgba(96, 165, 250, 0.28) 0%,
@@ -371,3 +434,113 @@ p {
   }
 }
 
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Theme transition (View Transitions API)
+
+   ThemeToggle swaps the theme inside `document.startViewTransition`, then
+   animates `::view-transition-new(root)` itself. The default cross-fade is
+   removed here so only that scripted reveal is visible.
+   ───────────────────────────────────────────────────────────────────────────── */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+/* The new snapshot paints over the old one during the reveal. */
+::view-transition-new(root) {
+  z-index: 1;
+}
+::view-transition-old(root) {
+  z-index: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: none !important;
+  }
+
+  .animate-drift,
+  .animate-float,
+  .animate-pulse-glow,
+  .animate-spin-slow {
+    animation: none !important;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Light-theme compatibility layer
+
+   The portfolio sections predate the theme switcher and hardcode `white`
+   utilities for ink, hairlines and tints — correct on the dark surface,
+   invisible on the light one. Rather than rewrite those (out of scope)
+   sections, remap the utilities to theme tokens for the light theme only.
+
+   Scoped to `.portfolio-surface` so /dashboard and /resume are untouched, and
+   left unlayered so it outranks Tailwind's `utilities` layer. Elements that
+   also carry a solid accent background keep real white ink.
+   ───────────────────────────────────────────────────────────────────────────── */
+html:not(.dark) .portfolio-surface :is(.text-white, .text-slate-100, .text-slate-200, .text-slate-300):not([class*="bg-blue"]):not([class*="bg-primary"]):not([class*="bg-gradient"]) {
+  color: var(--foreground);
+}
+
+html:not(.dark) .portfolio-surface .hover\:text-white:hover,
+html:not(.dark) .portfolio-surface .group:hover .group-hover\:text-white {
+  color: var(--foreground);
+}
+
+html:not(.dark) .portfolio-surface .text-white\/95 {
+  color: color-mix(in oklab, var(--foreground) 95%, transparent);
+}
+
+html:not(.dark) .portfolio-surface [class*="border-white/"] {
+  border-color: var(--hairline);
+}
+
+html:not(.dark) .portfolio-surface [class*="hover:border-white/"]:hover {
+  border-color: var(--hairline-strong);
+}
+
+html:not(.dark) .portfolio-surface :is([class*="bg-white/"], [class*="bg-white/["]) {
+  background-color: var(--tint-soft);
+}
+
+html:not(.dark) .portfolio-surface [class*="hover:bg-white/"]:hover {
+  background-color: var(--tint-strong);
+}
+
+html:not(.dark) .portfolio-surface [class*="from-white/"] {
+  --tw-gradient-from: var(--tint-strong);
+}
+
+/* Section headings paint themselves with an inline gradient that ramps from a
+   near-white blue — invisible on the light surface. Re-ramp it here (inline
+   styles need `!important`) rather than editing the shared heading component. */
+html:not(.dark) .portfolio-surface .sh-title {
+  background-image: linear-gradient(
+    95deg,
+    #1e3a8a 0%,
+    #2563eb 30%,
+    #1d4ed8 62%,
+    #0f172a 100%
+  ) !important;
+  filter: drop-shadow(0 0 12px rgba(37, 99, 235, 0.16)) !important;
+}
+
+/* Availability labels use dark-surface greens. */
+html:not(.dark) .portfolio-surface :is(.text-emerald-300, .text-green-400) {
+  color: #047857;
+}
+
+/* Ink sitting on an accent fill stays white in both themes. Needed where the
+   fill comes from a sibling layer rather than the element's own background,
+   which the `text-white` remap above cannot detect. */
+.ink-on-accent {
+  color: #fff;
+}
+.ink-on-accent-soft {
+  color: rgb(255 255 255 / 0.72);
+}
