@@ -1712,3 +1712,47 @@ html:not(.dark) .cols-row-icon img {
     will-change: auto;
   }
 }
+
+/* ---------------------------------------------------------------------------
+   Loading skeletons  (see components/ui/Skeleton.tsx)
+
+   The sweep is a background-position animation over an oversized gradient:
+   composited, no layout, no paint of the element's own box. Both themes get
+   their own base and highlight, because a single translucent white sweep that
+   reads as "shimmer" on a dark surface reads as "smudge" on a light one.
+--------------------------------------------------------------------------- */
+.skeleton-block {
+  --sk-base: oklch(0.92 0.012 250);
+  --sk-shine: oklch(0.97 0.008 250);
+  position: relative;
+  overflow: hidden;
+  background-color: var(--sk-base);
+  background-image: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--sk-shine) 50%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  background-repeat: no-repeat;
+  animation: skeleton-sweep 1.35s ease-in-out infinite;
+}
+
+.dark .skeleton-block {
+  --sk-base: oklch(0.22 0.02 250);
+  --sk-shine: oklch(0.29 0.022 250);
+}
+
+@keyframes skeleton-sweep {
+  0%   { background-position: 150% 0; }
+  100% { background-position: -50% 0; }
+}
+
+/* Reduced motion keeps the shape and drops the sweep. The block still says
+   "content of about this size is coming", which is the part doing the work. */
+@media (prefers-reduced-motion: reduce) {
+  .skeleton-block {
+    animation: none;
+    background-image: none;
+  }
+}

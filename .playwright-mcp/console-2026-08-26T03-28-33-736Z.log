@@ -1,5 +1,0 @@
-[   11796ms] TypeError: e.target.closest is not a function
-    at onKey (http://localhost:9482/skills-explorer/js/gallery/projects.js:1227:68)
-    at eval (eval at <anonymous> (eval at evaluate (:311:30)), <anonymous>:11:10)
-    at async eval (eval at evaluate (:311:30), <anonymous>:4:30)
-    at async <anonymous>:337:30

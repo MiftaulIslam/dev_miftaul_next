@@ -25,6 +25,11 @@ export interface PortfolioSettings {
   detailedSummary: string;
   /** Which homepage build every visitor is served. Chosen in the dashboard. */
   siteVersion: SiteVersion;
+  /**
+   * Whether the first-visit intro animation plays at all. Independent of the
+   * once-per-session rule: this switches the intro off for everyone.
+   */
+  introEnabled: boolean;
   updatedAt: string;
 }
 

@@ -32,6 +32,7 @@ type SettingsFormValues = {
   currentlyFocusedOn: Array<{ value: string }>;
   detailedSummary: string;
   siteVersion: SiteVersion;
+  introEnabled: "on" | "off";
 };
 
 function toFormValues(data: PortfolioSettings): SettingsFormValues {
@@ -57,6 +58,7 @@ function toFormValues(data: PortfolioSettings): SettingsFormValues {
       : [{ value: "" }],
     detailedSummary: data.detailedSummary,
     siteVersion: coerceSiteVersion(data.siteVersion),
+    introEnabled: data.introEnabled === false ? "off" : "on",
   };
 }
 
@@ -83,6 +85,7 @@ function fromFormValues(values: SettingsFormValues) {
       .filter(Boolean),
     detailedSummary: values.detailedSummary.trim(),
     siteVersion: coerceSiteVersion(values.siteVersion),
+    introEnabled: values.introEnabled !== "off",
   };
 }
 
@@ -111,6 +114,7 @@ export default function SettingsPanel() {
       currentlyFocusedOn: [{ value: "" }],
       detailedSummary: "",
       siteVersion: DEFAULT_SITE_VERSION,
+      introEnabled: "on",
     },
   });
 
@@ -161,8 +165,8 @@ export default function SettingsPanel() {
         </p>
       </div>
 
-      <Card title="Site Version" subtitle="Which homepage build the public portfolio serves.">
-        <div className="md:max-w-sm">
+      <Card title="First impression" subtitle="What a visitor meets before any of your content.">
+        <div className="grid gap-4 md:grid-cols-2">
           <Select
             label="Active version"
             hint="Every visitor sees this build. Takes effect as soon as you save."
@@ -170,6 +174,14 @@ export default function SettingsPanel() {
           >
             <option value="v1">v1 — Original</option>
             <option value="v2">v2 — Current</option>
+          </Select>
+          <Select
+            label="Intro animation"
+            hint="Plays once per browser session. Off sends every visitor straight to the page."
+            {...form.register("introEnabled")}
+          >
+            <option value="on">On — play the intro</option>
+            <option value="off">Off — skip straight to the page</option>
           </Select>
         </div>
       </Card>

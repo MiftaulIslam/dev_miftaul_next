@@ -26,6 +26,7 @@ export const fallbackProfile: PortfolioSettings = {
   detailedSummary:
     "I'm a Full Stack Developer with 3+ years of experience crafting high-performance web applications and scalable backend systems.\n\nCurrently building enterprise SaaS at Web Makers LTD while taking on select freelance projects. I care deeply about clean architecture, developer experience, and shipping things that matter to users.",
   siteVersion: DEFAULT_SITE_VERSION,
+  introEnabled: true,
   updatedAt: new Date().toISOString(),
 };
 

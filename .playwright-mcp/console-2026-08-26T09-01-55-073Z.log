@@ -1,4 +1,0 @@
-[     166ms] [INFO] [explorer] 71 concepts across 7 areas. @ http://localhost:3000/skills-explorer/js/main.js:58
-[   12517ms] [INFO] [explorer] 71 concepts across 7 areas. @ http://localhost:3000/skills-explorer/js/main.js:58
-[   21610ms] [WARNING] Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently @ :13
-[   48247ms] [INFO] [explorer] 71 concepts across 7 areas. @ http://localhost:3000/skills-explorer/js/main.js:58

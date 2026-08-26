@@ -19,6 +19,7 @@ import V2Experience from "@/components/sections/v2/V2Experience";
 import V2Contact from "@/components/sections/v2/V2Contact";
 import { markSectionsMounted, resetScrollTop } from "@/lib/navShell";
 import { useSiteVersionState, type PortfolioVersion } from "@/lib/portfolioVersion";
+import { PageSkeleton } from "@/components/ui/Skeleton";
 import { fallbackProfile } from "@/lib/dashboard/fallback-profile";
 import type { PortfolioSettings } from "@/lib/dashboard/types";
 
@@ -72,10 +73,18 @@ export default function Home() {
     return () => cancelAnimationFrame(raf);
   }, [version, sectionsMounted]);
 
-  // Play intro only once per session
+  // Play intro only once per session, and not at all if the dashboard has
+  // switched it off.
+  //
+  // The switch is read from the last known answer in localStorage rather than
+  // waited for, because the real value arrives with the profile fetch below and
+  // waiting would mean either a blank screen or an intro that starts and is then
+  // yanked away. First visit after an admin flips it still plays once; every
+  // visit after that is correct before the first frame.
   useEffect(() => {
     const seen = sessionStorage.getItem("intro-seen");
-    if (!seen) return;
+    const disabled = localStorage.getItem("intro-enabled") === "0";
+    if (!seen && !disabled) return;
     const raf = requestAnimationFrame(() => {
       setShowIntro(false);
       setIntroDone(true);
@@ -112,6 +121,22 @@ export default function Home() {
     void loadProfile();
   }, []);
 
+  // The authoritative answer. Cache it for the next load, and if the intro is
+  // off, dismiss it now rather than making the reader sit through an animation
+  // the owner has already turned off.
+  useEffect(() => {
+    if (typeof profile.introEnabled !== "boolean") return;
+    localStorage.setItem("intro-enabled", profile.introEnabled ? "1" : "0");
+    if (profile.introEnabled || introDone) return;
+    // Deferred a frame, the same way the session check above is: setting state
+    // straight from an effect body cascades renders.
+    const raf = requestAnimationFrame(() => {
+      setShowIntro(false);
+      setIntroDone(true);
+    });
+    return () => cancelAnimationFrame(raf);
+  }, [profile.introEnabled, introDone]);
+
   if (!introDone || showIntro) {
     return (
       <main className="portfolio-surface relative min-h-screen">
@@ -120,12 +145,17 @@ export default function Home() {
     );
   }
 
-  // Intro over but the server has not said which build to mount yet — a gap only
-  // a returning visitor sees, since the intro plays once per session and the
-  // config lookup settles long before it ends. An empty surface rather than a
-  // second loader: restarting the intro animation here would read as a stutter.
+  // Intro over but the server has not said which build to mount yet. The intro
+  // plays once per session, so every refresh and every return visit lands here
+  // instead of on the loader — which is precisely when this gap is longest, on
+  // a cold serverless start. It used to render an empty surface; a blank screen
+  // is indistinguishable from a broken one.
+  //
+  // A skeleton rather than the intro animation again: replaying a finished
+  // intro reads as a stutter, and a skeleton shaped like the shell means the
+  // real content fills in rather than re-laying-out.
   if (!sectionsMounted) {
-    return <main className="portfolio-surface relative min-h-screen" />;
+    return <PageSkeleton />;
   }
 
   return (

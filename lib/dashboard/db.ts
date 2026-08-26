@@ -83,6 +83,9 @@ function mapSettings(row: Row): PortfolioSettings {
     currentlyFocusedOn: parseJsonArray<string>(row.currently_focused_on),
     detailedSummary: parseString(row.detailed_summary, fallbackProfile.detailedSummary),
     siteVersion: coerceSiteVersion(row.site_version),
+    // Tolerates the column not existing yet: an undefined value falls back
+    // to the shipped default rather than reading as false.
+    introEnabled: row.intro_enabled == null ? fallbackProfile.introEnabled : Boolean(row.intro_enabled),
     updatedAt: toIsoDate(row.updated_at),
   };
 }
@@ -230,6 +233,7 @@ export async function upsertPortfolioSettings(input: PortfolioSettingsInput) {
       currently_focused_on,
       detailed_summary,
       site_version,
+      intro_enabled,
       updated_at
     )
     VALUES (
@@ -251,6 +255,7 @@ export async function upsertPortfolioSettings(input: PortfolioSettingsInput) {
       ${JSON.stringify(input.currentlyFocusedOn)}::jsonb,
       ${input.detailedSummary},
       ${coerceSiteVersion(input.siteVersion)},
+      ${input.introEnabled !== false},
       NOW()
     )
     ON CONFLICT (id)
@@ -272,6 +277,7 @@ export async function upsertPortfolioSettings(input: PortfolioSettingsInput) {
       currently_focused_on = EXCLUDED.currently_focused_on,
       detailed_summary = EXCLUDED.detailed_summary,
       site_version = EXCLUDED.site_version,
+      intro_enabled = EXCLUDED.intro_enabled,
       updated_at = NOW()
     RETURNING *
   `;
