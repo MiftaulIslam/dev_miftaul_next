@@ -1,0 +1,3288 @@
+/* ============================================================================
+   AREA STYLES: EXPERIENCE
+   ----------------------------------------------------------------------------
+   Five page-level directions for a career history. Every selector below starts
+   from one of the five concept roots, all prefixed `experience-`. Nothing here
+   styles a bare element or a shell class.
+
+   THE SHARED RULES
+   ----------------
+   - One radius for everything: var(--r) = 2px. The only round things are dots.
+   - Mono is for dates, durations, indices and measurements. Never for prose.
+   - Anything numeric that sits in a column carries `font-variant-numeric:
+     tabular-nums`, so a five-row date column never shifts by a pixel.
+   - The signature hue lives in --c-accent, set on the root by the concept's
+     own JS along with --c-line / --c-mid / --c-soft / --c-wash. Nothing here
+     hardcodes a hex for an accent.
+   - Each root is `position: absolute; inset: 0` because the stage mount is,
+     and each root owns its own overflow. A page concept that overflows the
+     stage silently is broken, so the scrolling surfaces are explicit.
+   ========================================================================== */
+
+/* ==========================================================================
+   SHARED ROOT
+   ========================================================================== */
+.experience-overlap,
+.experience-altitude,
+.experience-tenure,
+.experience-dossier,
+.experience-ledger {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: var(--void);
+  color: var(--ink);
+
+  /* one inset token for the whole area, so five concepts cannot drift */
+  --pad: clamp(1.125rem, 3.4vw, 3.25rem);
+  /* clearance for the shell hint strip, which is absolutely positioned
+     against these roots and would otherwise land on top of a bottom rail */
+  --hint: 3.25rem;
+
+  /* The shell ink ramp only has two steps that clear 4.5:1 on --void:
+     --ink at 16.9:1 and --ink-2 at 7.4:1. --ink-3 lands at 3.0:1 and --ink-4
+     at 1.6:1, which are fine for a hairline and not fine for a 10px date. So
+     this area adds one more legible step at 5.0:1 and uses it for every label
+     and annotation that would otherwise have reached for --ink-3. Three
+     readable levels instead of two, and nothing informational below AA. */
+  --x-quiet: var(--ink-3);
+}
+
+/* ---------------------------------------------------------------- headings */
+.experience-overlap__title,
+.experience-altitude__title,
+.experience-dossier__title,
+.experience-ledger__title {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: clamp(1.5rem, 3.1vw, 2.5rem);
+  line-height: 0.98;
+  letter-spacing: -0.035em;
+  text-wrap: balance;
+  color: var(--ink);
+}
+
+.experience-overlap__lede,
+.experience-altitude__lede,
+.experience-ledger__lede {
+  margin-top: 0.75rem;
+  max-width: 52ch;
+  color: var(--ink-2);
+  font-size: clamp(0.875rem, 1vw, 0.9375rem);
+  line-height: 1.6;
+}
+
+/* -------------------------------------------------------------- tech chips */
+.experience-overlap__chip,
+.experience-altitude__chip,
+.experience-tenure__chip,
+.experience-dossier__chip {
+  display: inline-block;
+  margin: 0 0.3125rem 0.3125rem 0;
+  padding: 0.1875rem 0.4375rem;
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  font-family: var(--font-mono);
+  font-size: 0.5625rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+  transition: border-color var(--d-ui) var(--ease-out), color var(--d-ui) var(--ease-out);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .experience-overlap__chip:hover,
+  .experience-altitude__chip:hover,
+  .experience-tenure__chip:hover,
+  .experience-dossier__chip:hover {
+    border-color: var(--c-line);
+    color: var(--ink);
+  }
+}
+
+/* ------------------------------------------------- shipped-item list shape */
+.experience-overlap__ship,
+.experience-altitude__ship,
+.experience-tenure__ship,
+.experience-dossier__ship {
+  display: grid;
+  grid-template-columns: 3.75rem minmax(0, 1fr);
+  gap: 0.75rem;
+  padding: 0.5rem 0;
+  color: var(--ink-2);
+  font-size: 0.875rem;
+  line-height: 1.55;
+}
+.experience-overlap__ship + .experience-overlap__ship,
+.experience-altitude__ship + .experience-altitude__ship,
+.experience-tenure__ship + .experience-tenure__ship,
+.experience-dossier__ship + .experience-dossier__ship {
+  border-top: 1px solid var(--line);
+}
+.experience-overlap__ship > i,
+.experience-altitude__ship > i,
+.experience-tenure__ship > i,
+.experience-dossier__ship > i {
+  font-style: normal;
+  font-size: 0.625rem;
+  letter-spacing: 0.06em;
+  color: var(--ink-2);
+  padding-top: 0.1875rem;
+}
+
+/* ==========================================================================
+   PAGE 01  -  OVERLAP
+   --------------------------------------------------------------------------
+   The plot area is the FULL width of .experience-overlap__chart, because the
+   marker's transform is computed from that element's own width. Putting the
+   labels in a left gutter would have shifted the plot origin and desynced the
+   marker from the bars by the width of the gutter. Instead each label is
+   anchored to the start of its own bar, clamped so it can never be pushed off
+   the right edge.
+   ========================================================================== */
+.experience-overlap__wrap {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto auto;
+  gap: clamp(0.875rem, 2vh, 1.5rem);
+  padding: var(--pad) var(--pad) calc(var(--pad) + var(--hint));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.experience-overlap__chart {
+  position: relative;
+  min-height: 15rem;
+  --lh: calc(100% / var(--rows));
+}
+
+/* ------------------------------------------------------------ static grid */
+.experience-overlap__grid {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.experience-overlap__band {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: calc(var(--f0) * 100%);
+  width: calc((var(--f1) - var(--f0)) * 100%);
+  background: var(--c-wash);
+  border-left: 1px solid var(--c-mid);
+  border-right: 1px solid var(--c-mid);
+}
+
+.experience-overlap__year {
+  position: absolute;
+  top: -1.375rem;
+  bottom: 0;
+  left: calc(var(--f) * 100%);
+  width: 1px;
+  background: rgba(236, 236, 239, 0.07);
+}
+.experience-overlap__year em {
+  position: absolute;
+  top: 0;
+  left: 0.375rem;
+  font-style: normal;
+  font-size: 0.625rem;
+  letter-spacing: 0.14em;
+  color: var(--ink-2);
+}
+
+/* ----------------------------------------------------------------- lanes */
+.experience-overlap__lanes {
+  position: absolute;
+  inset: 0;
+}
+
+.experience-overlap__lane {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(var(--lane) * var(--lh));
+  height: var(--lh);
+  display: block;
+  text-align: left;
+  cursor: pointer;
+}
+
+.experience-overlap__label {
+  position: absolute;
+  top: 0;
+  /* anchored to the bar start, but never closer than 13rem to the right edge,
+     so the last role's label always has room to set */
+  left: max(0px, min(calc(var(--f0) * 100%), calc(100% - 13rem)));
+  right: 0;
+  padding-left: 0.625rem;
+  display: grid;
+  gap: 0.0625rem;
+  opacity: 0;
+  transform: translateX(-10px);
+  transition:
+    opacity 420ms var(--ease-out) calc(var(--lane) * 70ms + 120ms),
+    transform 420ms var(--ease-out) calc(var(--lane) * 70ms + 120ms);
+}
+.experience-overlap.is-in .experience-overlap__label { opacity: 1; transform: none; }
+
+.experience-overlap__co {
+  font-weight: 500;
+  font-size: clamp(0.9375rem, 1.1vw, 1.0625rem);
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  transition: color var(--d-ui) var(--ease-out);
+}
+.experience-overlap__ti {
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+.experience-overlap__dt,
+.experience-overlap__du {
+  font-size: 0.625rem;
+  letter-spacing: 0.06em;
+  color: var(--ink-2);
+}
+.experience-overlap__du { color: var(--x-quiet); }
+
+.experience-overlap__track {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0.875rem;
+  height: 12px;
+  display: block;
+}
+.experience-overlap__fill {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: calc(var(--f0) * 100%);
+  width: calc((var(--f1) - var(--f0)) * 100%);
+  border-radius: var(--r);
+  background: var(--c-soft);
+  border: 1px solid var(--c-line);
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition:
+    transform 620ms var(--ease-out) calc(var(--lane) * 70ms),
+    background-color var(--d-ui) var(--ease-out),
+    border-color var(--d-ui) var(--ease-out);
+}
+.experience-overlap.is-in .experience-overlap__fill { transform: scaleX(1); }
+
+.experience-overlap__lane.is-live .experience-overlap__fill {
+  background: var(--c-accent);
+  border-color: var(--c-accent);
+}
+.experience-overlap__lane[aria-pressed="true"] .experience-overlap__co { color: var(--c-accent); }
+
+@media (hover: hover) and (pointer: fine) {
+  .experience-overlap__lane:hover .experience-overlap__co { color: var(--c-accent); }
+  .experience-overlap__lane:hover .experience-overlap__fill { border-color: var(--c-accent); }
+}
+
+/* ---------------------------------------------------------------- marker */
+.experience-overlap__marker {
+  position: absolute;
+  top: -1.375rem;
+  bottom: 0;
+  left: 0;
+  width: 1px;
+  background: rgba(255, 255, 255, 0.7);
+  pointer-events: none;
+  will-change: transform;
+}
+.experience-overlap__marker::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -1px;
+  width: 3px;
+  height: 3px;
+  background: #fff;
+}
+
+/* --------------------------------------------------------------- readout */
+.experience-overlap__read {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.375rem 1rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--line);
+}
+.experience-overlap__read b {
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: var(--ink);
+}
+.experience-overlap__read span {
+  font-size: 0.875rem;
+  color: var(--c-accent);
+}
+.experience-overlap__read em {
+  font-style: normal;
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--x-quiet);
+  margin-left: auto;
+}
+
+/* ---------------------------------------------------------------- detail */
+.experience-overlap__detail {
+  display: none;
+  opacity: 0;
+  transform: translateY(14px);
+  transition: opacity 240ms var(--ease-out), transform 240ms var(--ease-out);
+}
+.experience-overlap__detail.is-on {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+  gap: 0.5rem 2rem;
+  opacity: 1;
+  transform: none;
+  padding-top: 1rem;
+  border-top: 1px solid var(--line);
+}
+.experience-overlap__dtop {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: baseline;
+  gap: 0.875rem;
+}
+.experience-overlap__dtop b {
+  font-size: 1.125rem;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
+.experience-overlap__dtop span {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 0.625rem;
+  letter-spacing: 0.1em;
+  color: var(--ink-2);
+}
+.experience-overlap__dwas {
+  color: var(--ink-2);
+  font-size: 0.875rem;
+  line-height: 1.6;
+  max-width: 46ch;
+}
+.experience-overlap__dships { grid-row: span 2; }
+.experience-overlap__dtech { margin-top: 0.5rem; }
+.experience-overlap__dmeta {
+  grid-column: 1 / -1;
+  font-size: 0.625rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--x-quiet);
+}
+.experience-overlap__dmeta em {
+  font-style: normal;
+  margin-left: 1.25rem;
+  color: var(--c-accent);
+}
+
+/* --------------------------------------------- OVERLAP, vertical (narrow) */
+/* Driven by the class the JS sets from the measured chart width, not by a
+   viewport media query: the stage can be narrower than the window. */
+.experience-overlap.is-vertical .experience-overlap__chart {
+  /* Tall enough that the two concurrent roles, whose starts are only five
+     months apart, cannot collide once their labels are centred on their bars.
+     At 40rem the closest pair clears by 11px; the wrap scrolls, so buying
+     vertical scale here costs nothing. */
+  min-height: 40rem;
+  margin-top: 0.5rem;
+}
+.experience-overlap.is-vertical .experience-overlap__band {
+  left: 0;
+  right: 0;
+  width: auto;
+  top: calc(var(--f0) * 100%);
+  height: calc((var(--f1) - var(--f0)) * 100%);
+  border-left: 0;
+  border-right: 0;
+  border-top: 1px solid var(--c-mid);
+  border-bottom: 1px solid var(--c-mid);
+}
+.experience-overlap.is-vertical .experience-overlap__year {
+  left: 0;
+  right: 0;
+  width: auto;
+  top: calc(var(--f) * 100%);
+  bottom: auto;
+  height: 1px;
+}
+.experience-overlap.is-vertical .experience-overlap__year em {
+  top: -0.75rem;
+  left: 0;
+}
+.experience-overlap.is-vertical .experience-overlap__lane {
+  top: calc(var(--f0) * 100%);
+  height: calc((var(--f1) - var(--f0)) * 100%);
+}
+.experience-overlap.is-vertical .experience-overlap__track {
+  left: calc(2.25rem + var(--tk) * 0.875rem);
+  right: auto;
+  bottom: 0;
+  top: 0;
+  width: 4px;
+  height: auto;
+}
+.experience-overlap.is-vertical .experience-overlap__fill {
+  left: 0;
+  right: 0;
+  width: auto;
+  top: 0;
+  bottom: 0;
+  transform: scaleY(0);
+  transform-origin: top center;
+}
+.experience-overlap.is-vertical.is-in .experience-overlap__fill { transform: scaleY(1); }
+/* Centred on its own bar rather than anchored to its top. Two roles that
+   start five months apart would otherwise sit 25px apart with a 50px label
+   between them; centring spreads them by the difference in their midpoints
+   instead of the difference in their starts. */
+.experience-overlap.is-vertical .experience-overlap__label {
+  left: calc(2.25rem + var(--tracks) * 0.875rem + 0.75rem);
+  right: 0;
+  top: 50%;
+  padding-left: 0;
+  display: block;
+  transform: translateY(calc(-50% + 8px));
+}
+.experience-overlap.is-vertical.is-in .experience-overlap__label { transform: translateY(-50%); }
+/* The title drops out of the visible label to keep it to two lines. It is
+   still in the lane's aria-label and in the detail panel, so nothing is lost. */
+.experience-overlap.is-vertical .experience-overlap__ti { display: none; }
+.experience-overlap.is-vertical .experience-overlap__co {
+  display: block;
+  font-size: 0.875rem;
+  line-height: 1.2;
+  /* Two lines is the budget. A long company name truncates rather than
+     pushing the date line into the next role's label. */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.experience-overlap.is-vertical .experience-overlap__dt,
+.experience-overlap.is-vertical .experience-overlap__du {
+  display: inline;
+  font-size: 0.5625rem;
+  line-height: 1.5;
+  white-space: nowrap;
+}
+.experience-overlap.is-vertical .experience-overlap__du { margin-left: 0.625rem; }
+.experience-overlap.is-vertical .experience-overlap__marker {
+  top: 0;
+  bottom: auto;
+  left: 0;
+  right: 0;
+  width: auto;
+  height: 1px;
+}
+.experience-overlap.is-vertical .experience-overlap__marker::before {
+  top: -1px;
+  left: 0;
+}
+
+/* ==========================================================================
+   PAGE 02  -  ALTITUDE
+   ========================================================================== */
+.experience-altitude__wrap {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  gap: clamp(0.75rem, 1.8vh, 1.25rem);
+  padding: var(--pad) var(--pad) calc(var(--pad) + var(--hint));
+}
+
+.experience-altitude__head { max-width: 44rem; }
+
+.experience-altitude__plot {
+  position: relative;
+  min-height: 0;
+}
+.experience-altitude__canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+/* The reticle replaces the native cursor over the plot, where there is no text
+   to select. Gated on the media query rather than on the shell's `.is-fine`
+   html class, so this selector still starts from a class this area owns. */
+@media (hover: hover) and (pointer: fine) {
+  .experience-altitude__canvas { cursor: none; }
+}
+
+.experience-altitude__read {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.375rem 1.25rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--line);
+}
+.experience-altitude__read b {
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: var(--ink);
+}
+.experience-altitude__rrung {
+  font-size: clamp(1rem, 1.6vw, 1.25rem);
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  color: var(--c-accent);
+}
+.experience-altitude__rrole {
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--x-quiet);
+  margin-left: auto;
+}
+
+.experience-altitude__detail {
+  position: absolute;
+  top: calc(var(--pad) + 5.5rem);
+  right: var(--pad);
+  z-index: 3;
+  width: min(21rem, 42vw);
+  padding: 1rem 1.125rem 1.125rem;
+  border: 1px solid var(--line-2);
+  border-radius: var(--r);
+  background: rgba(16, 16, 21, 0.94);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  opacity: 0;
+  transform: translateX(14px);
+  pointer-events: none;
+  transition: opacity 240ms var(--ease-out), transform 240ms var(--ease-out);
+}
+.experience-altitude__detail.is-on {
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+}
+.experience-altitude__dtop {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding-bottom: 0.625rem;
+  border-bottom: 1px solid var(--line);
+}
+.experience-altitude__dtop b {
+  font-size: 1.0625rem;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
+.experience-altitude__dtop span {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 0.5625rem;
+  letter-spacing: 0.1em;
+  color: var(--ink-2);
+  white-space: nowrap;
+}
+.experience-altitude__drung {
+  display: grid;
+  grid-template-columns: 1.5rem minmax(0, 1fr);
+  gap: 0.125rem 0.5rem;
+  margin: 0.75rem 0;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--c-accent);
+}
+.experience-altitude__drung i {
+  font-style: normal;
+  color: var(--x-quiet);
+}
+.experience-altitude__drung em {
+  grid-column: 2;
+  font-style: normal;
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--ink-2);
+}
+.experience-altitude__dwas {
+  color: var(--ink-2);
+  font-size: 0.8125rem;
+  line-height: 1.55;
+}
+.experience-altitude__dships { margin-top: 0.5rem; }
+.experience-altitude__dships .experience-altitude__ship { font-size: 0.8125rem; }
+.experience-altitude__dtech { margin-top: 0.625rem; }
+
+/* ==========================================================================
+   PAGE 03  -  TENURE
+   --------------------------------------------------------------------------
+   The month field is one repeating gradient, so 79 hairlines cost zero
+   elements, and the lit window is the same gradient clipped to the active
+   role. Because both boxes are identical the gradient phases align exactly,
+   which a transform-based window could never guarantee.
+   ========================================================================== */
+.experience-tenure__wrap {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+.experience-tenure__field {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    90deg,
+    rgba(236, 236, 239, 0.055) 0 1px,
+    transparent 1px calc(100% / 79)
+  );
+}
+.experience-tenure__window {
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    90deg,
+    var(--c-accent) 0 1px,
+    transparent 1px calc(100% / 79)
+  );
+  opacity: 0.34;
+  clip-path: inset(0 calc((1 - var(--f1, 1)) * 100%) 0 calc(var(--f0, 0) * 100%));
+  transition: clip-path 620ms var(--ease-in-out);
+  will-change: clip-path;
+}
+
+/* ---------------------------------------------------------------- frames */
+.experience-tenure__frames {
+  position: absolute;
+  inset: 0;
+}
+.experience-tenure__frame {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  align-content: center;
+  gap: 0.5rem;
+  padding: var(--pad) var(--pad) calc(var(--pad) + 6rem) clamp(1.25rem, 6vw, 7rem);
+  max-width: 54rem;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  /* Frames before the active one rest above; the sibling rule below puts the
+     ones after it below. That is what makes the cut direction-aware without a
+     single line of JavaScript. */
+  transform: translateY(-22px);
+  transition:
+    opacity 260ms var(--ease-out),
+    transform 260ms var(--ease-out),
+    visibility 0s linear 260ms;
+}
+.experience-tenure__frame.is-on ~ .experience-tenure__frame { transform: translateY(22px); }
+.experience-tenure__frame.is-on {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: none;
+  transition:
+    opacity 420ms var(--ease-out),
+    transform 420ms var(--ease-out),
+    visibility 0s;
+}
+.experience-tenure__frame > * {
+  opacity: 0;
+  transition: opacity 300ms var(--ease-out);
+}
+.experience-tenure__frame.is-on > * {
+  opacity: 1;
+  transition: opacity 420ms var(--ease-out) calc(var(--k) * 55ms);
+}
+
+.experience-tenure__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem 1.25rem;
+  font-size: 0.625rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+.experience-tenure__meta em {
+  font-style: normal;
+  color: var(--c-accent);
+}
+.experience-tenure__co {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: clamp(2.25rem, 6.4vw, 5.5rem);
+  line-height: 0.92;
+  letter-spacing: -0.045em;
+  padding-bottom: 0.0625rem;
+  color: var(--ink);
+}
+.experience-tenure__ti {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.5rem 1rem;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+.experience-tenure__ti em {
+  font-style: normal;
+  color: var(--x-quiet);
+}
+.experience-tenure__was {
+  margin-top: 0.375rem;
+  max-width: 46ch;
+  color: var(--ink-2);
+  font-size: clamp(0.9375rem, 1.1vw, 1.0625rem);
+  line-height: 1.6;
+}
+.experience-tenure__ships { margin-top: 0.75rem; }
+.experience-tenure__tech { margin-top: 0.75rem; }
+
+/* ------------------------------------------------------------------ rail */
+.experience-tenure__rail {
+  position: absolute;
+  left: clamp(1.25rem, 6vw, 7rem);
+  right: var(--pad);
+  bottom: calc(var(--pad) + 0.5rem);
+  height: 2.75rem;
+}
+.experience-tenure__railline {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 1px;
+  background: var(--line);
+}
+.experience-tenure__stop {
+  position: absolute;
+  left: calc(var(--f0) * 100%);
+  width: calc((var(--f1) - var(--f0)) * 100%);
+  cursor: pointer;
+}
+/* Roles overlap in time, so their spans overlap on the rail. Splitting the
+   hit area by parity means two overlapping stops are never on the same half
+   and both stay clickable. */
+.experience-tenure__stop:nth-of-type(odd)  { top: 0; bottom: 50%; }
+.experience-tenure__stop:nth-of-type(even) { top: 50%; bottom: 0; }
+.experience-tenure__stop i {
+  position: absolute;
+  left: 0;
+  right: 1px;
+  height: 2px;
+  background: var(--c-mid);
+  transition: height var(--d-ui) var(--ease-out), background-color var(--d-ui) var(--ease-out);
+}
+.experience-tenure__stop:nth-of-type(odd) i  { bottom: 0; }
+.experience-tenure__stop:nth-of-type(even) i { top: 0; }
+.experience-tenure__stop[aria-current="true"] i {
+  height: 4px;
+  background: var(--c-accent);
+}
+@media (hover: hover) and (pointer: fine) {
+  .experience-tenure__stop:hover i { background: var(--c-line); }
+}
+.experience-tenure__railends {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(50% + 0.75rem);
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.5625rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--x-quiet);
+  pointer-events: none;
+}
+.experience-tenure__railends em { font-style: normal; }
+
+/* ------------------------------------------------------------------- nav */
+.experience-tenure__nav {
+  position: absolute;
+  right: var(--pad);
+  top: var(--pad);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.experience-tenure__count {
+  font-size: 0.625rem;
+  letter-spacing: 0.2em;
+  color: var(--ink-2);
+  min-width: 3.5rem;
+  text-align: center;
+}
+
+/* ==========================================================================
+   PAGE 04  -  DOSSIER
+   --------------------------------------------------------------------------
+   A document on a 24px baseline. Almost nothing here moves, and that is the
+   point: the only transition is the index mark travelling between entries.
+   ========================================================================== */
+.experience-dossier {
+  display: grid;
+  grid-template-columns: minmax(11rem, 15rem) minmax(0, 1fr);
+  --base: 24px;
+  --irow: 2.75rem;
+}
+
+.experience-dossier__index {
+  position: relative;
+  padding: var(--pad) 1.25rem var(--pad) var(--pad);
+  border-right: 1px solid var(--line);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.experience-dossier__mark {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 2px;
+  height: var(--irow);
+  background: var(--c-accent);
+  transition: transform 320ms var(--ease-drawer);
+  will-change: transform;
+}
+.experience-dossier__ilist { display: block; }
+.experience-dossier__ilist li {
+  height: var(--irow);
+  display: flex;
+  align-items: center;
+}
+.experience-dossier__ilist a {
+  display: grid;
+  gap: 0.0625rem;
+  width: 100%;
+  color: var(--ink-2);
+  transition: color var(--d-ui) var(--ease-out), opacity var(--d-ui) var(--ease-out);
+}
+.experience-dossier__ilist a b {
+  font-weight: 500;
+  font-size: 0.8125rem;
+  letter-spacing: -0.01em;
+}
+.experience-dossier__ilist a span {
+  font-family: var(--font-mono);
+  font-size: 0.5625rem;
+  letter-spacing: 0.1em;
+  color: var(--x-quiet);
+}
+.experience-dossier__ilist a[aria-current="true"] { color: var(--ink); }
+.experience-dossier__ilist a.is-dim { opacity: 0.28; }
+@media (hover: hover) and (pointer: fine) {
+  .experience-dossier__ilist a:hover { color: var(--ink); }
+}
+
+.experience-dossier__xref {
+  display: grid;
+  gap: 0.1875rem;
+  margin-top: 1.5rem;
+  padding-top: 0.875rem;
+  border-top: 1px solid var(--line);
+  font-size: 0.5625rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--x-quiet);
+  min-height: 1px;
+}
+.experience-dossier__xref b {
+  font-family: var(--font-display);
+  font-size: 0.875rem;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  text-transform: none;
+  color: var(--c-accent);
+}
+
+/* --------------------------------------------------------------- document */
+.experience-dossier__scroller {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.experience-dossier__doc {
+  max-width: 68rem;
+  padding: var(--pad) var(--pad) 6rem;
+}
+
+.experience-dossier__masthead {
+  padding-bottom: var(--base);
+  border-bottom: 1px solid var(--line-2);
+}
+.experience-dossier__facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 2.25rem;
+  margin-top: 1.25rem;
+}
+.experience-dossier__facts div { display: grid; gap: 0.125rem; }
+.experience-dossier__facts dt {
+  font-family: var(--font-mono);
+  font-size: 0.5625rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--x-quiet);
+}
+.experience-dossier__facts dd {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 0.9375rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: var(--ink);
+}
+
+.experience-dossier__entry {
+  display: grid;
+  grid-template-columns: 8rem minmax(0, 1fr) 11rem;
+  gap: 0 2rem;
+  padding: calc(var(--base) * 2) 0;
+  transition: opacity 180ms var(--ease-out);
+}
+.experience-dossier__entry + .experience-dossier__entry { border-top: 1px solid var(--line); }
+.experience-dossier__entry.is-dim { opacity: 0.28; }
+
+.experience-dossier__dates {
+  display: grid;
+  gap: 0.125rem;
+  align-content: start;
+  font-size: 0.6875rem;
+  letter-spacing: 0.04em;
+}
+.experience-dossier__dates b { font-weight: 500; color: var(--ink); }
+.experience-dossier__dates i { font-style: normal; color: var(--ink-2); }
+.experience-dossier__dates em {
+  font-style: normal;
+  margin-top: 0.375rem;
+  color: var(--x-quiet);
+}
+
+.experience-dossier__co {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: clamp(1.25rem, 2.3vw, 1.75rem);
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+}
+.experience-dossier__ti {
+  margin-top: 0.25rem;
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--c-accent);
+}
+.experience-dossier__was {
+  margin-top: 0.875rem;
+  max-width: 64ch;
+  color: var(--ink-2);
+  font-size: 0.9375rem;
+  line-height: 1.6;
+}
+.experience-dossier__ships { margin-top: 1rem; max-width: 72ch; }
+.experience-dossier__tech { margin-top: 1rem; }
+
+.experience-dossier__chip {
+  cursor: pointer;
+  font-family: var(--font-mono);
+}
+.experience-dossier__chip.is-hit {
+  border-color: var(--c-accent);
+  color: var(--ink);
+  background: var(--c-wash);
+}
+
+.experience-dossier__margin {
+  display: grid;
+  gap: 0.3125rem;
+  align-content: start;
+  font-size: 0.5625rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--x-quiet);
+}
+
+/* ==========================================================================
+   PAGE 05  -  LEDGER
+   ========================================================================== */
+.experience-ledger__wrap {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  gap: clamp(0.75rem, 1.8vh, 1.25rem);
+  padding: var(--pad) var(--pad) calc(var(--pad) + var(--hint));
+}
+.experience-ledger__head { max-width: 46rem; }
+
+.experience-ledger__body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(13rem, 19rem);
+  gap: 2rem;
+  min-height: 0;
+}
+
+.experience-ledger__logwrap {
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+.experience-ledger__log {
+  display: block;
+  padding: 0.5rem 0;
+  max-width: 92ch;
+}
+.experience-ledger__row {
+  display: grid;
+  grid-template-columns: 4.25rem 3.5rem 8rem minmax(0, 1fr);
+  gap: 0.75rem;
+  align-items: baseline;
+  padding: 0.25rem 0.5rem;
+  cursor: pointer;
+  opacity: 0.12;
+  transform: translateY(4px);
+  transition:
+    opacity 180ms var(--ease-out),
+    transform 180ms var(--ease-out),
+    background-color var(--d-fast) var(--ease-out);
+}
+.experience-ledger__row.is-on { opacity: 1; transform: none; }
+@media (hover: hover) and (pointer: fine) {
+  .experience-ledger__row.is-on:hover { background: var(--surface); }
+  .experience-ledger__row.is-on:hover .experience-ledger__t { color: var(--ink); }
+}
+
+.experience-ledger__t {
+  font-style: normal;
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 0.625rem;
+  letter-spacing: 0.04em;
+  color: var(--ink-2);
+  transition: color var(--d-fast) var(--ease-out);
+}
+.experience-ledger__lvl {
+  font-family: var(--font-mono);
+  font-size: 0.5625rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  color: var(--c-accent);
+}
+.experience-ledger__lvl[data-lvl="ADOPT"],
+.experience-ledger__lvl[data-lvl="LEAVE"] { color: var(--x-quiet); }
+.experience-ledger__lvl[data-lvl="SCOPE"] { color: var(--ink-2); }
+.experience-ledger__src {
+  font-family: var(--font-mono);
+  font-size: 0.5625rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--x-quiet);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.experience-ledger__msg {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  line-height: 1.55;
+  color: var(--ink-2);
+}
+
+/* ------------------------------------------------------------ state panel */
+.experience-ledger__state {
+  align-self: start;
+  padding: 1rem 1.125rem;
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  background: var(--void-2);
+}
+.experience-ledger__now {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: clamp(1.125rem, 1.9vw, 1.5rem);
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  color: var(--c-accent);
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--line);
+}
+.experience-ledger__facts { display: grid; gap: 0.75rem; margin-top: 0.875rem; }
+.experience-ledger__facts div {
+  display: grid;
+  grid-template-columns: 4.5rem minmax(0, 1fr);
+  gap: 0.75rem;
+  align-items: baseline;
+}
+.experience-ledger__facts dt {
+  font-family: var(--font-mono);
+  font-size: 0.5625rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--x-quiet);
+}
+.experience-ledger__facts dd {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  color: var(--ink);
+}
+
+/* ----------------------------------------------------------------- scrub */
+.experience-ledger__scrub {
+  position: relative;
+  height: 4.5rem;
+}
+.experience-ledger__density {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  width: 100%;
+  height: 2.75rem;
+}
+.experience-ledger__ticks {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 1rem;
+  pointer-events: none;
+}
+.experience-ledger__ticks i {
+  position: absolute;
+  left: calc(var(--f) * 100%);
+  transform: translateX(-50%);
+  font-style: normal;
+  font-size: 0.5625rem;
+  letter-spacing: 0.12em;
+  color: var(--x-quiet);
+}
+
+.experience-ledger__range {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 1.5rem;
+  width: 100%;
+  height: 2.75rem;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  -webkit-appearance: none;
+  appearance: none;
+  cursor: ew-resize;
+}
+.experience-ledger__range:focus { outline: none; }
+.experience-ledger__range:focus-visible {
+  outline: 2px solid var(--c-accent);
+  outline-offset: 2px;
+  border-radius: var(--r);
+}
+.experience-ledger__range::-webkit-slider-runnable-track {
+  height: 1px;
+  background: var(--line-2);
+}
+.experience-ledger__range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 2px;
+  height: 20px;
+  margin-top: -10px;
+  border: 0;
+  border-radius: var(--r);
+  background: #fff;
+  transition: height var(--d-fast) var(--ease-out), margin-top var(--d-fast) var(--ease-out);
+}
+.experience-ledger__range::-moz-range-track {
+  height: 1px;
+  background: var(--line-2);
+}
+.experience-ledger__range::-moz-range-thumb {
+  width: 2px;
+  height: 20px;
+  border: 0;
+  border-radius: var(--r);
+  background: #fff;
+}
+@media (hover: hover) and (pointer: fine) {
+  .experience-ledger__range:hover::-webkit-slider-thumb { height: 26px; margin-top: -13px; }
+}
+
+/* ==========================================================================
+   MOBILE  -  a different composition, not a smaller one.
+   ========================================================================== */
+@media (max-width: 768px) {
+  .experience-overlap,
+  .experience-altitude,
+  .experience-tenure,
+  .experience-dossier,
+  .experience-ledger {
+    --hint: 0.5rem;                  /* the shell hides the hint strip here */
+  }
+
+  /* -------------------------------------------------------------- OVERLAP */
+  .experience-overlap__wrap { gap: 0.875rem; }
+  .experience-overlap__co { font-size: 0.9375rem; }
+  .experience-overlap__detail.is-on {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.5rem;
+  }
+  .experience-overlap__dships { grid-row: auto; }
+  .experience-overlap__read em { margin-left: 0; }
+
+  /* ------------------------------------------------------------- ALTITUDE */
+  /* The panel becomes a sheet, because a floating 21rem card in a 390px
+     column is a card with no column left over. */
+  .experience-altitude__detail {
+    top: auto;
+    right: 0;
+    left: 0;
+    bottom: 0;
+    width: auto;
+    max-height: 62%;
+    overflow-y: auto;
+    border-width: 1px 0 0;
+    border-radius: 0;
+    transform: translateY(100%);
+    transition: opacity 320ms var(--ease-drawer), transform 320ms var(--ease-drawer);
+  }
+  .experience-altitude__detail.is-on { transform: none; }
+  .experience-altitude__rrole { margin-left: 0; }
+
+  /* --------------------------------------------------------------- TENURE */
+  /* The rail moves ABOVE the content: on a phone "where am I" is asked before
+     the content is read, not after. The controls take the bottom edge. */
+  .experience-tenure__frame {
+    align-content: start;
+    padding: 6rem var(--pad) 5.5rem;
+    gap: 0.375rem;
+  }
+  .experience-tenure__co {
+    font-size: clamp(1.875rem, 9vw, 2.75rem);
+    line-height: 1.02;
+    padding-bottom: 0.25rem;
+  }
+  .experience-tenure__rail {
+    left: var(--pad);
+    right: var(--pad);
+    top: 3.25rem;
+    bottom: auto;
+    height: 2.25rem;
+  }
+  .experience-tenure__nav {
+    left: var(--pad);
+    right: var(--pad);
+    top: auto;
+    bottom: calc(var(--pad) + env(safe-area-inset-bottom, 0px));
+    justify-content: space-between;
+  }
+  .experience-tenure__nav .iconbtn { width: 3rem; height: 3rem; }
+  .experience-tenure__ships { max-height: 40vh; overflow-y: auto; }
+
+  /* -------------------------------------------------------------- DOSSIER */
+  /* Single column. The index becomes a sticky strip carrying the running
+     totals and the technology cross-reference readout. */
+  .experience-dossier {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr);
+    --base: 22px;
+    --irow: 2.25rem;
+  }
+  .experience-dossier__index {
+    padding: 0.875rem var(--pad);
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
+  .experience-dossier__mark { display: none; }
+  .experience-dossier__ilist {
+    display: flex;
+    gap: 1.25rem;
+    width: max-content;
+  }
+  .experience-dossier__ilist li { height: auto; }
+  .experience-dossier__ilist a { white-space: nowrap; }
+  .experience-dossier__xref {
+    grid-auto-flow: column;
+    grid-auto-columns: max-content;
+    gap: 0 1rem;
+    align-items: baseline;
+    margin-top: 0.75rem;
+    padding-top: 0.625rem;
+    width: max-content;
+  }
+  .experience-dossier__entry {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.5rem;
+    padding: calc(var(--base) * 1.5) 0;
+  }
+  .experience-dossier__dates {
+    grid-auto-flow: column;
+    grid-auto-columns: max-content;
+    gap: 0 0.75rem;
+    align-items: baseline;
+  }
+  .experience-dossier__dates em { margin-top: 0; }
+  .experience-dossier__margin {
+    grid-auto-flow: row;
+    gap: 0.25rem;
+    margin-top: 0.875rem;
+    padding-top: 0.625rem;
+    border-top: 1px solid var(--line);
+  }
+  .experience-dossier__doc { padding-bottom: 4rem; }
+
+  /* --------------------------------------------------------------- LEDGER */
+  /* The state panel moves ABOVE the log, so the answer stays visible while a
+     thumb is on the slider at the bottom. */
+  .experience-ledger__body {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr);
+    gap: 0.875rem;
+  }
+  .experience-ledger__state {
+    order: -1;
+    padding: 0.75rem 0.875rem;
+  }
+  .experience-ledger__facts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.5rem 1rem;
+  }
+  .experience-ledger__facts div { grid-template-columns: minmax(0, 1fr); gap: 0.125rem; }
+  .experience-ledger__row {
+    grid-template-columns: 3.5rem minmax(0, 1fr);
+    gap: 0.25rem 0.625rem;
+  }
+  .experience-ledger__lvl { grid-column: 2; }
+  .experience-ledger__src { display: none; }
+  .experience-ledger__msg { grid-column: 2; }
+  .experience-ledger__scrub { height: 3.75rem; }
+  .experience-ledger__density { height: 2rem; }
+  .experience-ledger__range { top: 0.5rem; height: 3rem; }
+}
+
+/* ==========================================================================
+   REDUCED MOTION  -  fewer and gentler, never broken.
+   --------------------------------------------------------------------------
+   Everything below still ends in exactly the same composition. The bars are
+   already at length, the frames still cut, the lit window still lands on the
+   right months, and every date stays readable.
+   ========================================================================== */
+@media (prefers-reduced-motion: reduce) {
+  .experience-overlap__fill,
+  .experience-overlap__label,
+  .experience-overlap__marker,
+  .experience-overlap__detail,
+  .experience-altitude__detail,
+  .experience-tenure__window,
+  .experience-tenure__frame,
+  .experience-tenure__frame > *,
+  .experience-dossier__mark,
+  .experience-dossier__entry,
+  .experience-ledger__row {
+    transition-duration: 120ms !important;
+    transition-delay: 0s !important;
+  }
+
+  .experience-overlap__fill { transform: scaleX(1) !important; }
+  .experience-overlap.is-vertical .experience-overlap__fill { transform: scaleY(1) !important; }
+  .experience-overlap__label { opacity: 1 !important; transform: none !important; }
+  .experience-overlap.is-vertical .experience-overlap__label { transform: translateY(-50%) !important; }
+  .experience-overlap__detail { transform: none !important; }
+
+  .experience-altitude__detail { transform: none !important; }
+
+  .experience-tenure__frame,
+  .experience-tenure__frame.is-on ~ .experience-tenure__frame { transform: none !important; }
+  .experience-tenure__window { will-change: auto; }
+
+  .experience-ledger__row { transform: none !important; }
+}
+
+/* The JS adds `is-instant` when reduced motion is already on at mount, so the
+   entry never runs at all rather than running and being cut short. */
+.experience-overlap.is-instant .experience-overlap__fill,
+.experience-overlap.is-instant .experience-overlap__label {
+  transition: none;
+}
+
+/* ==========================================================================
+   SECTION ROOTS  -  the five concepts that live inside another page.
+   --------------------------------------------------------------------------
+   A page root is `position: absolute; inset: 0` because the stage mount is. A
+   section root must be the opposite: ordinary block flow, its own height, and
+   nothing that takes it out of the document. Everything below starts from
+   `.experience-sec` plus one concept class.
+   ========================================================================== */
+.experience-sec {
+  position: relative;
+  display: block;
+  background: var(--void);
+  color: var(--ink);
+
+  /* the same two tokens the page roots carry, so ten concepts cannot drift */
+  --pad: clamp(1.125rem, 3.4vw, 3.25rem);
+  --x-quiet: var(--ink-3);
+}
+
+.experience-sec .t-num {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+}
+
+/* SE.seeMore builds a `btn`, which reads the SHELL accent. Inside a concept
+   that is the one hue not allowed to appear, so the two properties the button
+   is assembled from are re-pointed at the concept's own tint. */
+.experience-sec .seemore {
+  --btn-ink: var(--c-accent);
+  --btn-line: var(--c-line);
+}
+
+.experience-sec__title {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: clamp(1.375rem, 2.8vw, 2.25rem);
+  line-height: 1;
+  letter-spacing: -0.035em;
+  text-wrap: balance;
+  color: var(--ink);
+}
+
+.experience-sec__lede {
+  margin-top: 0.75rem;
+  max-width: 54ch;
+  color: var(--ink-2);
+  font-size: clamp(0.875rem, 1vw, 0.9375rem);
+  line-height: 1.6;
+  text-wrap: pretty;
+}
+
+/* ==========================================================================
+   SECTION 01  -  AXIS
+   --------------------------------------------------------------------------
+   The plot is one coordinate space: `.experience-axis__field` is the same
+   width as `.experience-axis__plot`, so the sweep (a child of the plot) and
+   the brackets (children of the field) are measured against the same 100%.
+   Moving either one out of that agreement desyncs the sweep from the data.
+   ========================================================================== */
+/* The plot row is `1fr`: the axis takes whatever height is left after the
+   heading, the readout and the exit have taken theirs, so the composition is
+   the same at 900px and at 530px and only the plot is shorter. A fixed plot
+   height plus a centred grid is how a pinned section ends up clipping its
+   own exit on a short screen. */
+.experience-axis__stage {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  grid-template-rows: auto minmax(6rem, 1fr) auto auto;
+  align-content: stretch;
+  justify-items: start;
+  gap: clamp(1rem, 2.4vh, 2.25rem);
+  padding: clamp(1.75rem, 5vh, 4rem) var(--pad);
+}
+
+.experience-axis__head,
+.experience-axis__read {
+  opacity: 0;
+  transform: translate3d(0, 14px, 0);
+  transition: opacity 560ms var(--ease-out), transform 560ms var(--ease-out);
+}
+.experience-axis__head { max-width: 46ch; }
+.experience-axis__read { justify-self: stretch; }
+.experience-axis__head.is-in,
+.experience-axis__read.is-in { opacity: 1; transform: none; }
+.experience-axis__read.is-in { transition-delay: 90ms; }
+/* .seemore owns its own opacity and transform pair, so the reveal only needs
+   the classes the helper already looks for. */
+.experience-axis__more {
+  opacity: 0;
+  transform: translate3d(0, 10px, 0);
+  justify-self: start;
+}
+.experience-axis__more.is-on.is-in { opacity: 1; transform: none; }
+
+/* ------------------------------------------------------------------- plot */
+.experience-axis__plot {
+  position: relative;
+  min-height: 6rem;
+  width: 100%;
+  justify-self: stretch;
+}
+
+.experience-axis__field {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 1.375rem;
+  bottom: 0;
+  --axis: 58%;
+}
+
+.experience-axis__grid {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.experience-axis__rule {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: var(--axis);
+  height: 1px;
+  background: var(--line-2);
+}
+
+.experience-axis__year {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: calc(var(--f) * 100%);
+  width: 1px;
+  background: rgba(236, 236, 239, 0.045);
+}
+.experience-axis__year em {
+  position: absolute;
+  top: -1.25rem;
+  left: 0.3125rem;
+  font-style: normal;
+  font-size: 0.625rem;
+  letter-spacing: 0.14em;
+  color: var(--ink-4);
+}
+
+.experience-axis__band {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: calc(var(--f0) * 100%);
+  width: calc((var(--f1) - var(--f0)) * 100%);
+  background: var(--c-wash);
+  border-left: 1px solid var(--c-mid);
+  border-right: 1px solid var(--c-mid);
+  opacity: 0;
+  transition: opacity 420ms var(--ease-out);
+}
+.experience-axis__band.is-lit { opacity: 1; }
+
+/* ------------------------------------------------------------------ marks */
+.experience-axis__marks { position: absolute; inset: 0; }
+
+.experience-axis__mark {
+  position: absolute;
+  left: calc(var(--f0) * 100%);
+  width: calc((var(--f1) - var(--f0)) * 100%);
+  height: 3.25rem;
+  display: block;
+  padding: 0;
+  text-align: left;
+  cursor: pointer;
+}
+.experience-axis__mark[data-side="0"] { bottom: calc(100% - var(--axis)); }
+.experience-axis__mark[data-side="1"] { top: var(--axis); }
+
+.experience-axis__span {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 13px;
+  border-left: 1px solid var(--c-line);
+  border-right: 1px solid var(--c-line);
+  background: transparent;
+  clip-path: inset(0 100% 0 0);
+  opacity: 0;
+  transition:
+    clip-path 560ms var(--ease-out),
+    opacity 300ms var(--ease-out),
+    border-color 180ms ease,
+    background-color 180ms ease;
+}
+/* The span line is the data; the two caps are its terminals. The line is
+   drawn stronger than the caps so a resting bracket still reads as a mark
+   rather than as a fold in the ground. */
+.experience-axis__mark[data-side="0"] .experience-axis__span {
+  bottom: 0;
+  border-top: 1px solid color-mix(in oklab, var(--c-accent) 66%, transparent);
+}
+.experience-axis__mark[data-side="1"] .experience-axis__span {
+  top: 0;
+  border-bottom: 1px solid color-mix(in oklab, var(--c-accent) 66%, transparent);
+}
+.experience-axis__mark.is-lit .experience-axis__span {
+  clip-path: inset(0 0 0 0);
+  opacity: 1;
+}
+
+.experience-axis__tag {
+  position: absolute;
+  left: 0;
+  display: grid;
+  gap: 0.0625rem;
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 420ms var(--ease-out) 90ms, transform 420ms var(--ease-out) 90ms;
+}
+.experience-axis__mark[data-side="0"] .experience-axis__tag {
+  bottom: 0.875rem;
+  transform: translate3d(0, 6px, 0);
+}
+.experience-axis__mark[data-side="1"] .experience-axis__tag {
+  top: 0.875rem;
+  transform: translate3d(0, -6px, 0);
+}
+.experience-axis__mark.is-lit .experience-axis__tag { opacity: 1; transform: none; }
+
+/* The last role runs to the right edge of the axis, so its label has nowhere
+   to go but backwards. That is a rule about the composition, not a patch. */
+.experience-axis:not(.is-vertical) .experience-axis__mark[data-last] .experience-axis__tag {
+  left: auto;
+  right: 0;
+  text-align: right;
+  justify-items: end;
+}
+
+.experience-axis__co {
+  font-weight: 500;
+  font-size: 0.8125rem;
+  letter-spacing: -0.015em;
+  color: var(--ink);
+  transition: color var(--d-ui) var(--ease-out);
+}
+.experience-axis__dt {
+  font-style: normal;
+  font-size: 0.625rem;
+  letter-spacing: 0.06em;
+  color: var(--x-quiet);
+}
+
+.experience-axis__mark.is-live .experience-axis__span {
+  border-color: var(--c-accent);
+  background: var(--c-soft);
+}
+.experience-axis__mark.is-live .experience-axis__co { color: var(--c-accent); }
+
+@media (hover: hover) and (pointer: fine) {
+  .experience-axis__mark:hover .experience-axis__span { border-color: var(--c-accent); }
+  .experience-axis__mark:hover .experience-axis__co { color: var(--c-accent); }
+}
+
+/* ------------------------------------------------------------------ sweep */
+.experience-axis__sweep {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 1px;
+  background: rgba(255, 255, 255, 0.62);
+  pointer-events: none;
+  will-change: transform;
+}
+.experience-axis__sweep::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -1px;
+  width: 3px;
+  height: 3px;
+  background: #fff;
+}
+
+/* ---------------------------------------------------------------- readout */
+.experience-axis__read {
+  display: flex;
+  align-items: baseline;
+  gap: 0.875rem;
+  flex-wrap: wrap;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--line);
+  font-size: 0.8125rem;
+}
+.experience-axis__read b {
+  font-weight: 500;
+  font-size: 0.6875rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--c-accent);
+}
+.experience-axis__read span { color: var(--ink-2); }
+.experience-axis__read em {
+  margin-left: auto;
+  font-style: normal;
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--x-quiet);
+}
+
+/* -------------------------------------------------- vertical recomposition */
+/* Below 768px the axis rotates. Time runs top to bottom, the two packed
+   tracks become two columns, and the single track-1 role sets its label
+   right aligned so a four month gap in start dates cannot collide with the
+   track-0 label above it. Driven by a class computed from the section's own
+   width, never by a media query, so the CSS and the sweep transform agree. */
+.experience-axis.is-vertical .experience-axis__stage {
+  padding: clamp(2rem, 6vh, 3.5rem) var(--pad);
+  gap: 1.25rem;
+}
+.experience-axis.is-vertical .experience-axis__plot { min-height: 11rem; }
+.experience-axis.is-vertical .experience-axis__field {
+  inset: 0 0 0 3rem;
+}
+.experience-axis.is-vertical .experience-axis__rule {
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: auto;
+  width: 1px;
+  height: auto;
+}
+.experience-axis.is-vertical .experience-axis__year {
+  left: 0;
+  right: 0;
+  top: calc(var(--f) * 100%);
+  width: auto;
+  height: 1px;
+  bottom: auto;
+}
+.experience-axis.is-vertical .experience-axis__year em {
+  top: -0.5rem;
+  left: -2.75rem;
+}
+.experience-axis.is-vertical .experience-axis__band {
+  left: 0;
+  right: 0;
+  width: auto;
+  top: calc(var(--f0) * 100%);
+  height: calc((var(--f1) - var(--f0)) * 100%);
+  bottom: auto;
+  border-left: 0;
+  border-right: 0;
+  border-top: 1px solid var(--c-mid);
+  border-bottom: 1px solid var(--c-mid);
+}
+.experience-axis.is-vertical .experience-axis__mark {
+  top: calc(var(--f0) * 100%);
+  height: calc((var(--f1) - var(--f0)) * 100%);
+  bottom: auto;
+  left: 0;
+  right: 0;
+  width: auto;
+}
+.experience-axis.is-vertical .experience-axis__mark[data-side="1"] { left: 1.25rem; }
+.experience-axis.is-vertical .experience-axis__span {
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: auto;
+  width: 10px;
+  height: auto;
+  /* Rotated, the span line becomes the left edge and the two caps become the
+     top and bottom. Same hierarchy as the horizontal bracket: the line is
+     the data, the caps are its terminals. */
+  border: 1px solid var(--c-line);
+  border-right: 0;
+  border-left-color: color-mix(in oklab, var(--c-accent) 66%, transparent);
+  clip-path: inset(0 0 100% 0);
+}
+.experience-axis.is-vertical .experience-axis__mark.is-lit .experience-axis__span {
+  clip-path: inset(0 0 0 0);
+}
+.experience-axis.is-vertical .experience-axis__tag {
+  top: 0;
+  bottom: auto;
+  left: 2.75rem;
+  transform: translate3d(0, -6px, 0);
+}
+/* The second track is the contract that ran alongside the day job, and its
+   start date is four months from the day job's. Anchoring both labels to
+   their own start would put them 6px apart. So the parallel track labels
+   from the middle of its own run, right aligned against the far edge: the
+   bracket's top cap still marks the start date, and the two labels can never
+   land on each other. */
+.experience-axis.is-vertical .experience-axis__mark[data-side="1"] .experience-axis__tag {
+  top: 50%;
+  left: auto;
+  right: 0;
+  text-align: right;
+  justify-items: end;
+  transform: translate3d(0, calc(-50% - 6px), 0);
+}
+.experience-axis.is-vertical .experience-axis__mark[data-side="1"].is-lit .experience-axis__tag {
+  transform: translate3d(0, -50%, 0);
+}
+.experience-axis.is-vertical .experience-axis__sweep {
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: auto;
+  width: auto;
+  height: 1px;
+}
+.experience-axis.is-vertical .experience-axis__sweep::after {
+  top: -1px;
+  left: 0;
+  width: 3px;
+  height: 3px;
+}
+.experience-axis.is-vertical .experience-axis__read em { margin-left: 0; }
+
+/* Between 768px and 900px the bracket labels drop their date line. The
+   company name is what the axis is naming; the dates are already the axis. */
+@media (max-width: 900px) {
+  .experience-axis:not(.is-vertical) .experience-axis__dt { display: none; }
+}
+
+/* -------------------------------------------------------- reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .experience-axis__head,
+  .experience-axis__read,
+  .experience-axis__more,
+  .experience-axis__band,
+  .experience-axis__span,
+  .experience-axis__tag {
+    transition-duration: 140ms !important;
+    transition-delay: 0s !important;
+  }
+  /* The tags are deliberately NOT reset to `transform: none`: in vertical
+     mode the parallel track's label is centred with translateY(-50%), and
+     flattening it would drop the label off its own bracket. Every mark is
+     lit at mount under reduced motion, so each tag is already at its
+     resting transform. */
+  .experience-axis__head,
+  .experience-axis__read,
+  .experience-axis__more { transform: none !important; }
+  .experience-axis__sweep { will-change: auto; }
+}
+
+/* ==========================================================================
+   SECTION 02  -  ASCENT
+   --------------------------------------------------------------------------
+   The field is ONE coordinate space. The canvas, the label layer and the pen
+   track are all `inset: 0` on the same box, so a label at `top: 40%` and a
+   canvas y of `0.40 * h` land on the same pixel. Padding belongs to the
+   field; putting it on one of the three layers is how a plot desyncs from
+   its own labels.
+   ========================================================================== */
+/* The plot row is `1fr`, so the canvas takes whatever height is left after
+   the heading, the readout and the exit have taken theirs. That is what
+   makes this concept height-proof: at 844px and at 640px the composition is
+   the same and only the plot is shorter. A fixed plot height plus a centred
+   grid is how a pinned section ends up clipping its own exit on a laptop. */
+.experience-ascent__stage {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  grid-template-rows: auto minmax(6rem, 1fr) auto auto auto;
+  align-content: stretch;
+  justify-items: start;
+  gap: clamp(1rem, 2.4vh, 2rem);
+  padding: clamp(1.75rem, 5vh, 3.5rem) var(--pad);
+}
+
+.experience-ascent__head { max-width: 48ch; }
+
+.experience-ascent__head,
+.experience-ascent__plot,
+.experience-ascent__read {
+  opacity: 0;
+  transform: translate3d(0, 14px, 0);
+  transition: opacity 560ms var(--ease-out), transform 560ms var(--ease-out);
+}
+.experience-ascent__head.is-in,
+.experience-ascent__plot.is-in,
+.experience-ascent__read.is-in { opacity: 1; transform: none; }
+.experience-ascent__plot.is-in { transition-delay: 70ms; }
+.experience-ascent__read.is-in { transition-delay: 140ms; }
+
+.experience-ascent__more {
+  opacity: 0;
+  transform: translate3d(0, 10px, 0);
+  justify-self: start;
+}
+.experience-ascent__more.is-on.is-in { opacity: 1; transform: none; }
+
+/* --------------------------------------------------------------- the plot */
+.experience-ascent__plot {
+  position: relative;
+  width: 100%;
+  min-height: 0;
+  justify-self: stretch;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 0.75rem;
+}
+
+/* rung header: the four named responsibilities, positioned on the same x
+   fractions the canvas uses for its guides */
+.experience-ascent__rungs {
+  position: relative;
+  height: 2.25rem;
+  margin: 0 9%;
+}
+.experience-ascent__rung {
+  position: absolute;
+  top: 0;
+  left: calc(var(--x) * 100%);
+  transform: translateX(-50%);
+  display: grid;
+  justify-items: center;
+  gap: 0.1875rem;
+  white-space: nowrap;
+  font-style: normal;
+}
+.experience-ascent__rung b {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  color: var(--x-quiet);
+  transition: color var(--d-ui) var(--ease-out);
+}
+.experience-ascent__rung em {
+  font-style: normal;
+  font-family: var(--font-mono);
+  font-size: 0.5625rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-4);
+  transition: color var(--d-ui) var(--ease-out);
+}
+.experience-ascent__rung.is-on b { color: var(--c-accent); }
+.experience-ascent__rung.is-on em { color: var(--ink-2); }
+
+.experience-ascent__field {
+  position: relative;
+  min-height: 6rem;
+  width: 100%;
+}
+
+.experience-ascent__canvas {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+/* The label layer is inset by the same 9% the canvas uses for its own plot
+   area, so `left: calc(var(--x) * 100%)` on a label and `padX + x * iw` in
+   the renderer are the same pixel. Without this the labels sit 50px off
+   their own guides and the plot quietly stops being a plot. */
+.experience-ascent__labels {
+  position: absolute;
+  inset: 0 9%;
+  pointer-events: none;
+}
+
+/* ------------------------------------------------------------- the labels */
+.experience-ascent__label {
+  position: absolute;
+  top: calc(var(--f) * 100%);
+  left: calc(var(--x) * 100%);
+  margin-left: 14px;
+  padding-left: 0.625rem;
+  display: grid;
+  gap: 0.0625rem;
+  white-space: nowrap;
+  pointer-events: auto;
+  border-left: 1px solid transparent;
+  opacity: 0;
+  transform: translate3d(0, 8px, 0);
+  transition: opacity 480ms var(--ease-out), transform 480ms var(--ease-out);
+}
+/* Rung four sits at 87.5% of the plot. There is no room to its right, so its
+   label reads backwards from its own guide. */
+.experience-ascent__label[data-flip] {
+  left: auto;
+  right: calc((1 - var(--x)) * 100%);
+  margin-left: 0;
+  margin-right: 14px;
+  padding-left: 0;
+  padding-right: 0.625rem;
+  text-align: right;
+  justify-items: end;
+  border-left: 0;
+  border-right: 1px solid transparent;
+}
+.experience-ascent__label.is-on { opacity: 1; transform: none; }
+
+.experience-ascent__co {
+  font-weight: 500;
+  font-size: 0.875rem;
+  letter-spacing: -0.015em;
+  color: var(--ink);
+  transition: color var(--d-ui) var(--ease-out);
+}
+.experience-ascent__rl {
+  font-style: normal;
+  font-family: var(--font-mono);
+  font-size: 0.5625rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-4);
+}
+.experience-ascent__dt {
+  font-style: normal;
+  font-size: 0.625rem;
+  letter-spacing: 0.06em;
+  color: var(--x-quiet);
+  transition: opacity 480ms var(--ease-out) 80ms;
+}
+.experience-ascent__label:not(.is-on) .experience-ascent__dt { opacity: 0; }
+
+/* The contract label carries the one distinction the plot makes about kind
+   of employment, so it says so in words as well as in a dash pattern. */
+.experience-ascent__label[data-aside] .experience-ascent__rl::after {
+  content: " / contract";
+}
+
+.experience-ascent__label.is-live { border-left-color: var(--c-line); }
+.experience-ascent__label.is-live[data-flip] {
+  border-left-color: transparent;
+  border-right-color: var(--c-line);
+}
+.experience-ascent__label.is-live .experience-ascent__co { color: var(--c-accent); }
+
+@media (hover: hover) and (pointer: fine) {
+  .experience-ascent__label:hover .experience-ascent__co { color: var(--c-accent); }
+}
+
+/* ----------------------------------------------------------------- the pen */
+.experience-ascent__pen {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.22);
+  pointer-events: none;
+  will-change: transform;
+}
+.experience-ascent__pen em {
+  position: absolute;
+  left: 0;
+  top: -1.125rem;
+  font-style: normal;
+  font-size: 0.5625rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.62);
+}
+
+/* The dashed-line key. Only exists in the mobile composition. */
+.experience-ascent__note {
+  display: none;
+  max-width: 46ch;
+  font-size: 0.75rem;
+  line-height: 1.55;
+  color: var(--x-quiet);
+}
+.experience-ascent__note b { font-weight: 500; color: var(--ink-2); }
+
+/* ---------------------------------------------------------------- readout */
+.experience-ascent__read {
+  justify-self: stretch;
+  display: flex;
+  align-items: baseline;
+  gap: 0.875rem;
+  flex-wrap: wrap;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--line);
+  font-size: 0.8125rem;
+}
+.experience-ascent__read b {
+  font-weight: 500;
+  font-size: 0.6875rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--c-accent);
+}
+.experience-ascent__read span { color: var(--ink); }
+.experience-ascent__read i { font-style: normal; color: var(--ink-2); }
+.experience-ascent__read em {
+  margin-left: auto;
+  font-style: normal;
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--x-quiet);
+}
+
+/* Four rung names across 700px sets at 8px, and 8px is not a label. */
+@media (max-width: 900px) {
+  .experience-ascent__rung em { display: none; }
+  .experience-ascent__rungs { height: 1.25rem; }
+}
+
+/* ------------------------------------------------- mobile recomposition */
+/* Below 768px the plot becomes a 4.5rem spine with the labels in their own
+   column beside it. The canvas renderer reads its own width and switches to
+   the narrow inset, dash and wobble on its own, so JS and CSS agree without
+   sharing a breakpoint constant. */
+@media (max-width: 767px) {
+  .experience-ascent__stage {
+    padding: clamp(2rem, 6vh, 3rem) var(--pad);
+    gap: 1.25rem;
+  }
+  .experience-ascent__plot {
+    grid-template-rows: minmax(0, 1fr) auto;
+    gap: 0.5rem;
+  }
+  /* The narrow canvas insets by a flat 12px, so the numeral rail is 48px
+     wide starting 12px in. Same numbers on both sides of the boundary. */
+  .experience-ascent__rungs {
+    order: 2;
+    height: 1rem;
+    margin: 0 0 0 12px;
+    width: 48px;
+  }
+  .experience-ascent__rung { transform: translateX(-50%) scale(0.92); }
+  .experience-ascent__field { min-height: 10rem; }
+  .experience-ascent__canvas { right: auto; width: 4.5rem; }
+  .experience-ascent__labels { inset: 0 0 0 4.5rem; }
+  .experience-ascent__label,
+  .experience-ascent__label[data-flip] {
+    left: 0;
+    right: auto;
+    margin: 0;
+    padding-left: 0.75rem;
+    padding-right: 0;
+    text-align: left;
+    justify-items: start;
+    border-left: 1px solid transparent;
+    border-right: 0;
+  }
+  .experience-ascent__label.is-live[data-flip] {
+    border-left-color: var(--c-line);
+    border-right-color: transparent;
+  }
+  /* The contract starts four months after the day job it runs beside, which
+     is 22px at this height, and two 180px labels cannot share a 262px
+     column. So on mobile the contract leaves the plot: the dashed line stays
+     exactly where it is and the key below the plot says what it is. Moving
+     the label to a lie about its date would be worse than moving it out. */
+  .experience-ascent__label[data-aside] { display: none; }
+  .experience-ascent__note { display: block; }
+  .experience-ascent__pen { right: auto; width: 4.5rem; }
+  .experience-ascent__pen em { left: auto; right: 0; top: -1rem; }
+  .experience-ascent__read em { margin-left: 0; }
+}
+
+/* -------------------------------------------------------- reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .experience-ascent__head,
+  .experience-ascent__plot,
+  .experience-ascent__read,
+  .experience-ascent__more,
+  .experience-ascent__label,
+  .experience-ascent__dt {
+    transition-duration: 140ms !important;
+    transition-delay: 0s !important;
+    transform: none !important;
+  }
+  .experience-ascent__pen { will-change: auto; }
+}
+
+/* ==========================================================================
+   SECTION 03  -  STANDING
+   --------------------------------------------------------------------------
+   The column is ONE grid whose rows are exact fr units written from JS. Five
+   separate percentage heights would each round independently and the column
+   would stop being proportional by two or three pixels, which is exactly the
+   amount that makes a scale drawing look like a decoration.
+   ========================================================================== */
+.experience-standing__stage {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  align-content: center;
+  gap: clamp(1.25rem, 3vh, 2.25rem);
+  padding: clamp(2rem, 6vh, 4rem) var(--pad);
+}
+
+.experience-standing__head { max-width: 52ch; }
+
+.experience-standing__head,
+.experience-standing__body {
+  opacity: 0;
+  transform: translate3d(0, 14px, 0);
+  transition: opacity 560ms var(--ease-out), transform 560ms var(--ease-out);
+}
+.experience-standing__head.is-in,
+.experience-standing__body.is-in { opacity: 1; transform: none; }
+.experience-standing__body.is-in { transition-delay: 80ms; }
+
+.experience-standing__more {
+  opacity: 0;
+  transform: translate3d(0, 10px, 0);
+  justify-self: start;
+}
+.experience-standing__more.is-on.is-in { opacity: 1; transform: none; }
+
+.experience-standing__body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 13rem;
+  gap: clamp(1.5rem, 3vw, 3rem);
+  align-items: stretch;
+  min-height: 0;
+}
+
+/* ------------------------------------------------------------- the panel */
+/* The panel box STRETCHES and only its prose is measured. That way the rules
+   under the shipped lines run the full width and reach toward the column
+   instead of stopping at 62 characters and leaving a hole in the middle of
+   the section. */
+.experience-standing__feature {
+  min-width: 0;
+  align-self: center;
+}
+.experience-standing__feature.is-fresh > * {
+  animation: experience-standing-in 260ms var(--ease-out) both;
+}
+@keyframes experience-standing-in {
+  from { opacity: 0; transform: translate3d(0, 10px, 0); }
+  to { opacity: 1; transform: none; }
+}
+
+.experience-standing__co {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: clamp(1.75rem, 3.6vw, 2.75rem);
+  line-height: 1;
+  letter-spacing: -0.04em;
+  color: var(--ink);
+}
+.experience-standing__ti {
+  margin-top: 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--c-accent);
+}
+
+/* Separated by 1px rules rather than by dots. A row of middle dots is a
+   typographic tic; a rule is a decision about where one field ends. */
+.experience-standing__meta {
+  margin-top: 0.875rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  font-size: 0.6875rem;
+  color: var(--x-quiet);
+}
+.experience-standing__meta span { padding: 0 0.625rem; }
+.experience-standing__meta span:first-child { padding-left: 0; }
+.experience-standing__meta span + span { border-left: 1px solid var(--line-2); }
+
+.experience-standing__was {
+  margin-top: 1rem;
+  max-width: 58ch;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  color: var(--ink-2);
+  text-wrap: pretty;
+}
+
+.experience-standing__ships {
+  margin-top: 1.125rem;
+  border-top: 1px solid var(--line);
+}
+.experience-standing__ship {
+  display: grid;
+  grid-template-columns: 3.75rem minmax(0, 56ch);
+  gap: 0.75rem;
+  padding: 0.5rem 0;
+  color: var(--ink-2);
+  font-size: 0.875rem;
+  line-height: 1.55;
+  opacity: 0;
+  transform: translate3d(0, 8px, 0);
+  animation: experience-standing-in 320ms var(--ease-out) both;
+  animation-delay: calc(var(--k) * 60ms + 60ms);
+}
+.experience-standing__ship + .experience-standing__ship { border-top: 1px solid var(--line); }
+/* shipsHtml emits the month inside an <i>, so the italic has to be undone
+   here rather than in the shared helper the page concepts also use. */
+.experience-standing__ship .t-num {
+  font-style: normal;
+  font-size: 0.625rem;
+  letter-spacing: 0.06em;
+  color: var(--x-quiet);
+  padding-top: 0.25em;
+}
+
+.experience-standing__tech { margin-top: 1rem; }
+.experience-standing__chip {
+  display: inline-block;
+  margin: 0 0.3125rem 0.3125rem 0;
+  padding: 0.1875rem 0.4375rem;
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  font-family: var(--font-mono);
+  font-size: 0.5625rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+  transition: border-color var(--d-ui) var(--ease-out), color var(--d-ui) var(--ease-out);
+}
+
+.experience-standing__rung {
+  margin-top: 1rem;
+  max-width: 44rem;
+  padding: 0.625rem 0.75rem;
+  border-left: 1px solid var(--c-line);
+  background: var(--c-wash);
+  display: grid;
+  gap: 0.1875rem;
+}
+.experience-standing__rung b {
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--c-accent);
+}
+.experience-standing__rung span { font-size: 0.8125rem; color: var(--ink-2); }
+
+/* ------------------------------------------------------------ the column */
+.experience-standing__stack {
+  position: relative;
+  padding: 1.125rem 0;
+  min-height: 0;
+}
+.experience-standing__cap {
+  position: absolute;
+  top: 0;
+  right: 0;
+  font-size: 0.5625rem;
+  font-style: normal;
+  letter-spacing: 0.14em;
+  color: var(--ink-4);
+}
+.experience-standing__cap--end { top: auto; bottom: 0; }
+
+.experience-standing__list {
+  display: grid;
+  grid-template-rows: var(--rows);
+  gap: 2px;
+  height: 100%;
+  min-height: 11rem;
+  list-style: none;
+}
+/* Both minimums have to be zeroed: an `fr` track is `minmax(auto, Nfr)` and
+   the auto minimum is the item's min-content size, which would make the
+   rail's five segments size to their text instead of to their months. */
+.experience-standing__row { min-height: 0; min-width: 0; }
+
+.experience-standing__syr { display: none; }
+
+.experience-standing__seg {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 1.375rem;
+  padding: 0.25rem 0.5rem;
+  text-align: left;
+  overflow: hidden;
+  border-radius: var(--r);
+  background: var(--c-soft);
+  cursor: pointer;
+  transition: background-color 180ms ease, color 180ms ease;
+}
+.experience-standing__seg[data-aside] {
+  background: transparent;
+  border: 1px dashed var(--c-mid);
+}
+
+.experience-standing__bar {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--c-line);
+  transition: background-color 180ms ease;
+}
+.experience-standing__sco {
+  display: block;
+  font-weight: 500;
+  font-size: 0.75rem;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+  transition: color 180ms ease;
+}
+.experience-standing__sdu {
+  display: block;
+  font-style: normal;
+  font-size: 0.625rem;
+  letter-spacing: 0.06em;
+  color: var(--x-quiet);
+  transition: color 180ms ease;
+}
+.experience-standing__now {
+  position: absolute;
+  right: 0.5rem;
+  top: 0.3125rem;
+  font-family: var(--font-mono);
+  font-size: 0.5625rem;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--c-accent);
+  transition: color 180ms ease;
+}
+
+.experience-standing__seg.is-on {
+  background: var(--c-accent);
+}
+.experience-standing__seg.is-on .experience-standing__sco,
+.experience-standing__seg.is-on .experience-standing__sdu,
+.experience-standing__seg.is-on .experience-standing__now { color: var(--void); }
+.experience-standing__seg.is-on .experience-standing__bar { background: var(--void); }
+.experience-standing__seg[data-aside].is-on { border-style: solid; border-color: var(--c-accent); }
+
+@media (hover: hover) and (pointer: fine) {
+  .experience-standing__seg:hover { background: var(--c-mid); }
+  .experience-standing__seg.is-on:hover { background: var(--c-accent); }
+  .experience-standing__chip:hover { border-color: var(--c-line); color: var(--ink); }
+}
+
+.experience-standing__marker {
+  position: absolute;
+  left: -0.75rem;
+  right: 0;
+  top: 1.125rem;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.72);
+  pointer-events: none;
+  will-change: transform;
+}
+.experience-standing__marker::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: -1px;
+  width: 3px;
+  height: 3px;
+  background: #fff;
+}
+
+/* A chip row that wraps to three lines is a list pretending to be a row. */
+@media (max-width: 900px) {
+  .experience-standing__body { grid-template-columns: minmax(0, 1fr) 10rem; }
+  .experience-standing__tech { display: none; }
+  .experience-standing__sdu { display: none; }
+}
+
+/* ------------------------------------------------- mobile recomposition */
+/* Below 768px the column rotates into a full width rail above the panel,
+   newest at the LEFT, with the marker travelling left to right. The same
+   `--rows` string that drives the column's heights drives the rail's widths,
+   so the five proportions survive the rotation exactly. Driven by a class
+   from the section's own width, never a media query, so the layout and the
+   marker's transform axis cannot disagree. */
+.experience-standing.is-rail .experience-standing__stage {
+  grid-template-rows: auto auto auto;
+  gap: 1.25rem;
+  padding: clamp(2rem, 6vh, 3rem) var(--pad);
+}
+.experience-standing.is-rail .experience-standing__body {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1.25rem;
+}
+.experience-standing.is-rail .experience-standing__stack {
+  order: -1;
+  padding: 0 0 1.125rem;
+}
+.experience-standing.is-rail .experience-standing__list {
+  grid-template-rows: none;
+  grid-template-columns: var(--rows);
+  grid-auto-flow: column;
+  height: 2.75rem;
+  min-height: 0;
+}
+/* The shortest role is 11 of 103 months, which is 10.7% of a 350px rail and
+   37px of hit width. Widening the segment would be a lie about the
+   proportion, so the rail is 44px tall instead: the target gets its area on
+   the axis that is not carrying data. */
+.experience-standing.is-rail .experience-standing__seg {
+  min-height: 2.75rem;
+  padding: 0.3125rem 0.375rem;
+}
+.experience-standing.is-rail .experience-standing__bar {
+  left: 0;
+  right: 0;
+  bottom: auto;
+  width: auto;
+  height: 2px;
+}
+/* The shortest segment is 37px wide on the rail. A company name cannot set
+   there and a truncated one is worse than none, so the rail labels by start
+   year: 2025, 2023, 2022, 2021, 2020 left to right, which also states the
+   direction the desktop caps state. The company name is the panel heading
+   directly below, which is where the eye goes anyway. */
+.experience-standing.is-rail .experience-standing__sco,
+.experience-standing.is-rail .experience-standing__sdu,
+.experience-standing.is-rail .experience-standing__cap { display: none; }
+.experience-standing.is-rail .experience-standing__syr {
+  display: block;
+  margin-top: 0.75rem;
+  font-size: 0.5625rem;
+  font-style: normal;
+  letter-spacing: 0.1em;
+  text-decoration: none;
+  color: var(--x-quiet);
+  transition: color 180ms ease;
+}
+.experience-standing.is-rail .experience-standing__seg.is-on .experience-standing__syr {
+  color: var(--void);
+}
+.experience-standing.is-rail .experience-standing__now {
+  right: auto;
+  left: 0.375rem;
+  top: 0.375rem;
+  font-size: 0.5rem;
+}
+.experience-standing.is-rail .experience-standing__marker {
+  left: 0;
+  right: auto;
+  top: 0;
+  bottom: 1.125rem;
+  width: 1px;
+  height: auto;
+}
+.experience-standing.is-rail .experience-standing__marker::after { left: -1px; top: 0; }
+.experience-standing.is-rail .experience-standing__cap {
+  top: auto;
+  bottom: 0;
+  left: 0;
+  right: auto;
+}
+.experience-standing.is-rail .experience-standing__cap--end {
+  bottom: 0;
+  left: auto;
+  right: 0;
+}
+.experience-standing.is-rail .experience-standing__feature { align-self: start; }
+.experience-standing.is-rail .experience-standing__co { font-size: clamp(1.5rem, 8vw, 2rem); }
+.experience-standing.is-rail .experience-standing__tech { display: none; }
+
+/* -------------------------------------------------------- reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .experience-standing__head,
+  .experience-standing__body,
+  .experience-standing__more {
+    transition-duration: 140ms !important;
+    transition-delay: 0s !important;
+    transform: none !important;
+  }
+  .experience-standing__feature.is-fresh > *,
+  .experience-standing__ship {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  .experience-standing__marker { will-change: auto; }
+}
+
+/* ==========================================================================
+   SECTION 04  -  REGISTER
+   --------------------------------------------------------------------------
+   The list reserves the height of its tallest configuration. That is the
+   whole reason the section boundary can stay still while a row opens: the
+   accordion moves inside a box that does not.
+   ========================================================================== */
+/* Top aligned, deliberately. Centring the block would mean that opening a
+   taller row re-centres everything and the heading slides under the reader
+   while they are pointing at the index. The trailing air is the section's
+   own breathing room and it belongs at the bottom. */
+.experience-register__stage {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  gap: clamp(1.75rem, 4vh, 3rem);
+  padding: clamp(3rem, 9vh, 6rem) var(--pad);
+}
+
+.experience-register__head { max-width: 56ch; }
+
+.experience-register__head,
+.experience-register__more {
+  opacity: 0;
+  transform: translate3d(0, 16px, 0);
+  transition: opacity 560ms var(--ease-out), transform 560ms var(--ease-out);
+}
+.experience-register__head.is-in { opacity: 1; transform: none; }
+.experience-register__more { align-self: flex-start; }
+.experience-register__more.is-on.is-in { opacity: 1; transform: none; }
+
+/* --------------------------------------------------------------- the list */
+.experience-register__list {
+  min-height: 34rem;
+  border-top: 1px solid var(--line);
+  list-style: none;
+}
+
+.experience-register__row {
+  border-bottom: 1px solid var(--line);
+  opacity: 0;
+  transform: translate3d(0, 18px, 0);
+  transition:
+    opacity 620ms var(--ease-out) calc(var(--k) * 70ms),
+    transform 620ms var(--ease-out) calc(var(--k) * 70ms),
+    border-color 240ms ease;
+}
+.experience-register__row.is-in { opacity: 1; transform: none; }
+.experience-register__row:has(.experience-register__entry.is-open) { border-bottom-color: var(--c-line); }
+
+.experience-register__entry {
+  display: block;
+  width: 100%;
+  padding: 0;
+  text-align: left;
+  cursor: pointer;
+}
+
+/* ---------------------------------------------------------------- the line */
+.experience-register__line {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: 1.5rem;
+  min-height: 5.5rem;
+  padding: 1.125rem 0;
+}
+
+.experience-register__co {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(1.75rem, 5vw, 3.5rem);
+  line-height: 1;
+  letter-spacing: -0.045em;
+  color: var(--ink);
+  transition: color 240ms ease;
+}
+/* Receding is a colour change and nothing else. Scaling or shifting the four
+   rows the reader is not aiming at would move the index while they aim. */
+.experience-register__list.has-open .experience-register__co { color: var(--ink-3); }
+.experience-register__entry.is-open .experience-register__co { color: var(--ink); }
+
+.experience-register__now {
+  margin-left: 0.625rem;
+  vertical-align: 0.9em;
+  font-family: var(--font-mono);
+  font-size: 0.5625rem;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--c-accent);
+}
+
+/* Two absolutely stacked forms, crossfading. Both tabular, so the right edge
+   does not move while the date lengthens. */
+.experience-register__dates {
+  position: relative;
+  display: block;
+  min-width: 9.5rem;
+  height: 1rem;
+}
+.experience-register__short,
+.experience-register__long {
+  position: absolute;
+  right: 0;
+  top: 0;
+  font-style: normal;
+  font-size: 0.6875rem;
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+  transition: opacity 220ms ease, color 220ms ease;
+}
+.experience-register__short { opacity: 1; color: var(--x-quiet); }
+.experience-register__long { opacity: 0; color: var(--c-accent); }
+.experience-register__entry.is-open .experience-register__short { opacity: 0; }
+.experience-register__entry.is-open .experience-register__long { opacity: 1; }
+
+/* -------------------------------------------------------------- the detail */
+.experience-register__wrap {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 380ms var(--ease-drawer);
+}
+.experience-register__entry.is-open .experience-register__wrap { grid-template-rows: 1fr; }
+
+.experience-register__detail {
+  overflow: hidden;
+  display: grid;
+  gap: 0.625rem;
+  max-width: 60ch;
+}
+.experience-register__detail > * {
+  opacity: 0;
+  transform: translate3d(0, 10px, 0);
+  transition:
+    opacity 320ms var(--ease-out) calc(var(--d) * 55ms + 90ms),
+    transform 320ms var(--ease-out) calc(var(--d) * 55ms + 90ms);
+}
+.experience-register__detail > *:nth-child(1) { --d: 0; }
+.experience-register__detail > *:nth-child(2) { --d: 1; }
+.experience-register__detail > *:nth-child(3) { --d: 2; }
+.experience-register__detail > *:nth-child(4) { --d: 3; }
+.experience-register__entry.is-open .experience-register__detail > * {
+  opacity: 1;
+  transform: none;
+}
+.experience-register__detail > *:last-child { margin-bottom: 1.5rem; }
+
+.experience-register__ti {
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--c-accent);
+}
+.experience-register__was {
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  color: var(--ink-2);
+  text-wrap: pretty;
+}
+.experience-register__last {
+  display: grid;
+  grid-template-columns: 3.75rem minmax(0, 1fr);
+  gap: 0.75rem;
+  padding-top: 0.625rem;
+  border-top: 1px solid var(--line);
+  font-size: 0.875rem;
+  line-height: 1.55;
+}
+.experience-register__last i {
+  font-style: normal;
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 0.625rem;
+  letter-spacing: 0.06em;
+  color: var(--x-quiet);
+  padding-top: 0.25em;
+}
+.experience-register__last u { text-decoration: none; color: var(--ink-2); }
+
+.experience-register__chip {
+  display: inline-block;
+  margin: 0 0.3125rem 0.3125rem 0;
+  padding: 0.1875rem 0.4375rem;
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  font-family: var(--font-mono);
+  font-size: 0.5625rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+  transition: border-color var(--d-ui) var(--ease-out), color var(--d-ui) var(--ease-out);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .experience-register__chip:hover { border-color: var(--c-line); color: var(--ink); }
+}
+
+/* ------------------------------------------------------------------ tablet */
+@media (max-width: 1100px) {
+  .experience-register__line { min-height: 4.75rem; }
+  .experience-register__list { min-height: 30rem; }
+}
+
+/* ------------------------------------------------- mobile recomposition */
+/* A 3.5rem name and a date range cannot share 350px without one of them
+   shrinking to a size that is not a size. So the date leaves the line and
+   hangs under the name in mono, the row becomes a 72px tap target rather
+   than a hover target, and the chips go: a chip row that wraps three times
+   is a list pretending to be a row. */
+@media (max-width: 767px) {
+  .experience-register__stage {
+    gap: 1.5rem;
+    padding: clamp(2.5rem, 7vh, 4rem) var(--pad);
+  }
+  .experience-register__list { min-height: 28rem; }
+  .experience-register__line {
+    grid-template-columns: minmax(0, 1fr);
+    align-items: start;
+    gap: 0.375rem;
+    min-height: 4.5rem;
+    padding: 0.875rem 0;
+  }
+  .experience-register__dates {
+    min-width: 0;
+    height: auto;
+    text-align: left;
+  }
+  .experience-register__short,
+  .experience-register__long {
+    position: static;
+    display: block;
+    font-size: 0.625rem;
+  }
+  .experience-register__short { display: none; }
+  .experience-register__long { opacity: 1; color: var(--x-quiet); }
+  .experience-register__entry.is-open .experience-register__long { color: var(--c-accent); }
+  .experience-register__tech { display: none; }
+  .experience-register__was { font-size: 0.875rem; }
+}
+
+/* -------------------------------------------------------- reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .experience-register__head,
+  .experience-register__more,
+  .experience-register__row,
+  .experience-register__detail > * {
+    transition-duration: 140ms !important;
+    transition-delay: 0s !important;
+    transform: none !important;
+  }
+  .experience-register__wrap { transition-duration: 120ms !important; }
+  .experience-register__short,
+  .experience-register__long { transition: none !important; }
+}
+
+/* ==========================================================================
+   SECTION 05  -  CLAUSE
+   --------------------------------------------------------------------------
+   The clause buttons live inside a paragraph, so they inherit the paragraph's
+   face, size and line-height and only own their ink and their underline.
+   Anything that changes their box would break the line they are set in.
+   ========================================================================== */
+.experience-clause__stage {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  gap: clamp(1.5rem, 3.5vh, 2.25rem);
+  padding: clamp(3rem, 9vh, 6rem) var(--pad);
+}
+
+.experience-clause__head,
+.experience-clause__panels,
+.experience-clause__more {
+  opacity: 0;
+  transform: translate3d(0, 16px, 0);
+  transition: opacity 620ms var(--ease-out), transform 620ms var(--ease-out);
+}
+.experience-clause__head.is-in,
+.experience-clause__panels.is-in { opacity: 1; transform: none; }
+.experience-clause__panels.is-in { transition-delay: 90ms; }
+.experience-clause__more { align-self: flex-start; }
+.experience-clause__more.is-on.is-in { opacity: 1; transform: none; }
+
+/* ----------------------------------------------------------- the sentence */
+.experience-clause__sentence {
+  max-width: 48ch;
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(1.25rem, 2.6vw, 2rem);
+  line-height: 1.45;
+  letter-spacing: -0.02em;
+  color: var(--ink-2);
+  text-wrap: pretty;
+}
+
+/* `text-decoration` rather than `border-bottom`, because the phrase wraps.
+   A border draws one rule around the whole inline box; a text decoration
+   draws on every line fragment and knows where the descenders are. */
+.experience-clause__clause {
+  color: var(--ink);
+  cursor: pointer;
+  text-decoration: underline;
+  text-decoration-color: var(--c-line);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.18em;
+  transition: color 180ms ease, text-decoration-color 180ms ease;
+}
+.experience-clause__clause.is-open {
+  text-decoration-color: var(--c-accent);
+  text-decoration-thickness: 2px;
+}
+.experience-clause__clause:focus-visible {
+  outline: 2px solid var(--c-accent);
+  outline-offset: 2px;
+  border-radius: var(--r);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .experience-clause__clause:hover { text-decoration-color: var(--c-accent); }
+}
+
+.experience-clause__all {
+  margin-top: clamp(1rem, 2.5vh, 1.5rem);
+  padding: 0;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--x-quiet);
+  background: none;
+  border: 0;
+  border-bottom: 1px solid var(--line-2);
+  cursor: pointer;
+  transition: color 180ms ease, border-color 180ms ease;
+}
+@media (hover: hover) and (pointer: fine) {
+  .experience-clause__all:hover { color: var(--ink); border-bottom-color: var(--c-line); }
+}
+
+/* ------------------------------------------------------------- the panels */
+.experience-clause__panels {
+  display: grid;
+  gap: 0.75rem;
+  max-width: 58rem;
+}
+
+.experience-clause__panel {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 420ms var(--ease-drawer);
+}
+.experience-clause__panel.is-open { grid-template-rows: 1fr; }
+
+.experience-clause__inner {
+  overflow: hidden;
+  padding: 0 1.25rem;
+  border-left: 1px solid var(--c-line);
+  background: var(--c-wash);
+  opacity: 0;
+  transform: translate3d(0, 12px, 0);
+  transition: opacity 340ms var(--ease-out) 120ms, transform 340ms var(--ease-out) 120ms;
+}
+.experience-clause__panel.is-open .experience-clause__inner {
+  opacity: 1;
+  transform: none;
+}
+/* Padding lives on the inner rather than the row, so a closed panel is
+   genuinely zero height instead of two paddings tall. */
+.experience-clause__panel.is-open .experience-clause__inner { padding: 1rem 1.25rem; }
+
+.experience-clause__ptitle {
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--c-accent);
+}
+
+.experience-clause__foot {
+  margin-top: 0.75rem;
+  max-width: 62ch;
+  font-size: 0.8125rem;
+  line-height: 1.55;
+  color: var(--x-quiet);
+}
+
+/* -------------------------------------------------------------- the roles */
+.experience-clause__roles { margin-top: 0.75rem; list-style: none; }
+.experience-clause__role {
+  display: grid;
+  grid-template-columns: minmax(0, 12rem) minmax(0, 1fr) 11rem 5.5rem;
+  gap: 0.75rem;
+  align-items: baseline;
+  padding: 0.4375rem 0;
+  border-top: 1px solid var(--line);
+  font-size: 0.8125rem;
+}
+.experience-clause__role b { font-weight: 500; color: var(--ink); }
+.experience-clause__role span { color: var(--ink-2); }
+.experience-clause__role em,
+.experience-clause__role i {
+  font-style: normal;
+  font-size: 0.6875rem;
+  letter-spacing: 0.06em;
+  color: var(--x-quiet);
+}
+.experience-clause__role i { text-align: right; }
+
+/* ---------------------------------------------------------- the year table */
+.experience-clause__years {
+  margin-top: 0.75rem;
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8125rem;
+}
+.experience-clause__years th,
+.experience-clause__years td {
+  padding: 0.375rem 0.75rem 0.375rem 0;
+  text-align: left;
+  vertical-align: middle;
+}
+.experience-clause__years thead th {
+  font-family: var(--font-mono);
+  font-size: 0.5625rem;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-4);
+  border-bottom: 1px solid var(--line);
+}
+.experience-clause__years tbody th,
+.experience-clause__years tbody td {
+  border-bottom: 1px solid var(--line);
+  font-size: 0.6875rem;
+  letter-spacing: 0.04em;
+  color: var(--ink-2);
+}
+.experience-clause__years tbody th { font-weight: 500; color: var(--ink); }
+.experience-clause__years tbody tr.is-double th,
+.experience-clause__years tbody tr.is-double td {
+  border-bottom-color: var(--c-mid);
+  color: var(--ink);
+}
+.experience-clause__years td:last-child { width: 40%; padding-right: 0; }
+
+/* The bar is role months; the mark on it is that year's calendar months. */
+.experience-clause__ybar {
+  position: relative;
+  display: block;
+  height: 2px;
+  background: var(--c-mid);
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 520ms var(--ease-out);
+}
+.experience-clause__panel.is-open .experience-clause__ybar { transform: scaleX(1); }
+.experience-clause__years tbody tr:nth-child(1) .experience-clause__ybar { transition-delay: 45ms; }
+.experience-clause__years tbody tr:nth-child(2) .experience-clause__ybar { transition-delay: 90ms; }
+.experience-clause__years tbody tr:nth-child(3) .experience-clause__ybar { transition-delay: 135ms; }
+.experience-clause__years tbody tr:nth-child(4) .experience-clause__ybar { transition-delay: 180ms; }
+.experience-clause__years tbody tr:nth-child(5) .experience-clause__ybar { transition-delay: 225ms; }
+.experience-clause__years tbody tr:nth-child(6) .experience-clause__ybar { transition-delay: 270ms; }
+.experience-clause__years tbody tr:nth-child(7) .experience-clause__ybar { transition-delay: 315ms; }
+.experience-clause__ybar::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: calc(var(--w) * 100%);
+  background: var(--c-accent);
+}
+.experience-clause__ybar::after {
+  content: "";
+  position: absolute;
+  left: calc(var(--c) * 100%);
+  top: -3px;
+  width: 1px;
+  height: 8px;
+  background: var(--ink-3);
+}
+.experience-clause__years tbody tr.is-double .experience-clause__ybar::before {
+  background: var(--c-accent);
+}
+
+/* ------------------------------------------------------------ the windows */
+.experience-clause__windows { margin-top: 0.75rem; list-style: none; }
+.experience-clause__window {
+  display: grid;
+  grid-template-columns: 4.5rem minmax(0, 1fr) 14rem;
+  gap: 0.75rem;
+  align-items: baseline;
+  padding: 0.5rem 0;
+  border-top: 1px solid var(--line);
+  font-size: 0.8125rem;
+}
+.experience-clause__window b {
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--c-accent);
+}
+.experience-clause__window span { color: var(--ink); }
+.experience-clause__window span em {
+  font-style: normal;
+  padding: 0 0.4375rem;
+  color: var(--x-quiet);
+}
+.experience-clause__window i {
+  font-style: normal;
+  font-size: 0.6875rem;
+  letter-spacing: 0.06em;
+  color: var(--x-quiet);
+  text-align: right;
+}
+
+/* ----------------------------------------------------------- the contract */
+.experience-clause__contract { margin-top: 0.75rem; }
+.experience-clause__contract > b {
+  display: block;
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 1.125rem;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+.experience-clause__cmeta {
+  display: inline-block;
+  margin: 0.3125rem 0.875rem 0 0;
+  font-size: 0.6875rem;
+  letter-spacing: 0.04em;
+  color: var(--x-quiet);
+}
+.experience-clause__contract p {
+  margin-top: 0.625rem;
+  max-width: 62ch;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: var(--ink-2);
+}
+.experience-clause__cships { margin-top: 0.75rem; list-style: none; }
+.experience-clause__cship {
+  display: grid;
+  grid-template-columns: 3.75rem minmax(0, 56ch);
+  gap: 0.75rem;
+  padding: 0.4375rem 0;
+  border-top: 1px solid var(--line);
+  font-size: 0.8125rem;
+  line-height: 1.55;
+  color: var(--ink-2);
+}
+.experience-clause__cship .t-num {
+  font-style: normal;
+  font-size: 0.625rem;
+  letter-spacing: 0.06em;
+  color: var(--x-quiet);
+  padding-top: 0.25em;
+}
+
+/* ------------------------------------------------- mobile recomposition */
+/* Three numbers per row is what fits at 390px without the figures reaching
+   9px, so the scale bar and the live count leave the table. The role list
+   goes to two lines per role. */
+@media (max-width: 767px) {
+  .experience-clause__stage {
+    gap: 1.25rem;
+    padding: clamp(2.5rem, 7vh, 4rem) var(--pad);
+  }
+  .experience-clause__sentence {
+    max-width: none;
+    font-size: clamp(1.125rem, 5.2vw, 1.5rem);
+    line-height: 1.5;
+  }
+  .experience-clause__clause { text-underline-offset: 0.16em; }
+  .experience-clause__inner { padding: 0 0.875rem; }
+  .experience-clause__panel.is-open .experience-clause__inner { padding: 0.875rem; }
+  .experience-clause__role {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 0.125rem 0.75rem;
+  }
+  .experience-clause__role span { grid-column: 1; font-size: 0.75rem; }
+  .experience-clause__role em { grid-column: 2; grid-row: 1; text-align: right; }
+  .experience-clause__role i { grid-column: 2; grid-row: 2; }
+  .experience-clause__years th:nth-child(4),
+  .experience-clause__years td:nth-child(4),
+  .experience-clause__years th:nth-child(5),
+  .experience-clause__years td:nth-child(5) { display: none; }
+  .experience-clause__window {
+    grid-template-columns: 4rem minmax(0, 1fr);
+    gap: 0.25rem 0.75rem;
+  }
+  .experience-clause__window i { grid-column: 2; text-align: left; }
+  .experience-clause__cship { grid-template-columns: 3rem minmax(0, 1fr); }
+}
+
+/* -------------------------------------------------------- reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .experience-clause__head,
+  .experience-clause__panels,
+  .experience-clause__more,
+  .experience-clause__inner {
+    transition-duration: 140ms !important;
+    transition-delay: 0s !important;
+    transform: none !important;
+  }
+  .experience-clause__panel { transition-duration: 140ms !important; }
+  .experience-clause__ybar {
+    transition: none !important;
+    transform: scaleX(1) !important;
+  }
+}
+
+/* ==========================================================================
+   SHORT VIEWPORTS  -  the three pinned sections shedding content.
+   --------------------------------------------------------------------------
+   A sticky viewport is exactly one screen and it clips. On a 720px laptop the
+   scroller inside this shell is 582px, which is 38px less than the Standing
+   panel needs and 25px less than the Ascent plot needs. `is-short` and
+   `is-tiny` are set from the SCROLLER's own height in JS, never from a
+   `max-height` media query, because the query would be measuring the window
+   and the window is not the box the content has to fit inside.
+
+   What goes, in order: the things the other four concepts already say. The
+   technology list is in Standing's page counterpart and in Register. The
+   rung block is the whole of Ascent. The oldest of three shipped lines is in
+   every page concept. Nothing that is only here is ever dropped.
+   ========================================================================== */
+
+/* ---------------------------------------------------------------- AXIS */
+.experience-axis.is-short .experience-axis__stage {
+  padding-block: clamp(1.5rem, 4vh, 2.5rem);
+  gap: 0.875rem;
+}
+.experience-axis.is-tiny .experience-sec__lede { display: none; }
+
+/* -------------------------------------------------------------- ASCENT */
+.experience-ascent.is-short .experience-ascent__stage {
+  padding-block: 1.75rem;
+  gap: 0.875rem;
+}
+.experience-ascent.is-short .experience-ascent__rung em { display: none; }
+.experience-ascent.is-short .experience-ascent__rungs { height: 1.25rem; }
+.experience-ascent.is-tiny .experience-ascent__stage { padding-block: 1.25rem; }
+.experience-ascent.is-tiny .experience-ascent__label .experience-ascent__rl { display: none; }
+
+/* ------------------------------------------------------------ STANDING */
+.experience-standing.is-short .experience-standing__stage {
+  padding-block: 1.75rem;
+  gap: 1rem;
+}
+.experience-standing.is-short .experience-standing__tech { display: none; }
+.experience-standing.is-short .experience-standing__co { font-size: clamp(1.5rem, 3vw, 2rem); }
+.experience-standing.is-short .experience-standing__ship { padding: 0.375rem 0; }
+.experience-standing.is-short .experience-standing__was { margin-top: 0.75rem; }
+
+.experience-standing.is-tiny .experience-standing__stage { padding-block: 1.25rem; }
+.experience-standing.is-tiny .experience-standing__rung { display: none; }
+.experience-standing.is-tiny .experience-standing__co { font-size: 1.625rem; }
+/* The oldest of the three shipped lines goes first. Two dated things is
+   still evidence; the third is in the page counterpart. */
+.experience-standing.is-tiny .experience-standing__ship:first-child { display: none; }

@@ -1,0 +1,1072 @@
+/* ============================================================================
+   Experience — Overlap
+   components/sections/v2/V2Experience.tsx + components/experience/OverlapChart.tsx
+   ----------------------------------------------------------------------------
+   A career as overlapping bars on a real month grid.
+
+   Two spatial encodings exist here and no others: position along the axis is
+   date, and length along the axis is duration. Nothing else is permitted to
+   carry either, which is why every lane uses the same hue. Colour-coding the
+   lanes would say a second time what vertical position already says, and
+   redundant encoding is what makes a chart look anxious.
+
+   Ground is --void. The accent appears at four alphas and nowhere else:
+   1.00 live bar, 0.34 resting bar, 0.13 fill wash, 0.055 concurrency band.
+   Reference marks (year rules, numerals) are neutral ink, never the accent,
+   because a reference mark that competes with a data mark stops being one.
+
+   Per frame the JS writes at most one transform per lane plus one on the
+   marker, and only when the value actually changed. Everything else in this
+   file is set once and never touched again.
+   ========================================================================== */
+
+.xp {
+  --xp-accent: 63 169 224;
+  /* Alpha multiplier. Thin washes vanish on white, so light mode runs every
+     accent alpha ~1.4x while the concurrency band goes the other way. */
+  --xp-a: 1;
+  --xp-band: 0.055;
+  --xp-rule: 7%;
+  --xp-marker: rgb(255 255 255 / 0.7);
+  --xp-marker-cap: rgb(255 255 255 / 0.92);
+  /* The popover is the one lifted surface in the section, so it needs a real
+     ground rather than a wash: on a near-black void it lifts, on a near-white
+     one it goes pure white and leans on the shadow instead. */
+  --xp-pop-bg: oklch(0.2 0.022 250);
+  --xp-pop-shadow: 0 18px 40px -22px rgb(0 0 0 / 0.85);
+
+  --xp-gutter: clamp(11rem, 17vw, 15rem);
+  /* 76px is the design height; the svh term is what keeps a pinned stage of
+     exactly 100svh from overflowing on a short laptop screen. */
+  --xp-lane-h: clamp(58px, 8.2svh, 76px);
+  --xp-bar: 18px;
+  /* Mirrors the shell's own `px-5 md:px-10`, so the chart's left edge lands on
+     the same pixel as every heading above and below it. */
+  --xp-inset: clamp(1.25rem, 4vw, 2.5rem);
+  /* Narrower than the page shell's 88rem, deliberately.
+     88rem only starts constraining anything past a 1408px viewport, so on the
+     1440px laptop most people read this on the max() collapsed straight back to
+     --xp-inset and the chart ran edge to edge with a 40px gutter — 44 months
+     stretched across the full screen, every bar reading longer than it is, and
+     no visual container at all under a white ground.
+     72rem is the widest band that still leaves a real margin at 1440px
+     (~144px a side) while keeping the chart wide enough that a 5-month role is
+     not reduced to a tick. */
+  --xp-max: 72rem;
+  /* Centres an --xp-max band without a wrapper element. A wrapper would have to
+     go inside the pinned stage and would break its `auto 1fr auto` rows, so the
+     band is expressed as padding instead: normal inset until the viewport
+     outgrows the band, then whatever it takes to keep the band centred. */
+  --xp-pad: max(var(--xp-inset), calc((100% - var(--xp-max)) / 2 + var(--xp-inset)));
+  --xp-ease: cubic-bezier(0.23, 1, 0.32, 1);
+  --xp-sheet: cubic-bezier(0.32, 0.72, 0, 1);
+
+  position: relative;
+  isolation: isolate;
+  color: var(--ink);
+}
+
+/* Light mode is not the dark composition inverted: the marker cannot stay
+   white, and the band has to thin out or it turns into a grey stripe. */
+:root:not(.dark) .xp {
+  --xp-a: 1.4;
+  --xp-band: 0.04;
+  --xp-rule: 9%;
+  --xp-marker: rgb(17 17 20 / 0.72);
+  --xp-marker-cap: rgb(17 17 20 / 0.92);
+  --xp-pop-bg: oklch(1 0 0);
+  --xp-pop-shadow: 0 18px 40px -24px rgb(15 23 42 / 0.4);
+}
+
+/* ── Scroll rail ──────────────────────────────────────────────────────────
+   The rail is the only reason this section is tall. Its surplus height over one
+   viewport IS the pin duration: the stage is held still for `count * 52svh` of
+   scrolling while the bars arrive one after another, and released the moment
+   the chart is complete.
+
+   The stage is pinned by ScrollTrigger, NOT by `position: sticky`. Sticky does
+   not work here: ScrollSmoother drives the page by putting a transform on
+   #smooth-content, and a sticky element resolves against the window scrollport
+   while the content is translated underneath it — so it degrades to static, the
+   stage scrolls away, and the rest of the rail is a screen of nothing. Pinning
+   is what actually holds it. Same reason the projects reel pins its stage.
+
+   `svh` so a collapsing mobile URL bar cannot resize the rail mid-scroll and
+   force a ScrollTrigger recalculation. */
+.xp-rail {
+  height: calc(100svh + var(--xp-count, 3) * 52svh);
+}
+
+.xp-stage {
+  position: relative;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  gap: clamp(0.75rem, 2.2vh, 2rem);
+  /* Exact, not min-height: a pinned element whose height can grow would change
+     the travel it was measured against. Everything inside scales with svh. */
+  height: 100svh;
+  padding: clamp(2.5rem, 7vh, 5rem) var(--xp-pad) clamp(4rem, 9vh, 6rem);
+}
+
+/* Reduced motion holds nobody hostage. The bars are already at full length, so
+   there is nothing to arrive and no reason to spend 150svh of scroll not
+   arriving it — the section collapses to one ordinary screen. */
+.xp[data-reduced="true"] .xp-rail {
+  height: auto;
+}
+
+/* ── Heading ──────────────────────────────────────────────────────────────── */
+
+.xp-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem 2rem;
+}
+
+.xp-eyebrow {
+  font-family: var(--font-measure);
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: color-mix(in oklab, var(--ink) 45%, transparent);
+}
+
+.xp-title {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: clamp(1.75rem, 3.4vw, 2.75rem);
+  line-height: 0.98;
+  letter-spacing: -0.035em;
+  text-wrap: balance;
+  margin-top: 0.4rem;
+}
+
+/* The chart's own summary of itself, stated in words above the thing that
+   proves it. One integer, because concurrency is the fact a list cannot hold. */
+.xp-thesis {
+  font-family: var(--font-measure);
+  font-variant-numeric: tabular-nums;
+  font-size: 11px;
+  line-height: 1.5;
+  letter-spacing: 0.01em;
+  color: color-mix(in oklab, var(--ink) 52%, transparent);
+  max-width: 34ch;
+}
+
+/* ── Chart ────────────────────────────────────────────────────────────────── */
+
+.xp-chart {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  align-content: center;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.xp-years {
+  position: relative;
+  height: 14px;
+  margin-left: var(--xp-gutter);
+}
+
+.xp-year {
+  position: absolute;
+  top: 0;
+  left: calc(var(--f) * 100%);
+  font-family: var(--font-measure);
+  font-variant-numeric: tabular-nums;
+  font-size: 10px;
+  line-height: 1;
+  letter-spacing: 0.06em;
+  color: color-mix(in oklab, var(--ink) 34%, transparent);
+  transform: translateX(-1px);
+}
+
+.xp-plot {
+  position: relative;
+  min-width: 0;
+}
+
+/* Static layer. Year rules and concurrency bands are written once at mount and
+   never move: a chart whose reference marks move is a chart you cannot read. */
+.xp-grid {
+  position: absolute;
+  inset: 0 0 0 var(--xp-gutter);
+  pointer-events: none;
+}
+
+.xp-rule {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: calc(var(--f) * 100%);
+  width: 1px;
+  background: color-mix(in oklab, var(--ink) var(--xp-rule), transparent);
+}
+
+.xp-band {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: calc(var(--f0) * 100%);
+  width: calc((var(--f1) - var(--f0)) * 100%);
+  /* The one accent alpha that is NOT run through --xp-a. Light mode moves the
+     band down to 4% rather than up: every other wash has to fight a white
+     ground, but a band this wide turns into a grey stripe if it gains any. */
+  background: rgb(var(--xp-accent) / var(--xp-band));
+}
+
+/* No z-index here on purpose.
+   The lanes still paint over the static grid, because both are positioned and
+   the grid comes first in the DOM. Giving this element a z-index would make it
+   a stacking context, which would trap the popover below the marker's z-index 2
+   and let a 1px rule draw straight through a raised surface. */
+.xp-lanes {
+  position: relative;
+}
+
+/* ── Lanes ────────────────────────────────────────────────────────────────
+   The whole row is the hit target. A fourteen-percent-wide bar is still easy
+   to click because the click never had to land on the bar. */
+.xp-lane {
+  display: grid;
+  grid-template-columns: var(--xp-gutter) minmax(0, 1fr);
+  align-items: center;
+  gap: 0;
+  width: 100%;
+  height: var(--xp-lane-h);
+  padding: 0;
+  border: 0;
+  background: none;
+  text-align: left;
+  color: inherit;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.xp-lane:focus-visible {
+  outline: 1px solid rgb(var(--xp-accent) / calc(0.9 * var(--xp-a)));
+  outline-offset: -1px;
+}
+
+.xp-label {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: baseline;
+  column-gap: 0.75rem;
+  padding-right: 1.25rem;
+  min-width: 0;
+}
+
+/* Scaling a bar with type inside it squashes the type, so the label is its own
+   element on its own transition and never shares one with the fill. */
+.xp-label-main {
+  grid-column: 1;
+  min-width: 0;
+}
+
+.xp-company {
+  display: block;
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: clamp(0.9375rem, 1.1vw, 1.0625rem);
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  color: var(--ink-2);
+  transition: color 180ms ease;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.xp-role {
+  display: block;
+  margin-top: 0.2rem;
+  font-family: var(--font-measure);
+  font-weight: 400;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Tabular figures are not a nicety in a column of five stacked date ranges:
+   without them the gutter reflows by a pixel or two as the marker moves. */
+.xp-dates,
+.xp-duration {
+  font-family: var(--font-measure);
+  font-variant-numeric: tabular-nums;
+  font-size: 10px;
+  line-height: 1.4;
+  letter-spacing: 0.02em;
+  color: color-mix(in oklab, var(--ink) 40%, transparent);
+  white-space: nowrap;
+}
+
+.xp-dates {
+  display: block;
+  margin-top: 0.3rem;
+}
+
+/* Carried inline on the mobile axis only; see the media query at the bottom. */
+.xp-role-dur {
+  display: none;
+}
+
+.xp-duration {
+  grid-column: 2;
+  align-self: end;
+}
+
+.xp-track {
+  position: relative;
+  height: var(--xp-bar);
+  min-width: 0;
+}
+
+.xp-fill {
+  position: absolute;
+  inset-block: 0;
+  left: calc(var(--f0) * 100%);
+  width: calc((var(--f1) - var(--f0)) * 100%);
+  border: 1px solid rgb(var(--xp-accent) / calc(0.34 * var(--xp-a)));
+  background: rgb(var(--xp-accent) / calc(0.13 * var(--xp-a)));
+  opacity: 0.34;
+  transform-origin: left center;
+  /* Only opacity and border-color transition. The transform is written every
+     frame by the scroll driver and must never be fighting a CSS transition. */
+  transition: opacity 180ms ease, border-color 180ms ease;
+}
+
+/* Percentages, so a resize costs exactly zero JavaScript. */
+.xp-fill::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgb(var(--xp-accent) / calc(0.22 * var(--xp-a)));
+  opacity: 0;
+  transition: opacity 180ms ease;
+}
+
+/* Feedback, so it stays under 200ms. */
+.xp-lane.is-live .xp-fill {
+  opacity: 0.92;
+  border-color: rgb(var(--xp-accent) / calc(1 * var(--xp-a)));
+}
+
+.xp-lane.is-live .xp-company {
+  color: var(--ink);
+}
+
+.xp-lane[aria-pressed="true"] .xp-fill::after {
+  opacity: 1;
+}
+
+.xp-lane[aria-pressed="true"] .xp-company {
+  color: var(--ink);
+}
+
+/* Nothing translates on hover, because the bar position IS the data. */
+@media (hover: hover) and (pointer: fine) {
+  .xp-lane:hover .xp-company {
+    color: var(--ink);
+  }
+
+  .xp-lane:hover .xp-fill {
+    box-shadow: inset 0 1px 0 0 rgb(var(--xp-accent) / calc(0.8 * var(--xp-a)));
+  }
+}
+
+/* ── Bar popover ──────────────────────────────────────────────────────────
+   Anchored to the start of its own bar, so it reads as belonging to that bar
+   rather than following the cursor around.
+
+   It deliberately does not repeat the gutter label. Company, title, dates and
+   duration are already two centimetres to the left; printing them again would
+   be the same fact stated twice. What it carries instead is the one thing the
+   drawing cannot show at a glance — how long this role ran alongside another —
+   which is the section's whole argument, per role.
+
+   The `left` clamp keeps it inside the plot without a line of JavaScript: it
+   tracks the bar until the bar gets close enough to the right edge that the
+   popover would overhang, then stops. */
+.xp-pop {
+  --xp-pop-w: 15rem;
+  position: absolute;
+  z-index: 5;
+  left: clamp(0px, calc(var(--f0) * 100%), calc(100% - var(--xp-pop-w)));
+  bottom: calc(100% + 11px);
+  width: var(--xp-pop-w);
+  display: grid;
+  gap: 0.3rem;
+  padding: 0.6rem 0.7rem;
+  background: var(--xp-pop-bg);
+  border: 1px solid rgb(var(--xp-accent) / calc(0.32 * var(--xp-a)));
+  box-shadow: var(--xp-pop-shadow);
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(4px);
+  /* visibility is delayed out, not eased, so the box stops being hit-testable
+     the instant it starts leaving. */
+  transition: opacity 160ms ease, transform 160ms ease, visibility 0s linear 160ms;
+  visibility: hidden;
+}
+
+/* The topmost lane has no room above it, so its popover drops below instead. */
+.xp-lane:first-child .xp-pop {
+  bottom: auto;
+  top: calc(100% + 11px);
+}
+
+.xp-pop-key {
+  font-family: var(--font-measure);
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: color-mix(in oklab, var(--ink) 42%, transparent);
+}
+
+.xp-pop-fact {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 0.8125rem;
+  letter-spacing: -0.01em;
+  line-height: 1.25;
+  color: var(--ink);
+}
+
+.xp-pop-months {
+  flex: 0 0 auto;
+  font-family: var(--font-measure);
+  font-variant-numeric: tabular-nums;
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  color: rgb(var(--xp-accent) / calc(0.95 * var(--xp-a)));
+}
+
+.xp-pop-meta {
+  font-family: var(--font-measure);
+  font-size: 9px;
+  letter-spacing: 0.05em;
+  color: var(--ink-3);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Hover only, and only where hover is real. On touch the tap latches the panel
+   and there is no cursor to hang a popover off. */
+@media (hover: hover) and (pointer: fine) {
+  .xp-lane:hover .xp-pop,
+  .xp-lane:focus-visible .xp-pop {
+    opacity: 1;
+    transform: none;
+    visibility: visible;
+    transition-delay: 0s;
+  }
+}
+
+/* ── Scroll-driven draw ───────────────────────────────────────────────────
+   Without JS every bar is already at full length, so the chart is complete and
+   readable in the served HTML. `.js` hands the length over to the scroll
+   driver, which writes scaleX directly on each fill. */
+.xp-chart.js .xp-fill {
+  transform: scaleX(0);
+}
+
+.xp-chart.js .xp-label {
+  opacity: 0;
+  transform: translateX(-10px);
+  transition: opacity 420ms var(--xp-ease), transform 420ms var(--xp-ease);
+  transition-delay: 120ms;
+}
+
+.xp-chart.js .xp-lane.is-begun .xp-label {
+  opacity: 1;
+  transform: none;
+}
+
+/* ── Marker ───────────────────────────────────────────────────────────────
+   One 0..1 value, damped, written as translate3d on this element only. Never
+   as a custom property on the parent: that would restyle every bar in the
+   subtree on every frame to move one rule. */
+.xp-marker {
+  position: absolute;
+  inset: 0 auto 0 var(--xp-gutter);
+  width: 1px;
+  z-index: 2;
+  pointer-events: none;
+  background: var(--xp-marker);
+  opacity: 0;
+  transition: opacity 200ms ease;
+}
+
+.xp-chart.js .xp-marker {
+  opacity: 1;
+}
+
+/* The only pure white in the composition, and only 4x3 of it. */
+.xp-marker::before,
+.xp-marker::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  width: 4px;
+  height: 3px;
+  margin-left: -2px;
+  background: var(--xp-marker-cap);
+}
+
+.xp-marker::before {
+  top: 0;
+}
+
+.xp-marker::after {
+  bottom: 0;
+}
+
+/* ── Readout + detail panel ───────────────────────────────────────────────── */
+
+.xp-foot {
+  display: grid;
+  gap: 0.75rem;
+  /* Reserved so opening a panel cannot reflow the chart above it. */
+  min-height: 8.5rem;
+  align-content: start;
+  border-top: 1px solid color-mix(in oklab, var(--ink) 8%, transparent);
+  padding-top: 0.9rem;
+}
+
+.xp-readout {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.5rem 1.25rem;
+  font-family: var(--font-measure);
+  font-variant-numeric: tabular-nums;
+  font-size: 11px;
+  letter-spacing: 0.02em;
+  color: color-mix(in oklab, var(--ink) 55%, transparent);
+}
+
+.xp-readout-month {
+  color: var(--ink);
+  letter-spacing: 0.08em;
+}
+
+.xp-readout-roles {
+  color: color-mix(in oklab, var(--ink) 72%, transparent);
+}
+
+.xp-readout-count {
+  margin-left: auto;
+  color: color-mix(in oklab, var(--ink) 42%, transparent);
+}
+
+.xp-panel {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr) minmax(0, 0.9fr);
+  gap: 1.25rem 2rem;
+  /* Positioned so the close button anchors here for good. The entry animation
+     puts a transform on this element, and a transformed element is a containing
+     block for its absolute descendants — without this the close button would
+     re-anchor, and visibly jump, the instant the animation finished. */
+  position: relative;
+  animation: xp-panel-in 240ms var(--xp-ease) both;
+}
+
+@keyframes xp-panel-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Emphasis inside panel prose. A step up the ink ramp, never a second hue:
+   the section is allowed one accent and the bars already own it. */
+.xp-em {
+  color: var(--ink);
+  font-weight: 500;
+}
+
+.xp-panel-summary {
+  font-size: 0.875rem;
+  line-height: 1.55;
+  color: var(--ink-2);
+  text-wrap: pretty;
+}
+
+/* Stacked, not spread. "Solution Insurance Group" beside "Overlapped Web
+   Makers LTD + Freelancer · 19 mo" is sixty characters competing for one line;
+   on the second row the overlap fact reads as a caption to the company, which
+   is what it is. */
+.xp-panel-head {
+  display: grid;
+  justify-items: start;
+  gap: 0.2rem;
+  margin-bottom: 0.5rem;
+}
+
+.xp-panel-company {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 0.9375rem;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+
+.xp-panel-key {
+  font-family: var(--font-measure);
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: color-mix(in oklab, var(--ink) 38%, transparent);
+  display: block;
+  margin-bottom: 0.5rem;
+}
+
+.xp-shipped {
+  display: grid;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.xp-shipped li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.6rem;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: var(--ink-3);
+}
+
+/* The month prefix is what makes the panel a small timeline rather than a list
+   of claims. It is absent, not faked, when the record carries no date. */
+.xp-shipped-month {
+  font-family: var(--font-measure);
+  font-variant-numeric: tabular-nums;
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  color: rgb(var(--xp-accent) / calc(0.9 * var(--xp-a)));
+  padding-top: 0.15rem;
+  white-space: nowrap;
+}
+
+.xp-shipped-month[data-undated="true"] {
+  color: color-mix(in oklab, var(--ink) 22%, transparent);
+}
+
+.xp-tech {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+
+.xp-tech span {
+  font-family: var(--font-measure);
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  padding: 0.15rem 0.4rem;
+  border: 1px solid color-mix(in oklab, var(--ink) 11%, transparent);
+  color: var(--ink-3);
+}
+
+.xp-meta {
+  display: grid;
+  gap: 0.35rem;
+  font-family: var(--font-measure);
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  color: var(--ink-3);
+}
+
+.xp-hint {
+  font-family: var(--font-measure);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: color-mix(in oklab, var(--ink) 30%, transparent);
+}
+
+/* The same derived fact the popover carries, kept here so nothing in this
+   section exists only on hover. */
+.xp-panel-shared {
+  font-family: var(--font-measure);
+  font-variant-numeric: tabular-nums;
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgb(var(--xp-accent) / calc(0.9 * var(--xp-a)));
+  text-wrap: pretty;
+}
+
+/* Pinned state.
+   Signalled by an added mark rather than by dimming the preview: a preview is
+   the thing the reader is trying to read, and making it fainter to say
+   "provisional" taxes the wrong moment. It also could not have worked here —
+   `animation: ... both` on this element holds every property its keyframes
+   touch, and animations outrank normal declarations in the cascade no matter
+   how specific the selector is, so an `opacity` rule would simply be ignored.
+
+   inset box-shadow, not border-left, so latching costs no layout shift. */
+.xp-panel[data-pinned] {
+  box-shadow: inset 2px 0 0 0 rgb(var(--xp-accent) / calc(0.85 * var(--xp-a)));
+  padding-left: 0.85rem;
+}
+
+.xp-panel[data-pinned] .xp-panel-close {
+  color: rgb(var(--xp-accent) / calc(0.95 * var(--xp-a)));
+}
+
+/* Not a control while it is only a label, so it must not invite a click. */
+span.xp-panel-close {
+  cursor: default;
+}
+
+.xp-panel-close {
+  position: absolute;
+  top: 0.6rem;
+  right: 0;
+  font-family: var(--font-measure);
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: color-mix(in oklab, var(--ink) 40%, transparent);
+  background: none;
+  border: 0;
+  padding: 0.25rem;
+  cursor: pointer;
+}
+
+.xp-panel-close:hover {
+  color: var(--ink);
+}
+
+.xp-foot {
+  position: relative;
+}
+
+/* ── Tablet: same axis, less furniture ────────────────────────────────────── */
+
+@media (max-width: 1099px) and (min-width: 768px) {
+  .xp {
+    --xp-gutter: 10rem;
+    --xp-lane-h: clamp(52px, 7svh, 64px);
+  }
+
+  /* The duration column is the first thing to go: it is derivable from the
+     dates beside it, so dropping it costs the reader nothing. */
+  .xp-duration {
+    display: none;
+  }
+
+  .xp-panel {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+
+  .xp-meta {
+    grid-column: 1 / -1;
+    grid-auto-flow: column;
+    justify-content: start;
+    gap: 1.25rem;
+  }
+}
+
+/* ── Mobile: the axis rotates ─────────────────────────────────────────────
+   Time runs top to bottom down the left edge, and the roles are packed by a
+   greedy interval fit into as few vertical tracks as their overlaps allow.
+   This is a different drawing of the same model, not a squeezed one: a shrunk
+   desktop layout is the clearest sign that the mobile case was an afterthought.
+   ======================================================================== */
+
+@media (max-width: 767px) {
+  .xp {
+    --xp-gutter: 2.5rem;
+    --xp-col: 4px;
+    --xp-col-gap: 11px;
+  }
+
+  /* The mobile axis reveals downward, so the pin travel reads as the timeline
+     unrolling rather than sweeping. Slightly shorter per role than desktop
+     because a thumb covers ground faster than a wheel does. */
+  .xp-rail {
+    height: calc(100svh + var(--xp-count, 3) * 44svh);
+  }
+
+  /* Every pixel taken back from the chrome is a pixel of month axis, and the
+     month axis is what keeps two labels from landing on each other. */
+  .xp-stage {
+    gap: 0.85rem;
+    padding-block: clamp(2rem, 5vh, 3rem) clamp(3.5rem, 8vh, 5rem);
+  }
+
+  .xp-head {
+    display: grid;
+    gap: 0.4rem;
+  }
+
+  .xp-thesis {
+    max-width: none;
+    font-size: 10px;
+  }
+
+  /* Numerals move onto a rail down the left edge; the horizontal strip above
+     the plot no longer has an axis to sit on. */
+  .xp-years {
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: var(--xp-gutter);
+    height: auto;
+    margin: 0;
+    z-index: 2;
+    pointer-events: none;
+  }
+
+  .xp-year {
+    top: calc(var(--f) * 100%);
+    left: 0;
+    transform: translateY(-1px);
+  }
+
+  .xp-chart {
+    grid-template-rows: minmax(0, 1fr);
+    position: relative;
+  }
+
+  .xp-plot {
+    height: 100%;
+    min-height: 66svh;
+  }
+
+  .xp-grid {
+    inset: 0 0 0 var(--xp-gutter);
+  }
+
+  .xp-rule {
+    top: calc(var(--f) * 100%);
+    left: 0;
+    right: 0;
+    bottom: auto;
+    width: auto;
+    height: 1px;
+  }
+
+  .xp-band {
+    top: calc(var(--f0) * 100%);
+    height: calc((var(--f1) - var(--f0)) * 100%);
+    left: 0;
+    right: 0;
+    width: auto;
+    bottom: auto;
+  }
+
+  /* Safe to make a stacking context here: there is no popover on touch, so
+     nothing inside needs to rise above the marker. It keeps the per-lane
+     z-index below from fighting the marker for the plot's stacking order. */
+  .xp-lanes {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+  }
+
+  .xp-lane {
+    position: absolute;
+    display: block;
+    top: calc(var(--f0) * 100%);
+    height: calc((var(--f1) - var(--f0)) * 100%);
+    left: calc(var(--xp-gutter) + var(--track) * var(--xp-col-gap));
+    right: 0;
+    width: auto;
+    /* Most recent lanes win an overlap, matching the reading order above. */
+    z-index: calc(20 - var(--lane));
+  }
+
+  .xp-track {
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: var(--xp-col);
+    height: auto;
+  }
+
+  .xp-fill {
+    inset: 0;
+    left: 0;
+    width: var(--xp-col);
+    transform-origin: center top;
+  }
+
+  .xp-chart.js .xp-fill {
+    transform: scaleY(0);
+  }
+
+  /* Anchored to the top of its own bar, in whatever width is left over. */
+  .xp-label {
+    position: absolute;
+    top: -2px;
+    left: calc(var(--xp-col) + 0.75rem);
+    right: 0;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    padding-right: 0;
+  }
+
+  .xp-chart.js .xp-label {
+    transform: translateY(-8px);
+  }
+
+  .xp-chart.js .xp-lane.is-begun .xp-label {
+    transform: none;
+  }
+
+  /* Two lines, not four.
+     Labels are anchored to the top of their own bar, so two roles starting a
+     few months apart get only those few months of vertical room between their
+     labels. Four lines of type does not fit in four months at this scale, and
+     nudging a label away from its bar would break the anchor that makes this
+     drawing readable at all. So the label sheds what the axis already says:
+     the date range is the bar's own top edge read against the year rail, and
+     the duration moves inline onto the title line. */
+  .xp-dates,
+  .xp-duration {
+    display: none;
+  }
+
+  .xp-role-dur {
+    display: inline;
+    color: color-mix(in oklab, var(--ink) 40%, transparent);
+  }
+
+  .xp-company {
+    font-size: 0.875rem;
+  }
+
+  /* The rule rotates with the axis. */
+  .xp-marker {
+    inset: 0 0 auto var(--xp-gutter);
+    width: auto;
+    height: 1px;
+  }
+
+  .xp-marker::before,
+  .xp-marker::after {
+    width: 3px;
+    height: 4px;
+    margin-left: 0;
+    top: 50%;
+    bottom: auto;
+    margin-top: -2px;
+  }
+
+  .xp-marker::before {
+    left: 0;
+  }
+
+  .xp-marker::after {
+    left: auto;
+    right: 0;
+  }
+
+  .xp-foot {
+    min-height: 3.25rem;
+    /* Hands the sheet's containing block up to the sticky stage. Left relative,
+       the sheet would anchor to this 3.25rem strip instead of the screen. */
+    position: static;
+  }
+
+  /* Below 768px the panel becomes a sheet rather than a block, because there is
+     no "below the chart" left to put it in.
+
+     Absolute against the sticky stage, not fixed against the viewport.
+     ScrollSmoother puts a transform on #smooth-content, and a transformed
+     ancestor becomes the containing block for `position: fixed` — a fixed
+     sheet lands at the bottom of the whole page instead of the bottom of the
+     screen. The stage is already a sticky 100svh box, so anchoring to it gives
+     the viewport-bottom behaviour without depending on fixed at all. */
+  .xp-panel {
+    position: absolute;
+    inset: auto 0 0 0;
+    z-index: 60;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.9rem;
+    max-height: 76svh;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 1.25rem var(--xp-pad) calc(1.5rem + 64px);
+    background: var(--void);
+    border-top: 1px solid color-mix(in oklab, var(--ink) 12%, transparent);
+    box-shadow: 0 -24px 60px -30px rgb(0 0 0 / 0.55);
+    animation: xp-sheet-in 320ms var(--xp-sheet) both;
+  }
+
+  @keyframes xp-sheet-in {
+    from {
+      transform: translateY(100%);
+    }
+    to {
+      transform: none;
+    }
+  }
+
+  .xp-panel-close {
+    position: sticky;
+    top: 0;
+    justify-self: end;
+    margin-top: -0.5rem;
+  }
+}
+
+/* ── Reduced motion ───────────────────────────────────────────────────────
+   Bars are already at full length on mount, the marker jumps rather than
+   damping, and the panel cross-fades with no translate. Every number stays
+   readable; nothing is hidden behind an animation that will not play. */
+@media (prefers-reduced-motion: reduce) {
+  .xp-chart.js .xp-fill {
+    transform: none;
+  }
+
+  .xp-chart.js .xp-label {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+
+  .xp-fill,
+  .xp-fill::after,
+  .xp-company {
+    transition-duration: 1ms;
+  }
+
+  .xp-panel {
+    animation: xp-fade-in 1ms linear both;
+  }
+
+  .xp-pop {
+    transform: none;
+    transition-duration: 1ms;
+  }
+
+  @keyframes xp-fade-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+}

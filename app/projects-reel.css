@@ -1,0 +1,1592 @@
+/* ============================================================================
+   Projects reel — components/projects/v2/*
+   ----------------------------------------------------------------------------
+   Ground is --void; the only hue in play at any moment is --c-accent, set on
+   the reel root from the current project. It appears in exactly four places:
+   the plate furniture, the active index rule, the case sheet rule, and the
+   focus ring. Everything else is the --ink ramp.
+
+   No layout property is animated anywhere in this file. Every moving thing is
+   transform or opacity, on its own element, with one writer each.
+   ========================================================================== */
+
+.wreel {
+  position: relative;
+  isolation: isolate;
+  /* Follows the shell gutter used by the rest of the page. */
+  --wreel-gutter: clamp(1.25rem, 4vw, 4.5rem);
+  /* Bottom inset clears the fixed 64px site dock. */
+  --wreel-dock: 64px;
+  --wreel-ease: cubic-bezier(0.23, 1, 0.32, 1);
+  --wreel-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+  color: var(--ink);
+  /* The dark room is a property of the whole SECTION, not just the stage.
+     The stage alone used to carry it, which is fine while the pin is engaged —
+     it covers the viewport — but the rail is `count * 100svh` tall and the pin
+     spacer around it is transparent, so on a light theme the page ground showed
+     through as a white band at both pin boundaries: a white flash on the way in
+     and another on release. Painting --void here means the section is the dark
+     room from its first pixel to its last, and the stage's own background
+     becomes a no-op rather than the only thing holding the line. */
+  background: var(--void);
+}
+
+/* The rail supplies the scroll distance: one viewport per project, so the pin
+   releases exactly as the last plate finishes. `svh` rather than `dvh` on
+   purpose — a mobile URL bar collapsing mid-reel would otherwise resize the pin
+   and force a ScrollTrigger recalculation on every scroll. */
+/* The reel is a dark room in both themes.
+   Not an oversight in the light theme — a decision. This section is a viewing
+   surface: five full-bleed product captures, one at a time, with the page
+   furniture pulled back to nothing. A near-white ground under a full-bleed
+   screenshot gives the image no edge to sit against, so the plate stops reading
+   as a frame and the whole section reads as a blown-out white slab.
+   Dimming the house lights is what makes the picture the subject.
+
+   Implemented by re-declaring the reel's own ink ramp rather than by painting a
+   layer over the top: every rule in this file already reads these tokens, so
+   the scrim gradients, the hairlines and the four type steps all follow, and
+   contrast is preserved by construction instead of by patching each one. */
+:root:not(.dark) .wreel {
+  --void: oklch(0.13 0.018 250);
+  --ink: oklch(0.97 0.005 250);
+  --ink-2: oklch(0.82 0.012 250);
+  --ink-3: oklch(0.68 0.014 250);
+  --ink-4: oklch(0.58 0.014 250);
+}
+
+.wreel-rail {
+  height: calc(var(--wreel-count, 5) * 100svh);
+}
+
+.wreel-stage {
+  position: relative;
+  height: 100svh;
+  overflow: hidden;
+  isolation: isolate;
+  background: var(--void);
+  /* Vertical gestures belong to the page; horizontal ones come to the reel. */
+  touch-action: pan-y;
+}
+
+.wreel-stage:focus {
+  outline: none;
+}
+
+/* ── Plates ───────────────────────────────────────────────────────────────── */
+
+.wreel-plates {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  will-change: transform;
+}
+
+.wreel-plates-drag {
+  position: absolute;
+  inset: 0;
+}
+
+.wreel-plate {
+  position: absolute;
+  inset: 0;
+  will-change: transform, opacity;
+}
+
+/* The two layers trade these classes on every step, which changes
+   `animation-name` and restarts both animations without a remount. */
+.wreel-plate.is-front {
+  z-index: 2;
+  animation: wreel-plate-in 620ms var(--wreel-ease) both;
+}
+
+.wreel-plate.is-back {
+  z-index: 1;
+  animation: wreel-plate-out 620ms var(--wreel-ease) both;
+}
+
+@keyframes wreel-plate-in {
+  from {
+    transform: translate3d(calc(var(--dir, 1) * 16%), 0, 0);
+    opacity: 0;
+  }
+  to {
+    transform: translate3d(0, 0, 0);
+    opacity: 1;
+  }
+}
+
+@keyframes wreel-plate-out {
+  from {
+    transform: translate3d(0, 0, 0);
+    opacity: 1;
+  }
+  to {
+    transform: translate3d(calc(var(--dir, 1) * -16%), 0, 0);
+    opacity: 0;
+  }
+}
+
+.wreel-plate-inner {
+  position: absolute;
+  inset: 0;
+}
+
+.wreel-plate-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+/* The plate is graded, the way a frame in a reel would be.
+   This is not decoration — it is the only thing that makes the dark theme
+   legible. Several of these captures are light-UI products, and measured
+   against the real composited pixels, quiet type over an un-graded screenshot
+   cannot reach 4.5:1 at any scrim opacity short of fully opaque. Grading the
+   capture and leaving the drawn furniture untouched (the canvas is a sibling,
+   so the filter never reaches it) keeps the plate present and the type safe.
+
+   This used to be scoped to `.dark`, on the reasoning that the light theme's
+   ground already whitened the capture. That reasoning died with the block
+   above: the reel now runs the dark ramp in both themes, so quiet type sits
+   over these captures in both, and the grading has to apply in both or the
+   light theme inherits exactly the contrast failure this rule exists to fix. */
+.wreel-plate-img {
+  filter: brightness(0.46) saturate(0.9) contrast(1.04);
+}
+
+.wreel-plate-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+/* Gradients of the ground colour, not a black overlay — the plate darkens
+   toward the type instead of going grey, and contrast never depends on which
+   plate happens to be showing.
+
+   Three edges, one per thing that has to stay readable: the bottom and left
+   carry the reading column, and the right carries the index rail and the figure
+   caption. The right one is the narrowest of the three because the index labels
+   only reach ~16% in, and washing further would cost the plate its presence.
+
+   Both themes now, because both grounds are the same dark ground. */
+.wreel-scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  background:
+    linear-gradient(
+      to top,
+      var(--void) 0%,
+      color-mix(in oklab, var(--void) 92%, transparent) 20%,
+      color-mix(in oklab, var(--void) 46%, transparent) 46%,
+      transparent 74%
+    ),
+    linear-gradient(
+      to right,
+      var(--void) 0%,
+      color-mix(in oklab, var(--void) 78%, transparent) 20%,
+      color-mix(in oklab, var(--void) 26%, transparent) 44%,
+      transparent 62%
+    ),
+    linear-gradient(
+      to left,
+      color-mix(in oklab, var(--void) 90%, transparent) 0%,
+      color-mix(in oklab, var(--void) 66%, transparent) 12%,
+      color-mix(in oklab, var(--void) 28%, transparent) 22%,
+      transparent 32%
+    );
+}
+
+/* ── Reading column ───────────────────────────────────────────────────────── */
+
+.wreel-body {
+  position: absolute;
+  z-index: 5;
+  left: var(--wreel-gutter);
+  bottom: calc(var(--wreel-gutter) + var(--wreel-dock));
+  width: min(42rem, calc(100% - var(--wreel-gutter) * 2));
+}
+
+.wreel-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 0 1.25rem;
+  font-family: var(--font-measure);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-3);
+}
+
+.wreel-name {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: clamp(2.75rem, 7vw, 6.5rem);
+  letter-spacing: -0.045em;
+  line-height: 0.92;
+  color: var(--ink);
+}
+
+/* The rise happens inside an overflow-hidden line box, so the name arrives from
+   under its own baseline rather than fading in from nowhere. */
+.wreel-name-line {
+  display: block;
+  overflow: hidden;
+  padding-bottom: 0.06em;
+}
+
+.wreel-name-rise {
+  display: block;
+  animation: wreel-rise 760ms var(--wreel-ease) 90ms both;
+}
+
+@keyframes wreel-rise {
+  from {
+    transform: translate3d(0, 112%, 0);
+  }
+  to {
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+.wreel-problem,
+.wreel-outcome {
+  margin: 0;
+}
+
+.wreel-problem {
+  margin-top: 1.5rem;
+  max-width: 68ch;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  color: var(--ink-2);
+}
+
+.wreel-outcome {
+  margin-top: 0.75rem;
+  max-width: 74ch;
+  font-family: var(--font-display);
+  font-size: 1.0625rem;
+  line-height: 1.6;
+  color: var(--ink);
+}
+
+.wreel-tech {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.125rem;
+  margin: 1.75rem 0 0;
+  padding: 0;
+  list-style: none;
+  font-family: var(--font-measure);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+/* 60ms apart: enough to read as sequence, short enough that the block still
+   lands as one gesture. */
+.wreel-meta {
+  animation: wreel-line 520ms var(--wreel-ease) 150ms both;
+}
+.wreel-problem {
+  animation: wreel-line 520ms var(--wreel-ease) 210ms both;
+}
+.wreel-outcome {
+  animation: wreel-line 520ms var(--wreel-ease) 270ms both;
+}
+.wreel-tech {
+  animation: wreel-line 520ms var(--wreel-ease) 330ms both;
+}
+
+@keyframes wreel-line {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 14px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+/* ── Actions ──────────────────────────────────────────────────────────────── */
+
+.wreel-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.25rem;
+  margin-top: 1.75rem;
+}
+
+.wreel-case-btn,
+.wreel-more {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  height: 44px;
+  padding: 0 1.125rem;
+  border-radius: 999px;
+  font-family: var(--font-measure);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition:
+    color 180ms ease,
+    border-color 180ms ease,
+    background-color 180ms ease;
+}
+
+.wreel-case-btn :is(svg),
+.wreel-more :is(svg) {
+  width: 14px;
+  height: 14px;
+}
+
+.wreel-case-btn {
+  border: 1px solid color-mix(in oklab, var(--ink) 26%, transparent);
+  /* Blur here is legibility, not decoration: this control sits on artwork. */
+  background: color-mix(in oklab, var(--void) 55%, transparent);
+  backdrop-filter: blur(10px);
+  color: var(--ink);
+}
+
+.wreel-steppers {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.wreel-step {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in oklab, var(--ink) 18%, transparent);
+  background: color-mix(in oklab, var(--void) 45%, transparent);
+  backdrop-filter: blur(10px);
+  color: var(--ink-2);
+  cursor: pointer;
+  transition:
+    color 180ms ease,
+    border-color 180ms ease,
+    opacity 180ms ease;
+}
+
+.wreel-step svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* Clamped, not wrapped — a reel that loops silently loses the reader's sense of
+   how much is left. Still focusable (see the note in ProjectReel.tsx), so this
+   is a data attribute rather than :disabled. */
+.wreel-step[data-disabled="true"] {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.wreel-counter {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin: 0 0 0 0.5rem;
+  font-family: var(--font-measure);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-3);
+}
+
+.wreel-counter-sep {
+  color: var(--ink-4);
+}
+
+.wreel-more {
+  margin-left: auto;
+  border: 1px solid transparent;
+  color: var(--ink-3);
+}
+
+/* The last frame is where "see more" stops being furniture and becomes the
+   next step, so it takes the accent only there. */
+.wreel-more[data-at-end="true"] {
+  color: var(--c-accent);
+  border-color: color-mix(in oklab, var(--c-accent) 42%, transparent);
+}
+
+/* ── Index rail ───────────────────────────────────────────────────────────── */
+
+.wreel-index {
+  position: absolute;
+  z-index: 5;
+  right: var(--wreel-gutter);
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.wreel-index ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* 28px pitch. The hit area matches the pitch rather than the 44px in the brief:
+   44px targets on a 28px pitch would overlap by 8px on each side, so a click
+   near a row's edge would select its neighbour. 28px clears WCAG 2.5.8 (24px)
+   both as a target and as spacing, and this rail is desktop-only — on touch it
+   is the focus-revealed list below. */
+.wreel-index li {
+  height: 28px;
+}
+
+.wreel-index-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.625rem;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  font-family: var(--font-measure);
+  font-size: 0.625rem;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  font-variant-numeric: tabular-nums;
+  /* --ink-3, not --ink-4: measured against the pixels actually behind it, the
+     quietest step in the ramp cannot clear 4.5:1 over a plate. The rail still
+     reads as the quiet furniture it should be, because the active row above it
+     jumps two full steps to --ink. */
+  color: var(--ink-3);
+  transform: translate3d(0, 0, 0);
+  transition:
+    transform 260ms var(--wreel-ease),
+    color 140ms ease;
+}
+
+.wreel-index-num {
+  color: var(--ink-4);
+  transition: color 140ms ease;
+}
+
+.wreel-index-label {
+  transition: color 140ms ease;
+}
+
+.wreel-index-rule {
+  display: block;
+  width: 18px;
+  height: 1px;
+  background: var(--c-accent);
+  transform: scaleX(0);
+  transform-origin: right center;
+  transition: transform 380ms var(--wreel-ease);
+}
+
+.wreel-index-row[data-active="true"] {
+  color: var(--ink);
+  transform: translate3d(-14px, 0, 0);
+  transition-duration: 380ms, 140ms;
+}
+
+.wreel-index-row[data-active="true"] .wreel-index-num {
+  color: var(--ink-2);
+}
+
+.wreel-index-row[data-active="true"] .wreel-index-rule {
+  transform: scaleX(1);
+}
+
+/* ── Figure caption ───────────────────────────────────────────────────────── */
+
+/* Names what the plate is a picture of — the honest alternative to letting a
+   reader assume every frame is a screenshot. */
+.wreel-fig {
+  position: absolute;
+  z-index: 5;
+  right: var(--wreel-gutter);
+  bottom: calc(var(--wreel-gutter) + var(--wreel-dock));
+  display: flex;
+  gap: 0.5rem;
+  max-width: 18rem;
+  text-align: right;
+  font-family: var(--font-measure);
+  font-size: 0.5625rem;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-3);
+}
+
+.wreel-fig-num {
+  color: color-mix(in oklab, var(--c-accent) 70%, var(--ink-4));
+  white-space: nowrap;
+}
+
+/* ── Case sheet ───────────────────────────────────────────────────────────── */
+
+.wreel-case-scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 39;
+  background: color-mix(in oklab, var(--void) 66%, transparent);
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 240ms ease,
+    visibility 0s linear 240ms;
+}
+
+.wreel-case-scrim[data-open="true"] {
+  opacity: 1;
+  visibility: visible;
+  transition:
+    opacity 300ms ease,
+    visibility 0s;
+}
+
+.wreel-case {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  width: min(30rem, 92vw);
+  background: var(--void);
+  border-left: 1px solid color-mix(in oklab, var(--ink) 14%, transparent);
+  transform: translate3d(100%, 0, 0);
+  visibility: hidden;
+  /* Exit is ~70% of the entrance. */
+  transition:
+    transform 320ms var(--wreel-drawer),
+    visibility 0s linear 320ms;
+}
+
+.wreel-case[data-open="true"] {
+  transform: translate3d(0, 0, 0);
+  visibility: visible;
+  transition:
+    transform 460ms var(--wreel-drawer),
+    visibility 0s;
+}
+
+/* The sheet is clipped to the pinned stage, which lives inside the page's
+   transformed smooth-scroll wrapper — its own stacking context. That means no
+   z-index can lift the sheet above the site's fixed navbar, so the header is
+   inset below it instead. Without this the close button is genuinely
+   unclickable: a navbar control sits on top of it. */
+.wreel-case-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: calc(1.25rem + var(--wreel-navbar, 4.5rem)) 1.5rem 1.25rem;
+  border-bottom: 1px solid color-mix(in oklab, var(--ink) 10%, transparent);
+}
+
+.wreel-case-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  font-family: var(--font-measure);
+  font-size: 0.625rem;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-3);
+}
+
+.wreel-case-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  margin: -8px -8px -8px 0;
+  border: 0;
+  border-radius: 999px;
+  background: none;
+  color: var(--ink-3);
+  cursor: pointer;
+  transition:
+    color 160ms ease,
+    background-color 160ms ease;
+}
+
+.wreel-case-close svg {
+  width: 17px;
+  height: 17px;
+}
+
+.wreel-case-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  /* Reaching the end of the sheet must never scroll the document behind it. */
+  overscroll-behavior: contain;
+}
+
+.wreel-case-content {
+  padding: 1.75rem 1.5rem 3rem;
+}
+
+.wreel-case-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: clamp(1.75rem, 4vw, 2.25rem);
+  letter-spacing: -0.035em;
+  line-height: 1.05;
+  color: var(--ink);
+}
+
+.wreel-case-lede {
+  margin: 0.875rem 0 0;
+  font-family: var(--font-display);
+  font-size: 1rem;
+  line-height: 1.6;
+  color: var(--ink-2);
+}
+
+.wreel-case-rule {
+  height: 1px;
+  margin: 1.75rem 0;
+  background: linear-gradient(to right, var(--c-accent), transparent);
+}
+
+.wreel-case-block {
+  margin-bottom: 1.75rem;
+}
+
+.wreel-case-block h4 {
+  margin: 0 0 0.625rem;
+  font-family: var(--font-measure);
+  font-size: 0.625rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.wreel-case-block p {
+  margin: 0 0 0.75rem;
+  font-size: 0.9375rem;
+  line-height: 1.68;
+  color: var(--ink-2);
+  max-width: 68ch;
+}
+
+.wreel-case-block p:last-child {
+  margin-bottom: 0;
+}
+
+.wreel-case-spec {
+  margin: 2rem 0 0;
+  padding-top: 1.25rem;
+  border-top: 1px solid color-mix(in oklab, var(--ink) 10%, transparent);
+}
+
+.wreel-case-spec > div {
+  display: grid;
+  grid-template-columns: 5.5rem minmax(0, 1fr);
+  gap: 1rem;
+  padding: 0.5rem 0;
+}
+
+.wreel-case-spec dt {
+  font-family: var(--font-measure);
+  font-size: 0.5625rem;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-4);
+  padding-top: 0.15rem;
+}
+
+.wreel-case-spec dd {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--ink-2);
+}
+
+.wreel-case-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.625rem;
+  margin-top: 2rem;
+}
+
+.wreel-case-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  height: 42px;
+  padding: 0 1rem;
+  border: 1px solid color-mix(in oklab, var(--ink) 18%, transparent);
+  border-radius: 999px;
+  font-family: var(--font-measure);
+  font-size: 0.625rem;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+  transition:
+    color 180ms ease,
+    border-color 180ms ease,
+    background-color 180ms ease;
+}
+
+.wreel-case-link svg {
+  width: 13px;
+  height: 13px;
+}
+
+.wreel-case-link.is-primary {
+  border-color: color-mix(in oklab, var(--c-accent) 48%, transparent);
+  color: var(--c-accent);
+}
+
+/* ── Browser surfaces ─────────────────────────────────────────────────────── */
+
+.wreel ::selection {
+  background: color-mix(in oklab, var(--c-accent) 32%, transparent);
+  color: var(--ink);
+}
+
+.wreel :is(a, button):focus-visible {
+  outline: 2px solid var(--c-accent);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+
+.wreel-case-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in oklab, var(--ink) 22%, transparent) transparent;
+}
+
+.wreel-case-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.wreel-case-scroll::-webkit-scrollbar-thumb {
+  background: color-mix(in oklab, var(--ink) 22%, transparent);
+  border-radius: 999px;
+}
+
+.wreel-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ── Hover ────────────────────────────────────────────────────────────────── */
+
+/* On a page where one element owns the frame, hover feedback on the furniture
+   is noise. Only the plate (which is draggable and nothing else says so) and
+   the index rows respond. */
+@media (hover: hover) and (pointer: fine) {
+  .wreel-stage {
+    cursor: grab;
+  }
+
+  .wreel-stage:active {
+    cursor: grabbing;
+  }
+
+  .wreel-index-row:not([data-active="true"]):hover {
+    color: var(--ink-2);
+  }
+
+  .wreel-index-row:not([data-active="true"]):hover .wreel-index-label,
+  .wreel-index-row:not([data-active="true"]):hover .wreel-index-num {
+    color: var(--ink-2);
+  }
+
+  .wreel-index-row:not([data-active="true"]):hover .wreel-index-rule {
+    transform: scaleX(0.5);
+  }
+
+  .wreel-case-btn:hover {
+    border-color: color-mix(in oklab, var(--c-accent) 55%, transparent);
+    color: var(--c-accent);
+  }
+
+  .wreel-step:not([data-disabled="true"]):hover {
+    border-color: color-mix(in oklab, var(--ink) 34%, transparent);
+    color: var(--ink);
+  }
+
+  .wreel-more:hover {
+    color: var(--c-accent);
+    border-color: color-mix(in oklab, var(--c-accent) 42%, transparent);
+  }
+
+  .wreel-case-close:hover {
+    color: var(--ink);
+    background: color-mix(in oklab, var(--ink) 8%, transparent);
+  }
+
+  .wreel-case-link:hover {
+    border-color: color-mix(in oklab, var(--c-accent) 55%, transparent);
+    color: var(--c-accent);
+  }
+}
+
+/* ── Tablet ───────────────────────────────────────────────────────────────── */
+
+@media (min-width: 768px) and (max-width: 1099.98px) {
+  .wreel-name {
+    font-size: clamp(2.75rem, 8vw, 4.25rem);
+  }
+
+  .wreel-body {
+    width: min(34rem, calc(100% - var(--wreel-gutter) * 2));
+  }
+
+  /* Labels reduce to their numbers so the rail never crowds the outcome line. */
+  .wreel-index-label {
+    display: none;
+  }
+
+  .wreel-fig {
+    max-width: 12rem;
+  }
+}
+
+/* ── Mobile ───────────────────────────────────────────────────────────────── */
+
+/* A different composition, not a smaller one: the plate becomes a band at the
+   top and the type stacks beneath it on solid ground, so no prose is ever set
+   over artwork on a small screen. */
+@media (max-width: 767.98px) {
+  .wreel {
+    /* The site dock is fixed to the bottom of the viewport on mobile, so the
+       control set has to clear it or the counter lands underneath. */
+    --wreel-dock: 74px;
+  }
+
+  .wreel-stage {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .wreel-plates {
+    position: relative;
+    inset: auto;
+    order: 0;
+    flex: none;
+    /* 32svh, not the 42 of the desktop concept: at 390x844 the type below it —
+       name, outcome, tech and a three-row control set — needs the rest. */
+    height: 32svh;
+  }
+
+  /* Nothing to scrim: the type is no longer over the plate. */
+  .wreel-scrim {
+    display: none;
+  }
+
+  .wreel-fig {
+    position: relative;
+    inset: auto;
+    order: 1;
+    justify-content: flex-end;
+    max-width: none;
+    padding: 0.5rem var(--wreel-gutter) 0;
+    text-align: right;
+  }
+
+  .wreel-body {
+    position: relative;
+    inset: auto;
+    order: 2;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+    width: auto;
+    padding: 0.75rem var(--wreel-gutter) calc(var(--wreel-dock) + 0.5rem);
+  }
+
+  .wreel-body-inner {
+    flex: 1;
+    min-height: 0;
+    /* Belt and braces: prose can never paint over the control set below it. */
+    overflow: hidden;
+  }
+
+  .wreel-meta {
+    margin-bottom: 0.75rem;
+    font-size: 0.625rem;
+  }
+
+  .wreel-name {
+    font-size: clamp(2rem, 9.5vw, 2.75rem);
+  }
+
+  /* The outcome is what a hiring reader scans for, so it keeps its full length.
+     The problem line stays but is held to two lines — the sentence that sets up
+     the outcome is worth its space, and the case sheet one tap away carries the
+     rest rather than the small screen swallowing it whole. */
+  .wreel-problem {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    margin-top: 0.875rem;
+    font-size: 0.875rem;
+    line-height: 1.5;
+  }
+
+  .wreel-outcome {
+    margin-top: 0.875rem;
+    font-size: 0.9375rem;
+    line-height: 1.55;
+  }
+
+  .wreel-tech {
+    margin-top: 0.875rem;
+    gap: 0.375rem 0.875rem;
+    font-size: 0.5625rem;
+  }
+
+  /* The actions row becomes the whole control set: a full-width case button,
+     then the steppers, counter and "see all work" sharing one line. */
+  .wreel-actions {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.625rem;
+    margin-top: 1rem;
+  }
+
+  .wreel-case-btn {
+    flex: 1 0 100%;
+    justify-content: center;
+    height: 48px;
+  }
+
+  .wreel-steppers {
+    flex: 0 1 auto;
+  }
+
+  .wreel-step {
+    width: 48px;
+    height: 48px;
+  }
+
+  .wreel-counter {
+    margin-left: 0.5rem;
+    font-size: 0.6875rem;
+  }
+
+  .wreel-more {
+    flex: 0 0 auto;
+    margin-left: auto;
+    height: 44px;
+    padding: 0 0.875rem;
+    border-color: color-mix(in oklab, var(--ink) 16%, transparent);
+  }
+
+  /* The rail is removed visually, but every project stays reachable by Tab —
+     this is the single-pointer alternative to the drag gesture. Focus reveals
+     it as a real panel rather than leaving a focused control invisible. */
+  .wreel-index {
+    position: absolute;
+    right: auto;
+    top: auto;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    transform: none;
+  }
+
+  .wreel-index:focus-within {
+    right: var(--wreel-gutter);
+    top: 50%;
+    width: auto;
+    height: auto;
+    margin: 0;
+    padding: 0.75rem 1rem;
+    overflow: visible;
+    clip-path: none;
+    transform: translateY(-50%);
+    background: var(--void);
+    border: 1px solid color-mix(in oklab, var(--ink) 16%, transparent);
+    border-radius: 12px;
+    z-index: 20;
+  }
+
+  .wreel-index:focus-within li {
+    height: 36px;
+  }
+
+  /* The mobile navbar pill is taller than the desktop bar. */
+  .wreel {
+    --wreel-navbar: 7rem;
+  }
+}
+
+/* ── Reduced motion ───────────────────────────────────────────────────────── */
+
+/* The handoff becomes a short crossfade; the name and lines appear without
+   transform; nothing auto-advances. The composition stays deliberately
+   arranged — it just stops moving. */
+@media (prefers-reduced-motion: reduce) {
+  .wreel-plate.is-front {
+    animation: wreel-fade-in 200ms linear both;
+  }
+
+  .wreel-plate.is-back {
+    animation: wreel-fade-out 200ms linear both;
+  }
+
+  @keyframes wreel-fade-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes wreel-fade-out {
+    from {
+      opacity: 1;
+    }
+    to {
+      opacity: 0;
+    }
+  }
+
+  .wreel-name-rise,
+  .wreel-meta,
+  .wreel-problem,
+  .wreel-outcome,
+  .wreel-tech {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+
+  .wreel-index-row,
+  .wreel-index-rule,
+  .wreel-case,
+  .wreel-case-scrim {
+    transition-duration: 1ms;
+  }
+
+  .wreel-index-row[data-active="true"] {
+    transform: none;
+  }
+}
+
+/* ============================================================================
+   /work and /work/[slug] — the pages behind "See all work"
+   ----------------------------------------------------------------------------
+   Zero client JavaScript on either route. Where the reel is expressive, these
+   are the durable, linkable, crawlable versions of the same content: the plate
+   leads, the prose sits under it at a real measure, and nothing needs an
+   interaction to be reachable.
+   ========================================================================== */
+
+.wpage {
+  --wreel-gutter: clamp(1.25rem, 4vw, 4.5rem);
+  max-width: 76rem;
+  margin: 0 auto;
+  padding: clamp(6.5rem, 12vw, 9rem) var(--wreel-gutter) clamp(4rem, 10vw, 7rem);
+  color: var(--ink);
+}
+
+.wpage-head {
+  padding-bottom: clamp(2rem, 5vw, 3.5rem);
+  border-bottom: 1px solid color-mix(in oklab, var(--ink) 12%, transparent);
+}
+
+.wpage-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: clamp(2.5rem, 8vw, 5rem);
+  letter-spacing: -0.045em;
+  line-height: 0.94;
+}
+
+.wpage-sub {
+  margin: 1rem 0 0;
+  font-family: var(--font-measure);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-3);
+}
+
+.wlist {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.wlist-item + .wlist-item {
+  border-top: 1px solid color-mix(in oklab, var(--ink) 12%, transparent);
+}
+
+.wrow {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+  grid-template-areas:
+    "plate   plate"
+    "meta    meta"
+    "name    outcome"
+    "cta     tech";
+  column-gap: clamp(1.5rem, 4vw, 3rem);
+  padding: clamp(2.5rem, 6vw, 4.5rem) 0;
+}
+
+.wrow-plate {
+  grid-area: plate;
+  position: relative;
+  overflow: hidden;
+  aspect-ratio: 21 / 9;
+  border-radius: 4px;
+  background: color-mix(in oklab, var(--ink) 6%, transparent);
+}
+
+.wrow-plate img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.wrow-meta {
+  grid-area: meta;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 1.5rem 0 0;
+  font-family: var(--font-measure);
+  font-size: 0.625rem;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-3);
+}
+
+.wrow-num {
+  color: var(--c-accent);
+}
+
+.wrow-name {
+  grid-area: name;
+  margin: 0.875rem 0 0;
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: clamp(1.875rem, 5vw, 3.25rem);
+  letter-spacing: -0.04em;
+  line-height: 1;
+}
+
+.wrow-name a {
+  position: relative;
+  color: var(--ink);
+  text-decoration: none;
+  transition: color 180ms ease;
+}
+
+/* The whole row is the target; the name is what announces it. */
+.wrow-hit {
+  position: absolute;
+  inset: 0;
+}
+
+.wlist-item:has(.wrow-name a:hover) .wrow-plate img,
+.wlist-item:has(.wrow-name a:focus-visible) .wrow-plate img {
+  transform: scale(1.02);
+}
+
+.wrow-plate img {
+  transition: transform 620ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.wrow-outcome {
+  grid-area: outcome;
+  align-self: end;
+  margin: 0.875rem 0 0;
+  max-width: 60ch;
+  font-family: var(--font-display);
+  font-size: 1rem;
+  line-height: 1.6;
+  color: var(--ink-2);
+}
+
+.wrow-tech {
+  grid-area: tech;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem 1rem;
+  margin: 1.25rem 0 0;
+  padding: 0;
+  list-style: none;
+  font-family: var(--font-measure);
+  font-size: 0.625rem;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.wrow-cta {
+  grid-area: cta;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 1.25rem 0 0;
+  font-family: var(--font-measure);
+  font-size: 0.625rem;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-4);
+  transition: color 180ms ease;
+}
+
+.wrow-cta svg {
+  width: 12px;
+  height: 12px;
+}
+
+.wpage-foot {
+  padding-top: 2.5rem;
+  border-top: 1px solid color-mix(in oklab, var(--ink) 12%, transparent);
+}
+
+.wpage-back,
+.wcase-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--font-measure);
+  font-size: 0.625rem;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  transition: color 180ms ease;
+}
+
+.wcase-back svg {
+  width: 13px;
+  height: 13px;
+}
+
+/* ── Case page ────────────────────────────────────────────────────────────── */
+
+.wcase {
+  max-width: 60rem;
+}
+
+.wcase-head {
+  margin-top: 2rem;
+}
+
+.wcase-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 0 1.25rem;
+  font-family: var(--font-measure);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-3);
+}
+
+.wcase-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: clamp(2.5rem, 8vw, 5rem);
+  letter-spacing: -0.045em;
+  line-height: 0.94;
+}
+
+.wcase-outcome {
+  margin: 1.5rem 0 0;
+  max-width: 74ch;
+  font-family: var(--font-display);
+  font-size: clamp(1.0625rem, 2vw, 1.25rem);
+  line-height: 1.6;
+  color: var(--ink-2);
+}
+
+.wcase-figure {
+  margin: clamp(2.5rem, 6vw, 4rem) 0 0;
+}
+
+.wcase-plate {
+  overflow: hidden;
+  aspect-ratio: 16 / 9;
+  border-radius: 4px;
+  border-top: 2px solid var(--c-accent);
+  background: color-mix(in oklab, var(--ink) 6%, transparent);
+}
+
+.wcase-plate img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.wcase-figure figcaption {
+  margin-top: 0.75rem;
+  font-family: var(--font-measure);
+  font-size: 0.5625rem;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-4);
+}
+
+.wcase-body {
+  margin-top: clamp(2.5rem, 6vw, 4rem);
+}
+
+.wcase-block {
+  margin-bottom: 2.5rem;
+}
+
+.wcase-block h2 {
+  margin: 0 0 0.75rem;
+  font-family: var(--font-measure);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.wcase-block p {
+  margin: 0 0 0.875rem;
+  max-width: 72ch;
+  font-size: 1rem;
+  line-height: 1.7;
+  color: var(--ink-2);
+}
+
+.wcase-spec {
+  margin: 3rem 0 0;
+  padding-top: 1.5rem;
+  border-top: 1px solid color-mix(in oklab, var(--ink) 12%, transparent);
+}
+
+.wcase-spec > div {
+  display: grid;
+  grid-template-columns: 6rem minmax(0, 1fr);
+  gap: 1rem;
+  padding: 0.5rem 0;
+}
+
+.wcase-spec dt {
+  font-family: var(--font-measure);
+  font-size: 0.5625rem;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-4);
+  padding-top: 0.2rem;
+}
+
+.wcase-spec dd {
+  margin: 0;
+  font-size: 0.9375rem;
+  line-height: 1.55;
+  color: var(--ink-2);
+}
+
+.wcase-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.625rem;
+  margin-top: 2rem;
+}
+
+.wcase-links a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  height: 44px;
+  padding: 0 1.125rem;
+  border: 1px solid color-mix(in oklab, var(--ink) 18%, transparent);
+  border-radius: 999px;
+  font-family: var(--font-measure);
+  font-size: 0.625rem;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+  transition:
+    color 180ms ease,
+    border-color 180ms ease;
+}
+
+.wcase-links svg {
+  width: 13px;
+  height: 13px;
+}
+
+.wcase-nav {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-top: clamp(3rem, 8vw, 5rem);
+  padding-top: 2rem;
+  border-top: 1px solid color-mix(in oklab, var(--ink) 12%, transparent);
+}
+
+.wcase-nav-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-family: var(--font-display);
+  font-size: 1.125rem;
+  color: var(--ink);
+  transition: color 180ms ease;
+}
+
+.wcase-nav-link.is-next {
+  justify-self: end;
+  text-align: right;
+}
+
+.wcase-nav-link svg {
+  width: 16px;
+  height: 16px;
+  color: var(--ink-4);
+  flex: none;
+}
+
+.wcase-nav-link small {
+  display: block;
+  margin-bottom: 0.25rem;
+  font-family: var(--font-measure);
+  font-size: 0.5625rem;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-4);
+}
+
+.wpage :is(a):focus-visible {
+  outline: 2px solid var(--c-accent, var(--ink));
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+.wpage ::selection {
+  background: color-mix(in oklab, var(--c-accent, var(--ink)) 30%, transparent);
+  color: var(--ink);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .wrow-name a:hover {
+    color: var(--c-accent);
+  }
+
+  .wlist-item:has(.wrow-name a:hover) .wrow-cta {
+    color: var(--c-accent);
+  }
+
+  .wpage-back:hover,
+  .wcase-back:hover,
+  .wcase-nav-link:hover {
+    color: var(--c-accent, var(--ink));
+  }
+
+  .wcase-links a:hover {
+    border-color: color-mix(in oklab, var(--c-accent) 55%, transparent);
+    color: var(--c-accent);
+  }
+}
+
+@media (max-width: 767.98px) {
+  .wrow {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "plate"
+      "meta"
+      "name"
+      "outcome"
+      "tech"
+      "cta";
+  }
+
+  .wrow-plate {
+    aspect-ratio: 16 / 10;
+  }
+
+  .wrow-outcome {
+    margin-top: 0.75rem;
+  }
+
+  .wcase-nav {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .wcase-nav-link.is-next {
+    justify-self: start;
+    text-align: left;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wrow-plate img {
+    transition: none;
+  }
+}

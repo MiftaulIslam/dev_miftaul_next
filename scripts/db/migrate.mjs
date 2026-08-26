@@ -3,8 +3,8 @@ import path from "node:path";
 
 import { neon } from "@neondatabase/serverless";
 
-function loadLocalEnv() {
-  const envPath = path.resolve(process.cwd(), ".env.local");
+function loadEnvFile(fileName) {
+  const envPath = path.resolve(process.cwd(), fileName);
   if (!existsSync(envPath)) return;
 
   const content = readFileSync(envPath, "utf8");
@@ -25,11 +25,18 @@ function loadLocalEnv() {
   }
 }
 
+// `.env.local` is read first so it keeps precedence over `.env`, matching how
+// Next.js layers them. `.env` is where this repo actually keeps DATABASE_URL.
+function loadLocalEnv() {
+  loadEnvFile(".env.local");
+  loadEnvFile(".env");
+}
+
 async function run() {
   loadLocalEnv();
 
   if (!process.env.DATABASE_URL) {
-    throw new Error("DATABASE_URL is missing. Add it to .env.local or your environment.");
+    throw new Error("DATABASE_URL is missing. Add it to .env.local, .env, or your environment.");
   }
 
   const sql = neon(process.env.DATABASE_URL);
@@ -53,9 +60,17 @@ async function run() {
       happy_clients INTEGER NOT NULL DEFAULT 0,
       currently_focused_on JSONB NOT NULL DEFAULT '[]'::jsonb,
       detailed_summary TEXT NOT NULL DEFAULT '',
+      site_version TEXT NOT NULL DEFAULT 'v1',
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
       updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
+  `;
+
+  // Databases created before the site version became server-controlled are
+  // missing the column; ADD COLUMN IF NOT EXISTS keeps this safe to re-run.
+  await sql`
+    ALTER TABLE portfolio_settings
+    ADD COLUMN IF NOT EXISTS site_version TEXT NOT NULL DEFAULT 'v1';
   `;
 
   await sql`
@@ -161,6 +176,103 @@ async function run() {
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
       updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
+  `;
+
+  // ── v2 skills ─────────────────────────────────────────────────────────────
+  // Separate tables rather than more columns on stack_categories/stack_tools,
+  // because the two models are not the same thing. The v1 stack is a flat list
+  // of tool chips: a name, a brand colour, an icon. The v2 reel is authored
+  // copy — every section carries a title, a subtitle and a description, and
+  // every skill carries the one-line title that appears beside its name. Bolting
+  // those onto the v1 tables would leave half the columns null for v1 and force
+  // the v1 dashboard panel to edit fields it has no business showing.
+  await sql`
+    CREATE TABLE IF NOT EXISTS v2_skill_sections (
+      id SERIAL PRIMARY KEY,
+      key TEXT NOT NULL UNIQUE,
+      title TEXT NOT NULL,
+      subtitle TEXT NOT NULL DEFAULT '',
+      description TEXT NOT NULL DEFAULT '',
+      layer TEXT NOT NULL DEFAULT '',
+      accent TEXT NOT NULL DEFAULT '#60a5fa',
+      sort_order INTEGER NOT NULL DEFAULT 0,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+  `;
+
+  // No `years` column, deliberately: it is not modelled on either version.
+  // `weight` is not a rendered number — it drives icon size and ordering only.
+  await sql`
+    CREATE TABLE IF NOT EXISTS v2_skill_items (
+      id SERIAL PRIMARY KEY,
+      section_id INTEGER NOT NULL REFERENCES v2_skill_sections(id) ON DELETE CASCADE,
+      name TEXT NOT NULL,
+      title TEXT NOT NULL DEFAULT '',
+      icon TEXT NOT NULL DEFAULT '',
+      note TEXT NOT NULL DEFAULT '',
+      weight REAL NOT NULL DEFAULT 0.55,
+      sort_order INTEGER NOT NULL DEFAULT 0,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+  `;
+
+  await sql`
+    CREATE INDEX IF NOT EXISTS idx_v2_skill_items_section_id ON v2_skill_items(section_id);
+  `;
+
+  // ── v2 projects ───────────────────────────────────────────────────────────
+  // Separate from `projects` for the same reason the v2 skill tables are
+  // separate from `stack_categories`: the two are not the same record. The v1
+  // project is a card — a title, a subtitle, bullets, a thumbnail. The v2 reel
+  // entry is a case study: it carries a stable slug (the /work/[slug] route
+  // param and the plate drawing seed), a shipping year, a one-noun discipline,
+  // the problem/outcome pair the reel reads out, an honestly-named plate with
+  // its own focal point, and a long-form body. Bolting eleven columns onto
+  // `projects` would leave all of them null for v1 and force the v1 panel to
+  // show fields it has no business editing.
+  await sql`
+    CREATE TABLE IF NOT EXISTS v2_projects (
+      id SERIAL PRIMARY KEY,
+      slug TEXT NOT NULL UNIQUE,
+      name TEXT NOT NULL,
+      year TEXT NOT NULL DEFAULT '',
+      discipline TEXT NOT NULL DEFAULT '',
+      role TEXT NOT NULL DEFAULT '',
+      problem TEXT NOT NULL DEFAULT '',
+      outcome TEXT NOT NULL DEFAULT '',
+      tech JSONB NOT NULL DEFAULT '[]'::jsonb,
+      accent TEXT NOT NULL DEFAULT '#3b82f6',
+      plate_src TEXT NOT NULL DEFAULT '',
+      plate_caption TEXT NOT NULL DEFAULT '',
+      plate_focus TEXT NOT NULL DEFAULT '',
+      link_live TEXT NOT NULL DEFAULT '',
+      link_source TEXT NOT NULL DEFAULT '',
+      sort_order INTEGER NOT NULL DEFAULT 0,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+  `;
+
+  // The case body is rows rather than one JSONB column so a heading can be
+  // reordered, added or removed in the dashboard without rewriting the whole
+  // document. `body` stays JSONB because a block's paragraphs are only ever
+  // read and written together — they have no identity of their own.
+  await sql`
+    CREATE TABLE IF NOT EXISTS v2_project_cases (
+      id SERIAL PRIMARY KEY,
+      project_id INTEGER NOT NULL REFERENCES v2_projects(id) ON DELETE CASCADE,
+      heading TEXT NOT NULL DEFAULT '',
+      body JSONB NOT NULL DEFAULT '[]'::jsonb,
+      sort_order INTEGER NOT NULL DEFAULT 0,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+  `;
+
+  await sql`
+    CREATE INDEX IF NOT EXISTS idx_v2_project_cases_project_id ON v2_project_cases(project_id);
   `;
 
   console.log("Database migration complete.");

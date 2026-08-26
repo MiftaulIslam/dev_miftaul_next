@@ -1,0 +1,2666 @@
+/* ============================================================================
+   AREA  -  PROJECTS
+   ----------------------------------------------------------------------------
+   Ten concepts: five full-page takeovers and five in-page sections. Every
+   selector in this file starts from a `projects-` class, so nothing here can
+   reach into the shell or into another area's gallery.
+
+   Shape: one radius for the whole application, 2px, taken from --r. The only
+   round things are things that are genuinely dots.
+   ========================================================================== */
+
+/* ---------------------------------------------------------------- shared */
+
+/* A section concept mounted in page mode has no shell scroller to borrow, so
+   it scrolls itself. Added by scrollerFor(), removed on destroy. */
+.projects-selfscroll {
+  position: absolute;
+  inset: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+}
+
+/* The plate: canvas plus the frame furniture that makes it read as a figure
+   rather than as a background. */
+.projects-art {
+  position: relative;
+  overflow: hidden;
+  background: var(--void-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+}
+.projects-art__c {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.projects-art__tag {
+  position: absolute;
+  top: 0.5rem;
+  left: 0.625rem;
+  font-size: 0.5625rem;
+  letter-spacing: 0.18em;
+  color: var(--ink-4);
+  pointer-events: none;
+}
+
+/* Two-layer plate swap, shared by Index, Coverflow and Sequence. The
+   transition is declared only on the target states: a layer being reset before
+   an entrance has to snap, not unwind. */
+.projects-swap { position: relative; overflow: hidden; }
+.projects-swap__l {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transform: translate3d(14%, 0, 0);
+  pointer-events: none;
+}
+.projects-swap--y .projects-swap__l { transform: translate3d(0, 14%, 0); }
+.projects-swap__l > .projects-art__c { width: 100%; height: 100%; }
+.projects-swap__l.is-front {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+  transition: transform 560ms var(--ease-out), opacity 560ms var(--ease-out);
+}
+.projects-swap__l.is-out-a,
+.projects-swap__l.is-out-b {
+  opacity: 0;
+  transition: transform 560ms var(--ease-out), opacity 560ms var(--ease-out);
+}
+.projects-swap__l.is-out-a { transform: translate3d(-14%, 0, 0); }
+.projects-swap__l.is-out-b { transform: translate3d(14%, 0, 0); }
+.projects-swap__l.is-pre-a { transform: translate3d(-14%, 0, 0); }
+.projects-swap--y .projects-swap__l.is-out-a { transform: translate3d(0, -14%, 0); }
+.projects-swap--y .projects-swap__l.is-out-b { transform: translate3d(0, 14%, 0); }
+.projects-swap--y .projects-swap__l.is-pre-a { transform: translate3d(0, -14%, 0); }
+
+@media (prefers-reduced-motion: reduce) {
+  .projects-swap__l,
+  .projects-swap__l.is-front,
+  .projects-swap__l.is-out-a,
+  .projects-swap__l.is-out-b { transform: none !important; }
+  .projects-swap__l.is-front { transition: opacity 200ms linear !important; }
+  .projects-swap__l.is-out-a,
+  .projects-swap__l.is-out-b { transition: opacity 200ms linear !important; }
+}
+
+/* Section heading. No kicker above it; the heading carries itself. */
+.projects-head { max-width: 46rem; }
+.projects-head__title {
+  font-size: clamp(1.75rem, 4vw, 3.25rem);
+  font-weight: 500;
+  letter-spacing: -0.042em;
+  line-height: 0.98;
+}
+.projects-head__lede {
+  margin-top: 0.625rem;
+  color: var(--ink-3);
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  max-width: 56ch;
+}
+
+/* Technology rows. Used by six of the ten concepts, so it is defined once. */
+.projects-case__tech,
+.projects-reel__tech {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+}
+.projects-case__tech span,
+.projects-reel__tech span {
+  padding: 0.25rem 0.5rem;
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  white-space: nowrap;
+}
+
+/* ------------------------------------------------------------ case sheet */
+/* One implementation shared by Reel, Drift, Coverflow and Strip. A right-hand
+   sheet on wide screens, a bottom sheet below 768px, because a 30rem panel
+   sliding in from the right on a 375px screen is just a full-screen modal
+   that arrived from the wrong direction. */
+.projects-case {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 8;
+  width: min(30rem, 92vw);
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  border-left: 1px solid var(--line-2);
+  box-shadow: -40px 0 90px rgba(0, 0, 0, 0.55);
+  opacity: 0;
+  transform: translate3d(100%, 0, 0);
+  transition: transform 320ms var(--ease-drawer), opacity 200ms var(--ease-out);
+}
+/* An author `display` rule outranks the user-agent `[hidden] { display:none }`,
+   so the panel has to opt back in explicitly. Without this the sheet stays in
+   the layout permanently: it overflows its container to the right and, worse,
+   its close button sits in the tab order the whole time. */
+.projects-case[hidden] { display: none; }
+.projects-case.is-on {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+  transition: transform 460ms var(--ease-drawer), opacity 300ms var(--ease-out);
+}
+.projects-case__bar {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  padding: 0.875rem 1rem 0.875rem 1.5rem;
+  border-bottom: 1px solid var(--line);
+}
+.projects-case__num { font-size: 0.625rem; letter-spacing: 0.16em; color: var(--c-accent); }
+.projects-case__disc {
+  flex: 1;
+  font-family: var(--font-mono);
+  font-size: 0.5625rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ink-4);
+}
+.projects-case__scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: clamp(1.5rem, 4vh, 2.5rem) 1.5rem 3rem;
+}
+.projects-case__name {
+  font-size: clamp(1.75rem, 4vw, 2.5rem);
+  font-weight: 500;
+  letter-spacing: -0.04em;
+  line-height: 1;
+}
+.projects-case__meta {
+  margin-top: 0.5rem;
+  font-size: 0.6875rem;
+  letter-spacing: 0.14em;
+  color: var(--ink-3);
+}
+.projects-case__problem {
+  margin-top: 1.5rem;
+  padding-left: 0.875rem;
+  border-left: 1px solid var(--c-accent);
+  color: var(--ink);
+  font-size: 1rem;
+  line-height: 1.55;
+}
+.projects-case__detail {
+  margin-top: 1.25rem;
+  color: var(--ink-2);
+  font-size: 0.9375rem;
+  line-height: 1.7;
+}
+.projects-case__outcome {
+  margin-top: 1.25rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--line);
+  color: var(--ink);
+  font-size: 0.9375rem;
+  line-height: 1.6;
+}
+.projects-case__tech { margin-top: 1.5rem; }
+
+@media (max-width: 767px) {
+  .projects-case {
+    top: auto;
+    left: 0;
+    right: 0;
+    height: min(86%, 40rem);
+    width: auto;
+    border-left: 0;
+    border-top: 1px solid var(--line-2);
+    box-shadow: 0 -30px 80px rgba(0, 0, 0, 0.6);
+    transform: translate3d(0, 100%, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .projects-case,
+  .projects-case.is-on { transform: none !important; }
+}
+
+/* ==========================================================================
+   PAGE 01  REEL
+   ========================================================================== */
+.projects-reel {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  isolation: isolate;
+  background: var(--void);
+}
+
+/* Parallax wrapper. It owns both the pointer offset and the drag offset, so
+   the two never fight over the same transform. Inset past the edges, or the
+   parallax would expose the ground at the corners. */
+.projects-reel__plates {
+  --px: 0px;
+  --py: 0px;
+  --drag: 0px;
+  position: absolute;
+  inset: -3.5%;
+  z-index: 0;
+  transform: translate3d(calc(var(--px) + var(--drag)), var(--py), 0);
+  touch-action: pan-y;
+}
+.is-fine .projects-reel__plates { cursor: grab; }
+.is-fine .projects-reel.is-dragging .projects-reel__plates { cursor: grabbing; }
+
+/* Two layers, swapped on every step, so a step allocates nothing. The
+   transition lives only on the target states: a plate that is being reset
+   before an entrance must snap, not animate backwards. */
+.projects-reel__plate {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transform: translate3d(16%, 0, 0);
+  pointer-events: none;
+}
+.projects-reel__plate > .projects-art__c { width: 100%; height: 100%; }
+
+.projects-reel__plate.is-front {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+  transition: transform 620ms var(--ease-out), opacity 620ms var(--ease-out);
+}
+.projects-reel__plate.is-out-l {
+  opacity: 0;
+  transform: translate3d(-16%, 0, 0);
+  transition: transform 620ms var(--ease-out), opacity 620ms var(--ease-out);
+}
+.projects-reel__plate.is-out-r {
+  opacity: 0;
+  transform: translate3d(16%, 0, 0);
+  transition: transform 620ms var(--ease-out), opacity 620ms var(--ease-out);
+}
+.projects-reel__plate.is-pre-l { transform: translate3d(-16%, 0, 0); }
+
+/* One gradient of the ground colour, never a black overlay: the plate has to
+   darken toward the type, not go grey. */
+.projects-reel__scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background:
+    linear-gradient(to top, rgba(8, 8, 10, 0.95) 0%, rgba(8, 8, 10, 0.72) 26%, rgba(8, 8, 10, 0.12) 62%, rgba(8, 8, 10, 0) 100%),
+    linear-gradient(to right, rgba(8, 8, 10, 0.80) 0%, rgba(8, 8, 10, 0.18) 38%, rgba(8, 8, 10, 0) 62%);
+}
+
+.projects-reel__body {
+  position: absolute;
+  z-index: 3;
+  left: var(--gutter);
+  right: var(--gutter);
+  bottom: calc(1.75rem + env(safe-area-inset-bottom, 0px));
+  max-width: 42rem;
+}
+.projects-reel__meta {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.625rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.projects-reel__meta i { width: 1.5rem; height: 1px; background: var(--c-accent); }
+
+.projects-reel__name {
+  margin-top: 1.25rem;
+  overflow: hidden;
+  font-size: clamp(2.75rem, 7vw, 6.5rem);
+  font-weight: 500;
+  letter-spacing: -0.045em;
+  line-height: 0.92;
+}
+.projects-reel__name > span { display: block; transform: translate3d(0, 112%, 0); }
+.projects-reel__role {
+  margin-top: 0.75rem;
+  font-size: 0.6875rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.projects-reel__problem {
+  margin-top: 1.5rem;
+  color: var(--ink-2);
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  max-width: 62ch;
+}
+.projects-reel__outcome {
+  margin-top: 0.75rem;
+  color: var(--ink);
+  font-size: 1.0625rem;
+  line-height: 1.6;
+  max-width: 74ch;
+}
+.projects-reel__tech { margin-top: 1.75rem; }
+.projects-reel__actions {
+  margin-top: 1.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+}
+/* The shell accent never appears inside a concept stage; the button borrows
+   the project hue instead, which also means the primary action recolours with
+   the piece it belongs to. */
+.projects-reel__actions .btn { --btn-ink: var(--c-accent); --btn-line: var(--line-2); }
+.projects-reel__step { display: flex; gap: 0.375rem; }
+.projects-reel__count {
+  font-size: 0.625rem;
+  letter-spacing: 0.18em;
+  color: var(--ink-4);
+}
+.projects-reel__count b { color: var(--c-accent); font-weight: 500; }
+.projects-reel__actions .iconbtn.is-end { opacity: 0.35; pointer-events: none; }
+
+/* Entrance. Defined only on the `is-in` state, so removing the class resets
+   without playing the whole thing in reverse. */
+.projects-reel__body.is-in .projects-reel__name > span {
+  transform: translate3d(0, 0, 0);
+  transition: transform 760ms var(--ease-out) 90ms;
+}
+.projects-reel__body .projects-reel__role,
+.projects-reel__body .projects-reel__problem,
+.projects-reel__body .projects-reel__outcome,
+.projects-reel__body .projects-reel__tech {
+  opacity: 0;
+  transform: translate3d(0, 14px, 0);
+}
+.projects-reel__body.is-in .projects-reel__role,
+.projects-reel__body.is-in .projects-reel__problem,
+.projects-reel__body.is-in .projects-reel__outcome,
+.projects-reel__body.is-in .projects-reel__tech {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+  transition: opacity 520ms var(--ease-out), transform 520ms var(--ease-out);
+}
+.projects-reel__body.is-in .projects-reel__role { transition-delay: 150ms; }
+.projects-reel__body.is-in .projects-reel__problem { transition-delay: 210ms; }
+.projects-reel__body.is-in .projects-reel__outcome { transition-delay: 270ms; }
+.projects-reel__body.is-in .projects-reel__tech { transition-delay: 330ms; }
+
+.projects-reel__fig {
+  position: absolute;
+  z-index: 3;
+  right: var(--gutter);
+  bottom: calc(1.75rem + env(safe-area-inset-bottom, 0px));
+  max-width: 22rem;
+  text-align: right;
+  font-size: 0.5625rem;
+  letter-spacing: 0.14em;
+  line-height: 1.7;
+  text-transform: uppercase;
+  color: var(--ink-4);
+}
+
+
+/* The index: the other five, listed rather than reduced to dashes. The active
+   row is offset by a transform and marked by a leader rule that scales in.
+   Neither the offset nor the rule touches layout. */
+.projects-reel__index {
+  position: absolute;
+  z-index: 3;
+  right: var(--gutter);
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+.projects-reel__index button {
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.625rem;
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-4);
+  transform: translate3d(0, 0, 0);
+  transition: transform 260ms var(--ease-out), color 260ms var(--ease-out);
+}
+.projects-reel__index button i { font-style: normal; opacity: 0.6; }
+.projects-reel__index button b { font-weight: 500; letter-spacing: 0.14em; }
+.projects-reel__index button s {
+  display: block;
+  width: 18px;
+  height: 1px;
+  background: var(--c-accent);
+  text-decoration: none;
+  transform: scaleX(0);
+  transform-origin: right center;
+  transition: transform 260ms var(--ease-out);
+}
+@media (hover: hover) and (pointer: fine) {
+  .projects-reel__index button:hover { color: var(--ink-2); }
+  .projects-reel__index button:hover s { transform: scaleX(0.5); }
+}
+.projects-reel__index button[aria-current="true"] {
+  color: var(--ink);
+  transform: translate3d(-14px, 0, 0);
+  transition: transform 380ms var(--ease-out), color 260ms var(--ease-out);
+}
+.projects-reel__index button[aria-current="true"] i { color: var(--c-accent); opacity: 1; }
+.projects-reel__index button[aria-current="true"] s {
+  transform: scaleX(1);
+  transition: transform 380ms var(--ease-out);
+}
+
+/* -------------------------------------------------------------- mobile */
+/* A different composition, not a smaller one: the plate becomes a band the
+   type sits under, so prose is never set over artwork on a phone, and the
+   right-hand index is replaced by the actions row it would have crowded. */
+@media (max-width: 1099px) {
+  .projects-reel__index button b { display: none; }
+  .projects-reel__body { max-width: 34rem; }
+}
+@media (max-width: 767px) {
+  .projects-reel { display: grid; grid-template-rows: 42dvh 1fr; }
+  .projects-reel__plates {
+    position: relative;
+    inset: auto;
+    grid-row: 1;
+    overflow: hidden;
+    transform: translate3d(var(--drag), 0, 0);
+    border-bottom: 1px solid var(--line);
+  }
+  .projects-reel__scrim {
+    inset: auto 0 calc(100% - 42dvh) 0;
+    height: 7rem;
+    background: linear-gradient(to top, rgba(8, 8, 10, 0.92), rgba(8, 8, 10, 0));
+  }
+  .projects-reel__body {
+    position: relative;
+    grid-row: 2;
+    left: auto;
+    right: auto;
+    bottom: auto;
+    max-width: none;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 1.5rem var(--gutter) calc(1.5rem + env(safe-area-inset-bottom, 0px));
+  }
+  .projects-reel__name { margin-top: 0.875rem; font-size: clamp(2.25rem, 12vw, 3.25rem); }
+  .projects-reel__problem { margin-top: 1rem; }
+  .projects-reel__actions { flex-wrap: wrap; }
+  .projects-reel__actions .btn { flex: 1 0 100%; justify-content: center; }
+  .projects-reel__actions .iconbtn { width: 3rem; height: 3rem; }
+  .projects-reel__fig,
+  .projects-reel__index { display: none; }
+}
+
+/* ------------------------------------------------------ reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .projects-reel__plates { transform: none !important; }
+  .projects-reel__plate.is-front,
+  .projects-reel__plate.is-out-l,
+  .projects-reel__plate.is-out-r {
+    transform: none !important;
+    transition: opacity 200ms linear !important;
+  }
+  .projects-reel__plate { transform: none !important; }
+  .projects-reel__name > span { transform: none !important; }
+  .projects-reel__body .projects-reel__role,
+  .projects-reel__body .projects-reel__problem,
+  .projects-reel__body .projects-reel__outcome,
+  .projects-reel__body .projects-reel__tech {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  .projects-reel__index button,
+  .projects-reel__index button[aria-current="true"] { transform: none !important; }
+  .projects-reel__index button[aria-current="true"] s { transform: scaleX(1) !important; }
+}
+
+/* ==========================================================================
+   PAGE 02  DRIFT
+   ========================================================================== */
+.projects-drift {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  isolation: isolate;
+  background: var(--void);
+}
+.projects-drift__plane {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+}
+@media (hover: hover) and (pointer: fine) {
+  .projects-drift__plane { cursor: grab; }
+  .projects-drift.is-dragging .projects-drift__plane { cursor: grabbing; }
+}
+
+/* A right-edge wash so the index never has to be read over a plate. One
+   gradient of the ground colour, sized to the index and nothing wider. */
+.projects-drift__vig {
+  position: absolute;
+  z-index: 2;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 20rem;
+  pointer-events: none;
+  background: linear-gradient(to right, rgba(8, 8, 10, 0), rgba(8, 8, 10, 0.72) 62%, rgba(8, 8, 10, 0.9));
+}
+
+/* The stage hint bar is centred by the shell and would sit on the readout.
+   Scoped from this concept's own root, it moves to the free corner. */
+.projects-drift .hint-strip {
+  left: auto;
+  right: var(--gutter);
+  transform: none;
+}
+
+/* The reticle is the reference point that makes wandering safe. Two 22px
+   rules, nothing else; it names a sampling position, it is not decoration. */
+.projects-drift__reticle {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 2;
+  width: 22px;
+  height: 22px;
+  margin: -11px 0 0 -11px;
+  pointer-events: none;
+}
+.projects-drift__reticle i {
+  position: absolute;
+  background: var(--c-accent);
+  opacity: 0.85;
+}
+.projects-drift__reticle i:first-child { left: 0; right: 0; top: 50%; height: 1px; }
+.projects-drift__reticle i:last-child { top: 0; bottom: 0; left: 50%; width: 1px; }
+
+.projects-drift__readout {
+  position: absolute;
+  z-index: 3;
+  left: var(--gutter);
+  bottom: calc(1.75rem + env(safe-area-inset-bottom, 0px));
+  max-width: 34rem;
+  padding: 1.125rem 1.25rem 1.25rem;
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  background: rgba(8, 8, 10, 0.78);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+.projects-drift__meta {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.625rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.projects-drift__meta i { width: 1.5rem; height: 1px; background: var(--c-accent); }
+.projects-drift__name {
+  margin-top: 0.75rem;
+  font-size: clamp(1.75rem, 3.4vw, 2.75rem);
+  font-weight: 500;
+  letter-spacing: -0.04em;
+  line-height: 0.98;
+}
+.projects-drift__outcome {
+  margin-top: 0.75rem;
+  color: var(--ink-2);
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  max-width: 52ch;
+}
+.projects-drift__actions {
+  margin-top: 1.25rem;
+  display: flex;
+  gap: 0.625rem;
+}
+.projects-drift__actions .btn { --btn-ink: var(--c-accent); --btn-line: var(--line-2); }
+.projects-drift__actions .btn--ghost { --btn-ink: var(--ink); --btn-line: var(--line); }
+
+/* Entrance replayed whenever the reticle crosses into a new plate. Declared
+   only on the target state so a reset snaps instead of unwinding. */
+.projects-drift__readout .projects-drift__meta,
+.projects-drift__readout .projects-drift__name,
+.projects-drift__readout .projects-drift__outcome {
+  opacity: 0;
+  transform: translate3d(0, 10px, 0);
+}
+.projects-drift__readout.is-in .projects-drift__meta,
+.projects-drift__readout.is-in .projects-drift__name,
+.projects-drift__readout.is-in .projects-drift__outcome {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+  transition: opacity 380ms var(--ease-out), transform 380ms var(--ease-out);
+}
+.projects-drift__readout.is-in .projects-drift__name { transition-delay: 45ms; }
+.projects-drift__readout.is-in .projects-drift__outcome { transition-delay: 90ms; }
+
+.projects-drift__jump {
+  position: absolute;
+  z-index: 3;
+  right: var(--gutter);
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+.projects-drift__jump button {
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.625rem;
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-4);
+  transition: color 260ms var(--ease-out), transform 260ms var(--ease-out);
+}
+.projects-drift__jump button i { font-style: normal; opacity: 0.6; }
+.projects-drift__jump button b { font-weight: 500; letter-spacing: 0.14em; }
+.projects-drift__jump button s {
+  display: block;
+  width: 18px;
+  height: 1px;
+  background: var(--c-accent);
+  text-decoration: none;
+  transform: scaleX(0);
+  transform-origin: right center;
+  transition: transform 260ms var(--ease-out);
+}
+@media (hover: hover) and (pointer: fine) {
+  .projects-drift__jump button:hover { color: var(--ink-2); }
+  .projects-drift__jump button:hover s { transform: scaleX(0.5); }
+}
+.projects-drift__jump button[aria-current="true"] {
+  color: var(--ink);
+  transform: translate3d(-14px, 0, 0);
+}
+.projects-drift__jump button[aria-current="true"] i { color: var(--c-accent); opacity: 1; }
+.projects-drift__jump button[aria-current="true"] s { transform: scaleX(1); }
+
+/* -------------------------------------------------------------- mobile */
+/* The plane becomes a vertical ribbon: one column, no horizontal travel, and
+   the readout takes the bottom edge as a bar rather than floating over work
+   the thumb is about to drag. */
+@media (max-width: 1099px) {
+  .projects-drift__jump button b { display: none; }
+}
+@media (max-width: 767px) {
+  .projects-drift { display: grid; grid-template-rows: 1fr auto; }
+  .projects-drift__plane { position: relative; inset: auto; grid-row: 1; }
+  .projects-drift__reticle { top: auto; bottom: calc(50% + 6rem); }
+  .projects-drift__jump,
+  .projects-drift__vig { display: none; }
+  .projects-drift__readout {
+    position: relative;
+    grid-row: 2;
+    left: auto;
+    bottom: auto;
+    max-width: none;
+    border: 0;
+    border-top: 1px solid var(--line);
+    border-radius: 0;
+    background: var(--void);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    padding: 1.125rem var(--gutter) calc(1.125rem + env(safe-area-inset-bottom, 0px));
+  }
+  .projects-drift__actions .btn { flex: 1; justify-content: center; }
+}
+
+/* ------------------------------------------------------ reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .projects-drift__readout .projects-drift__meta,
+  .projects-drift__readout .projects-drift__name,
+  .projects-drift__readout .projects-drift__outcome {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  .projects-drift__jump button,
+  .projects-drift__jump button[aria-current="true"] { transform: none !important; }
+  .projects-drift__jump button[aria-current="true"] s { transform: scaleX(1) !important; }
+}
+
+/* ==========================================================================
+   PAGE 03  INDEX
+   ========================================================================== */
+.projects-index {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: 1fr minmax(22rem, 38%);
+  gap: clamp(1.5rem, 4vw, 3.5rem);
+  padding: clamp(1.25rem, 3vh, 2.25rem) var(--gutter);
+  background: var(--void);
+  overflow: hidden;
+}
+
+.projects-index__list {
+  position: relative;
+  min-width: 0;
+  display: flex;
+  padding-left: 2.25rem;
+}
+
+/* The spine keeps the reader's place in the list, which is the thing a
+   floating preview usually destroys. One rule, one marker, one transform. */
+.projects-index__spine {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--line);
+}
+.projects-index__spine i {
+  position: absolute;
+  left: -1px;
+  top: 0;
+  width: 3px;
+  height: calc(100% / 6);
+  background: var(--c-accent);
+  transform: translate3d(0, 0, 0);
+  transition: transform 480ms var(--ease-out), background-color 300ms var(--ease-out);
+}
+
+.projects-index__rows {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  grid-template-rows: repeat(6, minmax(88px, 1fr));
+  border-top: 1px solid var(--line);
+}
+.projects-index__rows li { display: grid; border-bottom: 1px solid var(--line); }
+.projects-index__rows button {
+  position: relative;
+  width: 100%;
+  display: grid;
+  grid-template-columns: 3.25rem 1fr auto auto;
+  align-items: baseline;
+  gap: clamp(0.75rem, 2vw, 1.75rem);
+  padding: 0 0.5rem;
+  text-align: left;
+  color: var(--ink-3);
+  transition: color 420ms var(--ease-out);
+}
+.projects-index__n {
+  font-size: 0.6875rem;
+  letter-spacing: 0.18em;
+  color: var(--ink-4);
+  transition: color 420ms var(--ease-out);
+}
+.projects-index__nm {
+  min-width: 0;
+  font-size: clamp(2rem, 4.4vw, 3.75rem);
+  font-weight: 400;
+  letter-spacing: -0.04em;
+  line-height: 1.02;
+  color: inherit;
+  transform: translate3d(0, 0, 0);
+  transition: transform 420ms var(--ease-out);
+}
+.projects-index__disc,
+.projects-index__yr {
+  font-size: 0.6875rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-4);
+  white-space: nowrap;
+  transition: color 420ms var(--ease-out);
+}
+.projects-index__yr { min-width: 3.5rem; text-align: right; }
+
+/* The travelling rule. scaleX from the left on the way in, collapsing to the
+   right on the way out, so it reads as one rule moving down the list. */
+.projects-index__rows button s {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 1px;
+  background: var(--c-accent);
+  text-decoration: none;
+  transform: scaleX(0);
+  transform-origin: right center;
+  transition: transform 300ms var(--ease-out);
+}
+.projects-index__rows button[aria-current="true"] { color: var(--ink); }
+.projects-index__rows button[aria-current="true"] .projects-index__n { color: var(--c-accent); }
+.projects-index__rows button[aria-current="true"] .projects-index__disc,
+.projects-index__rows button[aria-current="true"] .projects-index__yr { color: var(--ink-3); }
+.projects-index__rows button[aria-current="true"] .projects-index__nm {
+  transform: translate3d(18px, 0, 0);
+}
+.projects-index__rows button[aria-current="true"] s {
+  transform: scaleX(1);
+  transform-origin: left center;
+  transition: transform 480ms var(--ease-out);
+}
+@media (hover: hover) and (pointer: fine) {
+  .projects-index__rows button:hover { color: var(--ink-2); }
+}
+
+/* ------------------------------------------------------------ plate column */
+.projects-index__col {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  border-left: 1px solid var(--line);
+  padding-left: clamp(1.25rem, 3vw, 2.5rem);
+}
+.projects-index__plate {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  background: var(--void-2);
+  overflow: hidden;
+}
+.projects-index__below {
+  flex: 1;
+  min-height: 0;
+  margin-top: 1.25rem;
+  display: flex;
+  flex-direction: column;
+}
+.projects-index__fig {
+  font-size: 0.5625rem;
+  letter-spacing: 0.14em;
+  line-height: 1.7;
+  text-transform: uppercase;
+  color: var(--ink-4);
+}
+.projects-index__outcome {
+  margin-top: 0.875rem;
+  color: var(--ink);
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  max-width: 46ch;
+}
+/* The stack row is pushed to the foot of the column so it lands on the same
+   line as the last row of the index. The air above it is composition, not a
+   gap left over from a shorter caption. */
+.projects-index__tech {
+  margin-top: auto;
+  padding-top: 1.5rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+}
+.projects-index__tech span {
+  padding: 0.25rem 0.5rem;
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  white-space: nowrap;
+}
+
+/* Entrance declared only on the target state, so a fast sweep down the list
+   retargets rather than replaying from zero. */
+.projects-index__below .projects-index__fig,
+.projects-index__below .projects-index__outcome,
+.projects-index__below .projects-index__tech {
+  opacity: 0;
+  transform: translate3d(0, 10px, 0);
+}
+.projects-index__below.is-in .projects-index__fig,
+.projects-index__below.is-in .projects-index__outcome,
+.projects-index__below.is-in .projects-index__tech {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+  transition: opacity 420ms var(--ease-out), transform 420ms var(--ease-out);
+}
+.projects-index__below.is-in .projects-index__fig { transition-delay: 60ms; }
+.projects-index__below.is-in .projects-index__outcome { transition-delay: 120ms; }
+.projects-index__below.is-in .projects-index__tech { transition-delay: 180ms; }
+
+/* -------------------------------------------------------------- tablet */
+@media (max-width: 1099px) {
+  .projects-index { grid-template-columns: 1fr minmax(18rem, 34%); }
+  .projects-index__rows button { grid-template-columns: 2.75rem 1fr auto; }
+  .projects-index__disc { display: none; }
+}
+
+/* -------------------------------------------------------------- mobile */
+/* There is no hover on a phone, so scroll drives the column instead: the plate
+   becomes a sticky band at the top and the row crossing the reading line
+   activates it. Nothing is hidden behind an interaction a phone cannot do. */
+@media (max-width: 767px) {
+  .projects-index {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 0 0 3rem;
+  }
+  .projects-index__col {
+    order: -1;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    border-left: 0;
+    border-bottom: 1px solid var(--line);
+    padding: 0.75rem var(--gutter) 0.875rem;
+    background: var(--void);
+  }
+  .projects-index__plate { aspect-ratio: 16 / 9; }
+  .projects-index__below { flex: none; margin-top: 0.75rem; display: block; }
+  .projects-index__outcome { margin-top: 0.5rem; font-size: 0.875rem; }
+  .projects-index__tech { display: none; }
+
+  .projects-index__list { padding-left: 0; }
+  .projects-index__spine { display: none; }
+  .projects-index__rows { display: block; border-top: 0; }
+  .projects-index__rows li { border-bottom: 0; }
+  .projects-index__rows button {
+    display: block;
+    padding: 1.125rem var(--gutter) 1.5rem;
+    border-bottom: 1px solid var(--line);
+  }
+  .projects-index__nm {
+    display: block;
+    margin-top: 0.375rem;
+    font-size: clamp(2rem, 10vw, 2.75rem);
+    transform: none !important;
+  }
+  .projects-index__disc { display: inline; }
+  .projects-index__yr { display: inline; min-width: 0; margin-left: 0.75rem; text-align: left; }
+  .projects-index__rows button s { display: none; }
+}
+
+/* ------------------------------------------------------ reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .projects-index__spine i { transition: none !important; }
+  .projects-index__rows button[aria-current="true"] .projects-index__nm { transform: none !important; }
+  .projects-index__below .projects-index__fig,
+  .projects-index__below .projects-index__outcome,
+  .projects-index__below .projects-index__tech {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
+
+/* ==========================================================================
+   PAGE 04  COVERFLOW
+   ========================================================================== */
+.projects-flow {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  isolation: isolate;
+  background: var(--void);
+}
+
+/* Perspective origin above centre, so the row reads as being at eye level
+   rather than seen from below. */
+.projects-flow__stage {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  perspective: 1400px;
+  perspective-origin: 50% 42%;
+  touch-action: pan-y;
+}
+@media (hover: hover) and (pointer: fine) {
+  .projects-flow__stage { cursor: grab; }
+  .projects-flow.is-dragging .projects-flow__stage { cursor: grabbing; }
+}
+
+.projects-flow__rail {
+  position: absolute;
+  left: 50%;
+  top: 42%;
+  width: 34vw;
+  transform: translate3d(-50%, -50%, 0);
+  transform-style: preserve-3d;
+}
+
+.projects-flow__card {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+  text-align: left;
+  will-change: transform, opacity;
+}
+.projects-flow__card:first-child { position: relative; }
+.projects-flow__plate {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  border: 1px solid var(--line-2);
+  border-radius: var(--r);
+  background: var(--void-2);
+  transition: box-shadow 300ms var(--ease-out);
+}
+.projects-flow__plate > .projects-art__c { width: 100%; height: 100%; }
+
+/* Contact shadow, not a mirrored floor. A discrete state change on one class,
+   never a per-frame box-shadow. */
+.projects-flow__card.is-front .projects-flow__plate {
+  border-color: var(--c-accent);
+  box-shadow: 0 30px 60px -24px rgba(0, 0, 0, 0.85), 0 0 0 1px var(--c-accent);
+}
+.projects-flow__cap {
+  display: block;
+  margin-top: 0.75rem;
+  font-size: 0.625rem;
+  letter-spacing: 0.18em;
+  color: var(--ink-4);
+  transition: color 300ms var(--ease-out);
+}
+.projects-flow__card.is-front .projects-flow__cap { color: var(--ink-2); }
+
+@media (hover: hover) and (pointer: fine) {
+  .projects-flow__card:not(.is-front):hover { z-index: 300; }
+  .projects-flow__card:not(.is-front):hover .projects-flow__plate {
+    box-shadow: 0 18px 40px -20px rgba(0, 0, 0, 0.8);
+    border-color: var(--line-3);
+  }
+}
+
+/* ------------------------------------------------------------------ meta */
+.projects-flow__meta {
+  position: absolute;
+  z-index: 4;
+  left: var(--gutter);
+  bottom: calc(1.75rem + env(safe-area-inset-bottom, 0px));
+  max-width: 34rem;
+}
+.projects-flow__disc {
+  font-size: 0.625rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.projects-flow__name {
+  margin-top: 0.625rem;
+  font-size: clamp(2rem, 4vw, 3.25rem);
+  font-weight: 500;
+  letter-spacing: -0.04em;
+  line-height: 0.98;
+}
+.projects-flow__outcome {
+  margin-top: 0.75rem;
+  color: var(--ink-2);
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  max-width: 52ch;
+}
+.projects-flow__actions { margin-top: 1.25rem; }
+.projects-flow__actions .btn { --btn-ink: var(--c-accent); --btn-line: var(--line-2); }
+
+.projects-flow__meta .projects-flow__disc,
+.projects-flow__meta .projects-flow__name,
+.projects-flow__meta .projects-flow__outcome {
+  opacity: 0;
+  transform: translate3d(0, 10px, 0);
+}
+.projects-flow__meta.is-in .projects-flow__disc,
+.projects-flow__meta.is-in .projects-flow__name,
+.projects-flow__meta.is-in .projects-flow__outcome {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+  transition: opacity 380ms var(--ease-out), transform 380ms var(--ease-out);
+}
+.projects-flow__meta.is-in .projects-flow__name { transition-delay: 45ms; }
+.projects-flow__meta.is-in .projects-flow__outcome { transition-delay: 90ms; }
+
+/* ----------------------------------------------------------------- marks */
+.projects-flow__marks {
+  position: absolute;
+  z-index: 4;
+  right: var(--gutter);
+  bottom: calc(1.75rem + env(safe-area-inset-bottom, 0px));
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.projects-flow__count {
+  font-size: 0.625rem;
+  letter-spacing: 0.18em;
+  color: var(--ink-4);
+}
+.projects-flow__count b { color: var(--c-accent); font-weight: 500; }
+.projects-flow__marks button {
+  width: 22px;
+  height: 44px;
+  display: grid;
+  place-items: end center;
+  padding-bottom: 1rem;
+}
+.projects-flow__marks button i {
+  display: block;
+  width: 1px;
+  height: 10px;
+  background: var(--ink-4);
+  transform-origin: bottom center;
+  transition: transform 300ms var(--ease-out), background-color 260ms var(--ease-out);
+}
+@media (hover: hover) and (pointer: fine) {
+  .projects-flow__marks button:hover i { background: var(--ink-2); }
+}
+.projects-flow__marks button[aria-current="true"] i {
+  background: var(--c-accent);
+  transform: scaleY(2.6);
+}
+
+/* ------------------------------------------------------- expanded case */
+.projects-flow__expand {
+  position: absolute;
+  inset: 0;
+  z-index: 9;
+  display: grid;
+  grid-template-columns: 1.1fr 1fr;
+  gap: clamp(2rem, 5vw, 4.5rem);
+  align-items: center;
+  padding: clamp(1.5rem, 4vh, 3rem) var(--gutter);
+  background: var(--surface);
+  opacity: 0;
+  transition: opacity 220ms var(--ease-out);
+}
+/* Same reason as the case sheet: an author `display` rule outranks the
+   user-agent `[hidden]` rule, so the panel has to opt back in. */
+.projects-flow__expand[hidden] { display: none; }
+.projects-flow__expand.is-on { opacity: 1; transition: opacity 300ms var(--ease-out); }
+
+.projects-flow__exp-plate {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  border: 1px solid var(--c-accent);
+  border-radius: var(--r);
+  background: var(--void-2);
+  transform-origin: center center;
+  transition: transform 620ms var(--ease-in-out);
+}
+.projects-flow__exp-plate > .projects-art__c { width: 100%; height: 100%; }
+
+.projects-flow__exp-body {
+  min-width: 0;
+  max-height: 100%;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-right: 0.5rem;
+}
+.projects-flow__exp-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.625rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.projects-flow__exp-meta i { width: 1.5rem; height: 1px; background: var(--c-accent); }
+.projects-flow__exp-name {
+  margin-top: 1rem;
+  font-size: clamp(2.5rem, 5vw, 4rem);
+  font-weight: 500;
+  letter-spacing: -0.045em;
+  line-height: 0.94;
+}
+.projects-flow__exp-role {
+  margin-top: 0.625rem;
+  font-size: 0.6875rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.projects-flow__exp-problem {
+  margin-top: 1.5rem;
+  padding-left: 0.875rem;
+  border-left: 1px solid var(--c-accent);
+  color: var(--ink);
+  font-size: 1rem;
+  line-height: 1.55;
+  max-width: 68ch;
+}
+.projects-flow__exp-detail {
+  margin-top: 1.25rem;
+  color: var(--ink-2);
+  font-size: 0.9375rem;
+  line-height: 1.7;
+  max-width: 74ch;
+}
+.projects-flow__exp-outcome {
+  margin-top: 1.25rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--line);
+  color: var(--ink);
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  max-width: 74ch;
+}
+.projects-flow__exp-tech {
+  margin-top: 1.5rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+}
+.projects-flow__exp-tech span {
+  padding: 0.25rem 0.5rem;
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  white-space: nowrap;
+}
+.projects-flow__exp-close {
+  position: absolute;
+  top: clamp(1rem, 3vh, 1.75rem);
+  right: var(--gutter);
+}
+
+/* The body arrives after the plate has started moving, so the two read as one
+   gesture rather than as a panel and a picture doing separate things. */
+.projects-flow__expand .projects-flow__exp-body > * {
+  opacity: 0;
+  transform: translate3d(0, 16px, 0);
+}
+.projects-flow__expand.is-on .projects-flow__exp-body > * {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+  transition: opacity 320ms var(--ease-out) 180ms, transform 320ms var(--ease-out) 180ms;
+}
+
+/* -------------------------------------------------------------- tablet */
+@media (max-width: 1099px) {
+  .projects-flow__stage { perspective: 1100px; }
+  .projects-flow__rail { width: 46vw; }
+  .projects-flow__expand { grid-template-columns: 1fr; align-content: start; }
+  .projects-flow__exp-plate { max-width: 34rem; }
+}
+
+/* -------------------------------------------------------------- mobile */
+/* Perspective and rotation are removed entirely: the row becomes a flat strip
+   driven by the same position value and the same physics. */
+@media (max-width: 767px) {
+  .projects-flow__stage { perspective: none; top: 0; bottom: 8.5rem; }
+  .projects-flow__rail { width: 84vw; top: 46%; }
+  .projects-flow__card { will-change: transform; }
+  .projects-flow__card.is-front .projects-flow__plate {
+    box-shadow: 0 16px 34px -18px rgba(0, 0, 0, 0.85), 0 0 0 1px var(--c-accent);
+  }
+  .projects-flow__meta {
+    left: 0;
+    right: 0;
+    bottom: 0;
+    max-width: none;
+    padding: 1rem var(--gutter) calc(1rem + env(safe-area-inset-bottom, 0px));
+    border-top: 1px solid var(--line);
+    background: var(--void);
+  }
+  .projects-flow__outcome { display: none; }
+  .projects-flow__actions { margin-top: 0.875rem; }
+  .projects-flow__actions .btn { width: 100%; justify-content: center; }
+  .projects-flow__marks { display: none; }
+  .projects-flow__expand {
+    grid-template-columns: 1fr;
+    align-items: start;
+    align-content: start;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 3.5rem var(--gutter) 3rem;
+  }
+  .projects-flow__exp-plate { aspect-ratio: 16 / 9; }
+  .projects-flow__exp-body { overflow: visible; max-height: none; }
+}
+
+/* ------------------------------------------------------ reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .projects-flow__exp-plate { transition: none !important; transform: none !important; }
+  .projects-flow__meta .projects-flow__disc,
+  .projects-flow__meta .projects-flow__name,
+  .projects-flow__meta .projects-flow__outcome {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  .projects-flow__expand .projects-flow__exp-body > * {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  .projects-flow__marks button[aria-current="true"] i { transform: scaleY(2.6) !important; }
+}
+
+/* ==========================================================================
+   PAGE 05  DOSSIER
+   --------------------------------------------------------------------------
+   Everything sits on a 24px baseline. There are no cards anywhere in this
+   concept: records are separated by a rule and by space, which is what a
+   document does.
+   ========================================================================== */
+.projects-dossier {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: 13rem 1fr;
+  gap: clamp(1.5rem, 4vw, 3.5rem);
+  padding: 0 var(--gutter);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background: var(--void);
+}
+
+/* --------------------------------------------------------------------- rail */
+.projects-dossier__rail {
+  position: sticky;
+  top: 0;
+  align-self: start;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding-left: 0.75rem;
+  border-right: 1px solid var(--line);
+}
+.projects-dossier__marker {
+  position: absolute;
+  left: -1px;
+  top: 50%;
+  width: 2px;
+  height: 2.25rem;
+  margin-top: -6.75rem;
+  background: var(--c-accent);
+  transform: translate3d(0, 0, 0);
+  transition: transform 420ms var(--ease-out), background-color 300ms var(--ease-out);
+}
+.projects-dossier__rail a {
+  height: 2.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-4);
+  transition: color 260ms var(--ease-out);
+}
+.projects-dossier__rail a i { font-style: normal; opacity: 0.6; }
+.projects-dossier__rail a b { font-weight: 500; letter-spacing: 0.12em; }
+@media (hover: hover) and (pointer: fine) {
+  .projects-dossier__rail a:hover { color: var(--ink-2); }
+}
+.projects-dossier__rail a[aria-current="true"] { color: var(--ink); }
+.projects-dossier__rail a[aria-current="true"] i { color: var(--c-accent); opacity: 1; }
+
+/* --------------------------------------------------------------------- main */
+.projects-dossier__main {
+  min-width: 0;
+  padding: clamp(2rem, 6vh, 4rem) 0 6rem;
+}
+.projects-dossier__head { max-width: 62ch; }
+.projects-dossier__title {
+  font-size: clamp(1.75rem, 3.4vw, 2.75rem);
+  font-weight: 500;
+  letter-spacing: -0.042em;
+  line-height: 1.05;
+}
+.projects-dossier__lede {
+  margin-top: 0.75rem;
+  color: var(--ink-3);
+  font-size: 0.9375rem;
+  line-height: 1.6;
+}
+
+/* ------------------------------------------------------------------ filters */
+.projects-dossier__filters {
+  margin-top: 2rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+}
+.projects-dossier__filters button,
+.projects-dossier__stack button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 32px;
+  padding: 0.3125rem 0.5625rem;
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  white-space: nowrap;
+  transition: color 140ms ease, border-color 140ms ease, background-color 140ms ease;
+}
+.projects-dossier__filters button i,
+.projects-dossier__stack button i { font-style: normal; color: var(--ink-4); }
+@media (hover: hover) and (pointer: fine) {
+  .projects-dossier__filters button:hover,
+  .projects-dossier__stack button:hover { color: var(--ink); border-color: var(--line-3); }
+}
+.projects-dossier__filters button:active,
+.projects-dossier__stack button:active { transform: translateY(1px); }
+.projects-dossier__filters button[aria-pressed="true"] {
+  color: var(--void);
+  background: var(--c-accent);
+  border-color: var(--c-accent);
+}
+.projects-dossier__filters button[aria-pressed="true"] i { color: var(--void); opacity: 0.7; }
+
+/* ------------------------------------------------------------------ record */
+.projects-dossier__rec {
+  position: relative;
+  max-width: 92ch;
+  padding-top: 4rem;
+  opacity: 0;
+  transform: translate3d(0, 18px, 0);
+  transition: opacity 320ms var(--ease-out);
+}
+.projects-dossier__rec.is-in {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+  transition: opacity 620ms var(--ease-out), transform 620ms var(--ease-out);
+}
+.projects-dossier__rec.is-dim { opacity: 0.22; }
+.projects-dossier__rec:first-of-type { padding-top: 2.5rem; }
+.projects-dossier__rule {
+  height: 1px;
+  margin-bottom: 1.5rem;
+  background: var(--c-accent);
+  opacity: 0.55;
+}
+.projects-dossier__recmeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  font-size: 0.625rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-4);
+}
+.projects-dossier__recnum { color: var(--c-accent); }
+.projects-dossier__recname {
+  margin-top: 1.5rem;
+  font-size: clamp(1.75rem, 3.2vw, 2.5rem);
+  font-weight: 500;
+  letter-spacing: -0.042em;
+  line-height: 1.1;
+}
+.projects-dossier__problem {
+  margin-top: 1.5rem;
+  color: var(--ink);
+  font-size: 1rem;
+  line-height: 1.5;
+  max-width: 74ch;
+}
+.projects-dossier__outcome {
+  margin-top: 0.75rem;
+  color: var(--ink-2);
+  font-size: 1rem;
+  line-height: 1.5;
+  max-width: 74ch;
+}
+
+/* --------------------------------------------------------------- decisions */
+.projects-dossier__decisions {
+  margin-top: 3rem;
+  border-top: 1px solid var(--line);
+}
+.projects-dossier__dec {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  column-gap: 1.5rem;
+  padding: 1.125rem 0;
+  border-bottom: 1px solid var(--line);
+}
+.projects-dossier__rec.is-in .projects-dossier__dec {
+  transition: opacity 480ms var(--ease-out), transform 480ms var(--ease-out);
+}
+.projects-dossier__chose {
+  font-size: 1rem;
+  line-height: 1.4;
+  color: var(--ink);
+}
+.projects-dossier__over {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.08em;
+  line-height: 1.6;
+  color: var(--ink-4);
+  text-align: right;
+  white-space: nowrap;
+}
+/* The rejected alternative is legible on purpose. The reader is supposed to
+   read what was turned down; the rule through it says it lost, not that it is
+   unimportant. */
+.projects-dossier__over s {
+  text-decoration: line-through;
+  text-decoration-thickness: 1px;
+  text-decoration-color: var(--ink-4);
+}
+.projects-dossier__because {
+  grid-column: 1 / -1;
+  margin-top: 0.375rem;
+  color: var(--ink-2);
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  max-width: 92ch;
+}
+
+/* ------------------------------------------------------------ stack, figure */
+.projects-dossier__stack {
+  margin-top: 2rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+}
+.projects-dossier__stack button.is-on {
+  color: var(--void);
+  background: var(--c-accent);
+  border-color: var(--c-accent);
+}
+.projects-dossier__figure { margin-top: 2rem; }
+.projects-dossier__plate {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 21 / 9;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  background: var(--void-2);
+}
+.projects-dossier__plate > .projects-art__c { width: 100%; height: 100%; }
+.projects-dossier__figure figcaption {
+  margin-top: 0.75rem;
+  font-size: 0.5625rem;
+  letter-spacing: 0.14em;
+  line-height: 1.7;
+  text-transform: uppercase;
+  color: var(--ink-4);
+}
+
+/* -------------------------------------------------------------- tablet */
+@media (max-width: 1099px) {
+  .projects-dossier { grid-template-columns: 8rem 1fr; }
+  .projects-dossier__rail a b { display: none; }
+}
+
+/* -------------------------------------------------------------- mobile */
+/* The rail becomes a sticky chip strip carrying the filters, the decision rows
+   stack into three labelled lines, and the plate moves above the header so a
+   phone reader gets the picture before the density. Nothing is removed: a
+   dossier that hides its detail on a phone is not a dossier. */
+@media (max-width: 767px) {
+  .projects-dossier {
+    display: block;
+    padding: 0;
+  }
+  .projects-dossier__rail { display: none; }
+  .projects-dossier__main { padding: 1.5rem 0 4rem; }
+  .projects-dossier__head { padding: 0 var(--gutter); }
+  .projects-dossier__filters {
+    position: sticky;
+    top: 0;
+    z-index: 3;
+    margin-top: 1.5rem;
+    padding: 0.75rem var(--gutter);
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+    background: var(--void);
+    border-top: 1px solid var(--line);
+  }
+  .projects-dossier__filters::-webkit-scrollbar { display: none; }
+  .projects-dossier__rec {
+    display: flex;
+    flex-direction: column;
+    padding: 2.5rem var(--gutter) 0;
+  }
+  .projects-dossier__rule { order: -3; }
+  .projects-dossier__figure { order: -2; margin-top: 0; margin-bottom: 1.5rem; }
+  .projects-dossier__plate { aspect-ratio: 16 / 9; }
+  .projects-dossier__dec { grid-template-columns: 1fr; row-gap: 0.25rem; }
+  .projects-dossier__over { text-align: left; white-space: normal; }
+  .projects-dossier__recmeta { gap: 0.875rem; }
+}
+
+/* ------------------------------------------------------ reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .projects-dossier__rec,
+  .projects-dossier__rec.is-in { transform: none !important; }
+  .projects-dossier__rec { transition: opacity 200ms linear !important; }
+  .projects-dossier__marker { transition: none !important; }
+}
+
+/* ==========================================================================
+   SECTION 01  STRIP
+   ========================================================================== */
+.projects-strip { position: relative; display: block; }
+.projects-strip__sec {
+  padding: clamp(4rem, 12vh, 8rem) 0;
+  content-visibility: auto;
+  contain-intrinsic-size: auto 720px;
+}
+.projects-strip__head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 2rem;
+  padding: 0 var(--gutter);
+}
+.projects-strip__headtext { max-width: 48ch; }
+.projects-strip__title {
+  font-size: clamp(1.75rem, 4vw, 3.25rem);
+  font-weight: 500;
+  letter-spacing: -0.042em;
+  line-height: 1.02;
+}
+.projects-strip__lede {
+  margin-top: 0.75rem;
+  color: var(--ink-3);
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  max-width: 54ch;
+}
+.projects-strip__steps { display: flex; gap: 0.375rem; flex: none; }
+.projects-strip__steps .iconbtn.is-end { opacity: 0.35; pointer-events: none; }
+
+/* The run is a real overflow container. Everything the browser already does
+   well with a scroll container is therefore free. */
+.projects-strip__run {
+  margin-top: clamp(1.75rem, 4vh, 3rem);
+  display: flex;
+  column-gap: 1.25rem;
+  padding: 0 var(--gutter);
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  scroll-padding-inline: var(--gutter);
+  scrollbar-width: thin;
+  scrollbar-color: var(--line-2) transparent;
+}
+.projects-strip__run::-webkit-scrollbar { height: 8px; }
+.projects-strip__run::-webkit-scrollbar-track { background: transparent; }
+.projects-strip__run::-webkit-scrollbar-thumb { background: var(--line-2); border-radius: 99px; }
+@media (hover: hover) and (pointer: fine) {
+  .projects-strip__run { cursor: grab; }
+  .projects-strip.is-dragging .projects-strip__run { cursor: grabbing; }
+}
+
+.projects-strip__card {
+  flex: none;
+  width: 26rem;
+  max-width: 82vw;
+  scroll-snap-align: start;
+  display: block;
+  text-align: left;
+  opacity: 0;
+  transform: translate3d(0, 24px, 0);
+}
+.projects-strip__card.is-in {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+  transition: opacity 620ms var(--ease-out), transform 620ms var(--ease-out);
+}
+.projects-strip__card:active { transform: scale(0.985); transition: transform 120ms ease; }
+.projects-strip__plate {
+  position: relative;
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  background: var(--void-2);
+  transition: border-color 180ms var(--ease-out);
+}
+.projects-strip__plate > .projects-art__c { width: 100%; height: 100%; }
+.projects-strip__meta {
+  display: block;
+  margin-top: 1rem;
+  font-size: 0.5625rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ink-4);
+}
+.projects-strip__name {
+  display: block;
+  margin-top: 0.5rem;
+  font-size: 1.125rem;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  color: var(--ink-2);
+  transition: color 180ms var(--ease-out);
+}
+.projects-strip__outcome {
+  display: block;
+  margin-top: 0.5rem;
+  color: var(--ink-3);
+  font-size: 0.875rem;
+  line-height: 1.55;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+@media (hover: hover) and (pointer: fine) {
+  .projects-strip__card:hover .projects-strip__plate { border-color: var(--c-accent); }
+  .projects-strip__card:hover .projects-strip__name { color: var(--ink); }
+}
+
+.projects-strip__foot {
+  margin-top: 2.5rem;
+  padding: 0 var(--gutter);
+  display: flex;
+  align-items: center;
+  gap: clamp(1.25rem, 4vw, 3rem);
+}
+.projects-strip__bar {
+  flex: 1;
+  height: 1px;
+  background: var(--line);
+}
+.projects-strip__bar i {
+  display: block;
+  height: 100%;
+  background: var(--c-accent);
+  transform: scaleX(0);
+  transform-origin: left center;
+}
+.projects-strip__more { flex: none; }
+
+/* -------------------------------------------------------------- mobile */
+/* Cards go wide enough that the peek of the next one is the affordance, and
+   the step controls are removed because the native gesture is better than
+   anything two buttons can offer a thumb. */
+@media (max-width: 767px) {
+  .projects-strip__head { display: block; }
+  .projects-strip__steps { display: none; }
+  .projects-strip__card { width: 84vw; max-width: none; }
+  .projects-strip__foot {
+    margin-top: 1.75rem;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1.5rem;
+  }
+  .projects-strip__more { align-self: stretch; justify-content: center; }
+}
+
+/* ------------------------------------------------------ reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .projects-strip__card,
+  .projects-strip__card.is-in { transform: none !important; }
+  .projects-strip__card { transition: opacity 200ms linear !important; }
+  .projects-strip__card:active { transform: none !important; }
+}
+
+/* ==========================================================================
+   SECTION 02  ANCHOR
+   ========================================================================== */
+.projects-anchor { position: relative; display: block; }
+.projects-anchor__sec {
+  padding: clamp(4rem, 12vh, 8rem) var(--gutter);
+  content-visibility: auto;
+  contain-intrinsic-size: auto 760px;
+}
+.projects-anchor__head { max-width: 52ch; }
+.projects-anchor__title {
+  font-size: clamp(1.75rem, 4vw, 3.25rem);
+  font-weight: 500;
+  letter-spacing: -0.042em;
+  line-height: 1.02;
+}
+.projects-anchor__lede {
+  margin-top: 0.75rem;
+  color: var(--ink-3);
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  max-width: 56ch;
+}
+
+.projects-anchor__grid {
+  margin-top: clamp(2rem, 5vh, 3.5rem);
+  display: grid;
+  grid-template-columns: 1.35fr 1fr;
+  gap: clamp(2rem, 5vw, 4.5rem);
+}
+.projects-anchor__index {
+  border-left: 1px solid var(--line);
+  padding-left: clamp(1.5rem, 3vw, 2.75rem);
+}
+
+/* ---------------------------------------------------------------- feature */
+.projects-anchor__figure { margin: 0; }
+.projects-anchor__plate {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  background: var(--void-2);
+}
+.projects-anchor__plate > .projects-art__c { width: 100%; height: 100%; }
+.projects-anchor__figure figcaption {
+  margin-top: 1rem;
+  font-size: 0.5625rem;
+  letter-spacing: 0.14em;
+  line-height: 1.7;
+  text-transform: uppercase;
+  color: var(--ink-4);
+}
+.projects-anchor__meta {
+  margin-top: 2rem;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1.25rem;
+  font-size: 0.625rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.projects-anchor__meta i { width: 1.5rem; height: 1px; background: var(--c-accent); }
+.projects-anchor__meta span { display: inline-block; }
+.projects-anchor__name {
+  margin-top: 0.75rem;
+  font-size: clamp(2rem, 4vw, 3.25rem);
+  font-weight: 500;
+  letter-spacing: -0.042em;
+  line-height: 0.98;
+}
+.projects-anchor__problem {
+  margin-top: 1.5rem;
+  padding-left: 0.875rem;
+  border-left: 1px solid var(--c-accent);
+  color: var(--ink-2);
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  max-width: 66ch;
+}
+.projects-anchor__outcome {
+  margin-top: 0.75rem;
+  color: var(--ink);
+  font-size: 1rem;
+  line-height: 1.6;
+  max-width: 66ch;
+}
+.projects-anchor__tech {
+  margin-top: 1.75rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+}
+.projects-anchor__tech span {
+  padding: 0.25rem 0.5rem;
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  white-space: nowrap;
+}
+.projects-anchor__actions { margin-top: 1.5rem; }
+.projects-anchor__actions .btn { --btn-ink: var(--c-accent); --btn-line: var(--line-2); }
+
+/* ------------------------------------------------------------------ index */
+.projects-anchor__idxtitle {
+  font-size: 0.6875rem;
+  font-family: var(--font-mono);
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ink-4);
+}
+.projects-anchor__rows { margin-top: 1.25rem; border-top: 1px solid var(--line); }
+.projects-anchor__rows li { border-bottom: 1px solid var(--line); }
+.projects-anchor__rows button {
+  position: relative;
+  width: 100%;
+  display: grid;
+  grid-template-columns: 2rem 1fr auto;
+  align-items: baseline;
+  gap: 0.75rem;
+  padding: 1.125rem 0;
+  text-align: left;
+}
+.projects-anchor__rows i {
+  font-style: normal;
+  font-size: 0.625rem;
+  letter-spacing: 0.16em;
+  color: var(--ink-4);
+}
+.projects-anchor__rows b {
+  font-size: 1.125rem;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  color: var(--ink-2);
+  transition: color 180ms var(--ease-out);
+}
+.projects-anchor__rows em {
+  grid-column: 2;
+  display: block;
+  margin-top: 0.25rem;
+  font-style: normal;
+  font-size: 0.5625rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-4);
+}
+.projects-anchor__rows span {
+  font-size: 0.625rem;
+  letter-spacing: 0.16em;
+  color: var(--ink-4);
+}
+.projects-anchor__rows s {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 1px;
+  background: var(--c-accent);
+  text-decoration: none;
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 180ms var(--ease-out);
+}
+@media (hover: hover) and (pointer: fine) {
+  .projects-anchor__rows button:hover b { color: var(--ink); }
+  .projects-anchor__rows button:hover s { transform: scaleX(1); }
+}
+.projects-anchor__rows button:active { transform: translateY(1px); transition: transform 120ms ease; }
+.projects-anchor__more { margin-top: 2rem; }
+
+/* --------------------------------------------------------------- entrance */
+/* Declared only on the entered state, so nothing has to unwind. */
+.projects-anchor__feature > *,
+.projects-anchor__index > * {
+  opacity: 0;
+  transform: translate3d(0, 16px, 0);
+}
+.projects-anchor__sec.is-in .projects-anchor__feature > *,
+.projects-anchor__sec.is-in .projects-anchor__index > * {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+  transition: opacity 620ms var(--ease-out), transform 620ms var(--ease-out);
+}
+.projects-anchor__sec.is-in .projects-anchor__feature > *:nth-child(2) { transition-delay: 80ms; }
+.projects-anchor__sec.is-in .projects-anchor__feature > *:nth-child(3) { transition-delay: 160ms; }
+.projects-anchor__sec.is-in .projects-anchor__feature > *:nth-child(4) { transition-delay: 240ms; }
+.projects-anchor__sec.is-in .projects-anchor__feature > *:nth-child(5) { transition-delay: 320ms; }
+.projects-anchor__sec.is-in .projects-anchor__feature > *:nth-child(n + 6) { transition-delay: 400ms; }
+.projects-anchor__sec.is-in .projects-anchor__index > *:nth-child(1) { transition-delay: 260ms; }
+.projects-anchor__sec.is-in .projects-anchor__index > *:nth-child(2) { transition-delay: 330ms; }
+.projects-anchor__sec.is-in .projects-anchor__index > *:nth-child(3) { transition-delay: 400ms; }
+
+/* -------------------------------------------------------------- tablet */
+@media (max-width: 1099px) {
+  .projects-anchor__grid { grid-template-columns: 1.2fr 1fr; }
+  .projects-anchor__rows em { display: none; }
+}
+
+/* -------------------------------------------------------------- mobile */
+@media (max-width: 899px) {
+  .projects-anchor__grid { grid-template-columns: 1fr; }
+  .projects-anchor__index {
+    border-left: 0;
+    border-top: 1px solid var(--line);
+    padding-left: 0;
+    padding-top: 2.5rem;
+  }
+  .projects-anchor__rows em { display: block; }
+}
+@media (max-width: 767px) {
+  .projects-anchor__plate { aspect-ratio: 3 / 2; }
+  .projects-anchor__actions .btn { width: 100%; justify-content: center; }
+  .projects-anchor__more { align-self: stretch; justify-content: center; width: 100%; }
+}
+
+/* ------------------------------------------------------ reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .projects-anchor__feature > *,
+  .projects-anchor__index > * {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  .projects-anchor__rows button:active { transform: none !important; }
+}
+
+/* ==========================================================================
+   SECTION 03  SEQUENCE
+   ========================================================================== */
+.projects-seq { position: relative; display: block; }
+.projects-seq .srail__sticky { align-items: stretch; }
+
+.projects-seq__view {
+  position: relative;
+  flex: 1;
+  width: 100%;
+  display: grid;
+  grid-template-columns: 6rem minmax(0, 38%) minmax(0, 58%);
+  align-items: center;
+  gap: clamp(1.5rem, 4vw, 3.5rem);
+  padding: clamp(1.5rem, 4vh, 3rem) var(--gutter);
+}
+
+/* ------------------------------------------------------------------ marks */
+.projects-seq__marks {
+  align-self: center;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+/* The active bar scales to 2.6x, so it gets a fixed 40px slot to grow into
+   rather than a gap that it can grow across. */
+.projects-seq__marks button {
+  height: 44px;
+  display: grid;
+  grid-template-columns: 40px auto;
+  align-items: center;
+  text-align: left;
+}
+.projects-seq__marks i {
+  display: block;
+  width: 14px;
+  height: 2px;
+  background: var(--ink-4);
+  transform-origin: left center;
+  transition: transform 300ms var(--ease-out), background-color 260ms var(--ease-out);
+}
+.projects-seq__marks b {
+  font-size: 0.625rem;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  color: var(--ink-4);
+  transition: color 260ms var(--ease-out);
+}
+@media (hover: hover) and (pointer: fine) {
+  .projects-seq__marks button:hover i { background: var(--ink-2); }
+  .projects-seq__marks button:hover b { color: var(--ink-2); }
+}
+.projects-seq__marks button[aria-current="true"] i {
+  background: var(--c-accent);
+  transform: scaleX(2.6);
+}
+.projects-seq__marks button[aria-current="true"] b { color: var(--ink); }
+.projects-seq__count {
+  margin-top: 1.25rem;
+  font-size: 0.5625rem;
+  letter-spacing: 0.2em;
+  color: var(--ink-4);
+}
+
+/* ------------------------------------------------------------------- text */
+.projects-seq__text { position: relative; min-width: 0; }
+.projects-seq__block {
+  grid-area: 1 / 1;
+  will-change: opacity, transform;
+}
+.projects-seq__text { display: grid; }
+.projects-seq__meta {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  font-size: 0.625rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.projects-seq__meta i { width: 1.5rem; height: 1px; background: var(--c-accent); }
+.projects-seq__name {
+  margin-top: 0.75rem;
+  font-size: clamp(2rem, 4.4vw, 3.5rem);
+  font-weight: 500;
+  letter-spacing: -0.042em;
+  line-height: 0.98;
+}
+.projects-seq__problem {
+  margin-top: 1.5rem;
+  padding-left: 0.875rem;
+  border-left: 1px solid var(--c-accent);
+  color: var(--ink-2);
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  max-width: 60ch;
+}
+.projects-seq__outcome {
+  margin-top: 0.75rem;
+  color: var(--ink);
+  font-size: 1rem;
+  line-height: 1.6;
+  max-width: 60ch;
+}
+.projects-seq__actions { margin-top: 1.75rem; }
+.projects-seq__actions .btn { --btn-ink: var(--c-accent); --btn-line: var(--line-2); }
+
+/* ------------------------------------------------------------------- gate */
+/* One clipped window and one strip of three frames. The strip is the only
+   thing scroll moves. */
+.projects-seq__gate {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  max-height: 74vh;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  background: var(--void-2);
+}
+.projects-seq__strip {
+  position: absolute;
+  inset: 0;
+  will-change: transform;
+}
+.projects-seq__frame {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+.projects-seq__frame > .projects-art__c { width: 100%; height: 100%; }
+
+.projects-seq__foot {
+  position: absolute;
+  left: var(--gutter);
+  bottom: clamp(1rem, 3vh, 2rem);
+  z-index: 3;
+}
+
+/* -------------------------------------------------------------- tablet */
+@media (max-width: 1099px) {
+  .projects-seq__view { grid-template-columns: 4.5rem minmax(0, 42%) minmax(0, 54%); }
+  .projects-seq__marks b { display: none; }
+}
+
+/* -------------------------------------------------------------- mobile */
+/* The gate becomes a band across the top and the text sits under it, so the
+   plate and the prose never compete for a 375px width. */
+@media (max-width: 767px) {
+  .projects-seq__view {
+    grid-template-columns: 1fr;
+    grid-template-rows: 30dvh auto auto;
+    align-content: start;
+    align-items: start;
+    gap: 1.5rem;
+    padding: 1.25rem var(--gutter) 4rem;
+  }
+  .projects-seq__gate {
+    grid-row: 1;
+    aspect-ratio: auto;
+    height: 100%;
+    max-height: none;
+  }
+  .projects-seq__text { grid-row: 2; }
+  .projects-seq__marks {
+    position: absolute;
+    top: 1.25rem;
+    right: var(--gutter);
+    z-index: 3;
+    flex-direction: row;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .projects-seq__marks button { height: 32px; }
+  .projects-seq__marks b { display: none; }
+  .projects-seq__count { margin: 0 0 0 0.5rem; }
+  .projects-seq__name { font-size: clamp(1.75rem, 9vw, 2.5rem); }
+  /* The sticky viewport is exactly one screen and clips: the prose is
+     clamped so the case button and the hand-off are always inside it. */
+  .projects-seq__problem {
+    margin-top: 1rem;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .projects-seq__outcome {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .projects-seq__actions { margin-top: 1.25rem; }
+  .projects-seq__actions .btn { width: 100%; justify-content: center; }
+  .projects-seq__foot { position: relative; left: auto; bottom: auto; grid-row: 3; margin-top: -0.5rem; }
+  .projects-seq__more { width: 100%; justify-content: center; }
+}
+
+/* ------------------------------------------------------ reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .projects-seq__block { transform: none !important; }
+  .projects-seq__marks button[aria-current="true"] i { transform: scaleX(2.6) !important; }
+}
+
+/* ==========================================================================
+   SECTION 04  ROSTER
+   ========================================================================== */
+.projects-roster { position: relative; display: block; }
+.projects-roster__sec {
+  padding: clamp(4rem, 12vh, 8rem) var(--gutter);
+  content-visibility: auto;
+  contain-intrinsic-size: auto 780px;
+}
+.projects-roster__head { max-width: 52ch; }
+.projects-roster__title {
+  font-size: clamp(1.75rem, 4vw, 3.25rem);
+  font-weight: 500;
+  letter-spacing: -0.042em;
+  line-height: 1.02;
+}
+.projects-roster__lede {
+  margin-top: 0.75rem;
+  color: var(--ink-3);
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  max-width: 58ch;
+}
+
+/* ------------------------------------------------------------------- list */
+.projects-roster__list {
+  position: relative;
+  margin-top: clamp(2rem, 5vh, 3.5rem);
+  isolation: isolate;
+  border-top: 1px solid var(--line);
+}
+
+/* One canvas band, exactly one row tall, parked behind the list. It slides to
+   the active row; it never follows the cursor. */
+.projects-roster__wash {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 7.5rem;
+  z-index: 0;
+  overflow: hidden;
+  opacity: 0;
+  transform: translate3d(0, 0, 0);
+  transition: transform 420ms var(--ease-out), opacity 200ms var(--ease-out);
+}
+.projects-roster__wash > .projects-art__c { width: 100%; height: 100%; opacity: 0.85; }
+.projects-roster__list.is-on .projects-roster__wash {
+  opacity: 1;
+  transition: transform 420ms var(--ease-out), opacity 260ms var(--ease-out);
+}
+/* A scrim of the ground colour, so text contrast never depends on which
+   plate happens to be behind the row. */
+.projects-roster__scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: linear-gradient(to right, rgba(8, 8, 10, 0.9) 0%, rgba(8, 8, 10, 0.55) 46%, rgba(8, 8, 10, 0.78) 100%);
+}
+
+.projects-roster__rows { position: relative; z-index: 2; }
+.projects-roster__row {
+  position: relative;
+  width: 100%;
+  height: 7.5rem;
+  display: block;
+  padding: 1.25rem 0.75rem;
+  text-align: left;
+  border-bottom: 1px solid var(--line);
+  transition: border-color 180ms var(--ease-out);
+}
+.projects-roster__top {
+  display: grid;
+  grid-template-columns: 3rem 1fr auto auto;
+  align-items: baseline;
+  gap: clamp(0.75rem, 2vw, 1.75rem);
+}
+.projects-roster__row i {
+  font-style: normal;
+  font-size: 0.625rem;
+  letter-spacing: 0.18em;
+  color: var(--ink-4);
+  transition: color 180ms var(--ease-out);
+}
+.projects-roster__row b {
+  font-size: clamp(1.5rem, 3vw, 2.5rem);
+  font-weight: 500;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  color: var(--ink-3);
+  transition: color 180ms var(--ease-out);
+}
+.projects-roster__row em,
+.projects-roster__row .projects-roster__top > span {
+  font-style: normal;
+  font-size: 0.625rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-4);
+  white-space: nowrap;
+  transition: color 180ms var(--ease-out);
+}
+.projects-roster__out {
+  display: block;
+  margin-top: 0.75rem;
+  max-width: 64ch;
+  color: var(--ink-2);
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  opacity: 0;
+  transition: opacity 180ms var(--ease-out);
+  /* Two lines, because the row height is fixed and the reveal must never be
+     the thing that decides how tall a row is. */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.projects-roster__row.is-on { border-bottom-color: var(--c-accent); }
+.projects-roster__row.is-on b { color: var(--ink); }
+.projects-roster__row.is-on i { color: var(--c-accent); }
+.projects-roster__row.is-on em,
+.projects-roster__row.is-on .projects-roster__top > span { color: var(--ink-3); }
+.projects-roster__row.is-on .projects-roster__out { opacity: 1; }
+
+.projects-roster__foot { margin-top: 2.5rem; }
+
+/* --------------------------------------------------------------- entrance */
+.projects-roster__list,
+.projects-roster__foot {
+  opacity: 0;
+  transform: translate3d(0, 18px, 0);
+}
+.projects-roster__sec.is-in .projects-roster__list,
+.projects-roster__sec.is-in .projects-roster__foot {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+  transition: opacity 620ms var(--ease-out), transform 620ms var(--ease-out);
+}
+.projects-roster__sec.is-in .projects-roster__foot { transition-delay: 120ms; }
+
+/* -------------------------------------------------------------- tablet */
+@media (max-width: 1099px) {
+  .projects-roster__row em { display: none; }
+}
+
+/* -------------------------------------------------------------- mobile */
+/* No hover on a phone, so nothing is held back: the wash leaves the list and
+   becomes a figure above it, and every outcome is permanently visible. */
+.projects-roster.is-narrow .projects-roster__list { border-top: 0; }
+.projects-roster.is-narrow .projects-roster__wash {
+  position: relative;
+  height: auto;
+  aspect-ratio: 16 / 9;
+  opacity: 1;
+  transform: none !important;
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  background: var(--void-2);
+  margin-bottom: 2rem;
+}
+.projects-roster.is-narrow .projects-roster__wash > .projects-art__c { opacity: 1; }
+.projects-roster.is-narrow .projects-roster__scrim { display: none; }
+.projects-roster.is-narrow .projects-roster__rows { border-top: 1px solid var(--line); }
+.projects-roster.is-narrow .projects-roster__row {
+  height: auto;
+  padding: 1.25rem 0;
+}
+.projects-roster.is-narrow .projects-roster__top { grid-template-columns: 2.5rem 1fr auto; }
+.projects-roster.is-narrow .projects-roster__row em { display: none; }
+.projects-roster.is-narrow .projects-roster__out { opacity: 1; font-size: 0.875rem; }
+.projects-roster.is-narrow .projects-roster__row.is-on { border-bottom-color: var(--line); }
+@media (max-width: 767px) {
+  .projects-roster__more { width: 100%; justify-content: center; }
+}
+
+/* ------------------------------------------------------ reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  /* The wash keeps its transform: that is position, not decoration. Only the
+     travel is removed, so it arrives at the row instantly. */
+  .projects-roster__wash { transition: opacity 150ms linear !important; }
+  .projects-roster__list,
+  .projects-roster__foot { opacity: 1 !important; transform: none !important; }
+  .projects-roster__out { transition: none !important; }
+}
+
+/* ==========================================================================
+   SECTION 05  RELAY
+   ========================================================================== */
+.projects-relay { position: relative; display: block; }
+.projects-relay__sec {
+  padding: clamp(4rem, 12vh, 8rem) var(--gutter);
+  content-visibility: auto;
+  contain-intrinsic-size: auto 720px;
+}
+.projects-relay__head { max-width: 52ch; }
+.projects-relay__title {
+  font-size: clamp(1.75rem, 4vw, 3.25rem);
+  font-weight: 500;
+  letter-spacing: -0.042em;
+  line-height: 1.02;
+}
+.projects-relay__lede {
+  margin-top: 0.75rem;
+  color: var(--ink-3);
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  max-width: 58ch;
+}
+
+.projects-relay__grid {
+  margin-top: clamp(2rem, 5vh, 3.5rem);
+  display: grid;
+  grid-template-columns: 1fr 34rem;
+  gap: clamp(2rem, 5vw, 4.5rem);
+  align-items: center;
+}
+
+/* ------------------------------------------------------------------- text */
+.projects-relay__text { min-width: 0; }
+.projects-relay__meta {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  font-size: 0.625rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.projects-relay__meta i { width: 1.5rem; height: 1px; background: var(--c-accent); }
+.projects-relay__name {
+  margin-top: 0.75rem;
+  font-size: clamp(2rem, 4vw, 3.25rem);
+  font-weight: 500;
+  letter-spacing: -0.042em;
+  line-height: 0.98;
+}
+.projects-relay__problem {
+  margin-top: 1.5rem;
+  padding-left: 0.875rem;
+  border-left: 1px solid var(--c-accent);
+  color: var(--ink-2);
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  max-width: 56ch;
+}
+.projects-relay__outcome {
+  margin-top: 0.75rem;
+  color: var(--ink);
+  font-size: 1rem;
+  line-height: 1.6;
+  max-width: 56ch;
+}
+
+/* Declared on the entered state only, so a fast step retargets rather than
+   playing the exit in reverse. */
+.projects-relay__text .projects-relay__meta,
+.projects-relay__text .projects-relay__name,
+.projects-relay__text .projects-relay__problem,
+.projects-relay__text .projects-relay__outcome {
+  opacity: 0;
+  transform: translate3d(0, 14px, 0);
+}
+.projects-relay__text.is-in .projects-relay__meta,
+.projects-relay__text.is-in .projects-relay__name,
+.projects-relay__text.is-in .projects-relay__problem,
+.projects-relay__text.is-in .projects-relay__outcome {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+  transition: opacity 420ms var(--ease-out) 120ms, transform 420ms var(--ease-out) 120ms;
+}
+.projects-relay__text.is-in .projects-relay__name { transition-delay: 165ms; }
+.projects-relay__text.is-in .projects-relay__problem { transition-delay: 210ms; }
+.projects-relay__text.is-in .projects-relay__outcome { transition-delay: 255ms; }
+
+/* --------------------------------------------------------------- controls */
+.projects-relay__controls {
+  margin-top: 2rem;
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+}
+.projects-relay__pause {
+  --btn-ink: var(--c-accent);
+  --btn-line: var(--line-2);
+  min-width: 6.5rem;
+  justify-content: center;
+}
+.projects-relay__count {
+  margin-left: 0.5rem;
+  font-size: 0.625rem;
+  letter-spacing: 0.18em;
+  color: var(--ink-4);
+}
+.projects-relay__count b { color: var(--c-accent); font-weight: 500; }
+
+/* The clock. scaleX only, written per frame with no transition: smoothing a
+   clock makes it lie. */
+.projects-relay__bar {
+  margin-top: 1.5rem;
+  max-width: 56ch;
+  height: 1px;
+  background: var(--line);
+}
+.projects-relay__bar i {
+  display: block;
+  height: 100%;
+  background: var(--c-accent);
+  transform: scaleX(1);
+  transform-origin: left center;
+}
+.projects-relay__sec.is-paused .projects-relay__bar i { background: var(--ink-4); }
+.projects-relay__foot { margin-top: 2.5rem; }
+
+/* ------------------------------------------------------------------ stack */
+.projects-relay__stack {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  margin-bottom: 4.5rem;
+  perspective: 1200px;
+  transform-style: preserve-3d;
+}
+.projects-relay__plate {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border: 1px solid var(--line-2);
+  border-radius: var(--r);
+  background: var(--void-2);
+  transform-origin: 50% 50%;
+  backface-visibility: hidden;
+  transition: transform 620ms var(--ease-out), opacity 620ms var(--ease-out);
+}
+/* One frame with the transition suppressed, for a plate that has just wrapped
+   from the front of the stack to the back. Higher specificity rather than an
+   important flag. */
+.projects-relay__plate.is-snap { transition: none; }
+.projects-relay__plate > .projects-art__c { width: 100%; height: 100%; }
+.projects-relay__plate.is-top {
+  border-color: var(--c-accent);
+  box-shadow: 0 30px 60px -26px rgba(0, 0, 0, 0.85);
+}
+@media (hover: hover) and (pointer: fine) {
+  .projects-relay__stack { cursor: pointer; }
+}
+
+/* --------------------------------------------------------------- entrance */
+.projects-relay__grid { opacity: 0; transform: translate3d(0, 18px, 0); }
+.projects-relay__sec.is-in .projects-relay__grid {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+  transition: opacity 620ms var(--ease-out), transform 620ms var(--ease-out);
+}
+
+/* -------------------------------------------------------------- tablet */
+@media (max-width: 1099px) {
+  .projects-relay__grid { grid-template-columns: 1fr 28rem; }
+  .projects-relay__stack { perspective: 1000px; }
+}
+
+/* -------------------------------------------------------------- mobile */
+/* The stack goes above the text and takes the full width, and the controls
+   become a full-width row, because three 32px buttons in a corner is not a
+   pause control a thumb can find. */
+@media (max-width: 899px) {
+  .projects-relay__grid { grid-template-columns: 1fr; }
+  .projects-relay__stack { grid-row: 1; }
+  .projects-relay__text { grid-row: 2; }
+}
+@media (max-width: 767px) {
+  .projects-relay__stack { aspect-ratio: 3 / 2; perspective: 900px; }
+  .projects-relay__controls { flex-wrap: wrap; }
+  .projects-relay__controls .iconbtn { width: 3rem; height: 3rem; }
+  .projects-relay__pause { flex: 1; height: 3rem; }
+  .projects-relay__count { flex: 1 0 100%; margin: 0.5rem 0 0; }
+  .projects-relay__bar { max-width: none; }
+  .projects-relay__more { width: 100%; justify-content: center; }
+}
+
+/* ------------------------------------------------------ reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .projects-relay__plate { transition: none !important; }
+  .projects-relay__text .projects-relay__meta,
+  .projects-relay__text .projects-relay__name,
+  .projects-relay__text .projects-relay__problem,
+  .projects-relay__text .projects-relay__outcome {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  .projects-relay__grid { opacity: 1 !important; transform: none !important; }
+  /* No clock is running, so there is nothing for a clock to show. */
+  .projects-relay__bar { display: none; }
+}

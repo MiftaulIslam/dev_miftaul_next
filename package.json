@@ -8,7 +8,9 @@
     "start": "next start",
     "lint": "eslint",
     "db:migrate": "node scripts/db/migrate.mjs",
-    "db:seed": "node scripts/db/seed.mjs"
+    "db:seed": "node scripts/db/seed.mjs",
+    "db:seed:skills": "node scripts/db/seed-skills-v2.mjs",
+    "db:seed:projects": "node scripts/db/seed-projects-v2.mjs"
   },
   "dependencies": {
     "@gsap/react": "^2.1.2",

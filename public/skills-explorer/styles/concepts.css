@@ -1,0 +1,930 @@
+/* ============================================================================
+   CONCEPTS  -  one block per art direction.
+   Each concept scopes its signature hue to --c-accent on its own root. The
+   shell accent never appears inside a stage, and a concept hue never leaks out.
+   ========================================================================== */
+
+/* ==========================================================================
+   01  ORBIT
+   ========================================================================== */
+.orbit__canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.is-fine .orbit__canvas { cursor: none; }
+
+.orbit__legend {
+  position: absolute;
+  left: clamp(1rem, 2.5vw, 2rem);
+  bottom: clamp(1rem, 3vh, 2rem);
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  gap: 0.0625rem;
+}
+.orbit__legend button {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.3125rem 0.5rem 0.3125rem 0;
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-4);
+  transition: color var(--d-ui) var(--ease-out);
+}
+.orbit__legend button i {
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: var(--h);
+  opacity: 0.45;
+  transition: opacity var(--d-ui) var(--ease-out), transform var(--d-ui) var(--ease-out);
+}
+@media (hover: hover) and (pointer: fine) {
+  .orbit__legend button:hover { color: var(--ink-2); }
+  .orbit__legend button:hover i { opacity: 1; }
+}
+.orbit__legend button[aria-pressed="true"] { color: var(--ink); }
+.orbit__legend button[aria-pressed="true"] i { opacity: 1; transform: scale(1.6); }
+
+@media (max-width: 720px) {
+  .orbit__legend { flex-direction: row; flex-wrap: wrap; bottom: auto; top: 0.75rem; left: 0.75rem; right: 0.75rem; }
+  .orbit__legend button { font-size: 0.5625rem; }
+}
+
+/* ==========================================================================
+   02  REEL
+   ========================================================================== */
+.reel { position: absolute; inset: 0; overflow: hidden; background: var(--void); }
+
+.reel__grade {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(120% 100% at 12% 88%, color-mix(in oklab, var(--g, #fff) 18%, transparent), transparent 60%),
+    radial-gradient(90% 80% at 90% 8%, color-mix(in oklab, var(--g, #fff) 10%, transparent), transparent 62%);
+  transition: background 700ms var(--ease-out);
+}
+@supports not (background: color-mix(in oklab, red 10%, transparent)) {
+  .reel__grade { background: none; opacity: 0.5; }
+}
+
+/* Letterbox. scaleY on a fixed-height bar, never an animated height. */
+.reel__bars { position: absolute; inset: 0; z-index: 4; pointer-events: none; }
+.reel__bars span {
+  position: absolute;
+  left: 0; right: 0;
+  height: clamp(14px, 3.4vh, 34px);
+  background: var(--void);
+  transform-origin: top center;
+}
+.reel__bars span:first-child { top: 0; }
+.reel__bars span:last-child { bottom: 0; transform-origin: bottom center; }
+
+.reel__scroller {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  overscroll-behavior: contain;
+}
+.reel__scroller::-webkit-scrollbar { display: none; }
+
+.reel__rail { position: relative; }
+.reel__sticky { overflow: hidden; }
+.reel__track { display: flex; height: 100%; will-change: transform; }
+
+.reel__scene {
+  position: relative;
+  flex: 0 0 100%;
+  width: 100%;
+  height: 100%;
+  display: grid;
+  align-content: center;
+  padding: clamp(2.5rem, 6vh, 5rem) clamp(1.25rem, 7vw, 8rem);
+  overflow: hidden;
+}
+.reel__scene::before {
+  content: "";
+  position: absolute;
+  left: 0; top: 12%; bottom: 12%;
+  width: 1px;
+  background: linear-gradient(to bottom, transparent, var(--c-accent), transparent);
+  opacity: 0.4;
+}
+
+.reel__plate {
+  position: absolute;
+  right: 2vw;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: clamp(10rem, 34vw, 30rem);
+  font-weight: 700;
+  line-height: 0.72;
+  letter-spacing: -0.06em;
+  color: var(--c-accent);
+  opacity: 0.07;
+  pointer-events: none;
+  user-select: none;
+  will-change: transform;
+}
+
+.reel__body { position: relative; z-index: 2; max-width: 46rem; }
+
+.reel__slate {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.625rem;
+  letter-spacing: 0.24em;
+  color: var(--c-accent);
+  margin-bottom: clamp(0.75rem, 2vh, 1.25rem);
+}
+.reel__slate i { display: block; width: 2rem; height: 1px; background: currentColor; opacity: 0.5; }
+
+.reel__title {
+  font-size: clamp(2.5rem, 7vw, 6rem);
+  font-weight: 500;
+  letter-spacing: -0.05em;
+  line-height: 0.88;
+  margin-bottom: 0.5rem;
+}
+.reel__kicker {
+  font-size: clamp(1rem, 1.6vw, 1.375rem);
+  font-weight: 300;
+  color: var(--ink-2);
+  margin-bottom: clamp(0.75rem, 2vh, 1.25rem);
+}
+.reel__blurb {
+  color: var(--ink-3);
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  max-width: 42ch;
+  margin-bottom: clamp(1.25rem, 3vh, 2rem);
+}
+
+.reel__rows { border-top: 1px solid var(--line); max-width: 42rem; }
+.reel__row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: 1rem;
+  padding: 0.625rem 0;
+  border-bottom: 1px solid var(--line);
+}
+.reel__rowname { font-size: clamp(1rem, 1.5vw, 1.25rem); font-weight: 500; letter-spacing: -0.02em; }
+.reel__rowrole {
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.reel__rowyr { font-size: 0.625rem; letter-spacing: 0.12em; color: var(--c-accent); }
+
+/* Scene cut: contents are held out until the scene is the live one, then
+   released on a cascade. transition-delay from --i, not six JS tweens. */
+.reel__body > *,
+.reel__row {
+  opacity: 0;
+  transform: translate3d(0, 18px, 0);
+  transition:
+    opacity 520ms var(--ease-out),
+    transform 620ms var(--ease-out);
+}
+.reel__scene.is-live .reel__body > * { opacity: 1; transform: none; }
+.reel__scene.is-live .reel__body > *:nth-child(1) { transition-delay: 40ms; }
+.reel__scene.is-live .reel__body > *:nth-child(2) { transition-delay: 90ms; }
+.reel__scene.is-live .reel__body > *:nth-child(3) { transition-delay: 130ms; }
+.reel__scene.is-live .reel__body > *:nth-child(4) { transition-delay: 170ms; }
+.reel__scene.is-live .reel__row {
+  opacity: 1;
+  transform: none;
+  transition-delay: calc(220ms + var(--i) * 45ms);
+}
+
+.reel__chapters {
+  position: absolute;
+  left: 0; right: 0;
+  bottom: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: clamp(0.75rem, 2vw, 1.75rem);
+  padding: 0.6875rem clamp(1rem, 4vw, 2.5rem) calc(0.6875rem + clamp(14px, 3.4vh, 34px));
+}
+.reel__tc { font-size: 0.625rem; letter-spacing: 0.2em; color: var(--c-accent); flex: none; }
+.reel__ticks { display: flex; gap: 0.125rem; flex: 1; min-width: 0; overflow-x: auto; scrollbar-width: none; }
+.reel__ticks::-webkit-scrollbar { display: none; }
+.reel__ticks button {
+  display: flex;
+  align-items: center;
+  gap: 0.4375rem;
+  padding: 0.25rem 0.625rem;
+  font-family: var(--font-mono);
+  font-size: 0.5625rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-4);
+  white-space: nowrap;
+  transition: color var(--d-ui) var(--ease-out);
+}
+.reel__ticks button i { width: 4px; height: 4px; border-radius: 50%; background: var(--h); opacity: 0.4; transition: opacity var(--d-ui) var(--ease-out); }
+.reel__ticks button[aria-current="true"] { color: var(--ink); }
+.reel__ticks button[aria-current="true"] i { opacity: 1; }
+@media (hover: hover) and (pointer: fine) { .reel__ticks button:hover { color: var(--ink-2); } }
+
+.reel__progress { position: relative; flex: none; width: clamp(3rem, 10vw, 8rem); height: 1px; background: var(--line-2); }
+.reel__progress span {
+  position: absolute;
+  inset: 0;
+  background: var(--c-accent);
+  transform-origin: left center;
+  transform: scaleX(0);
+}
+
+/* horizontal mode geometry */
+.reel.is-horizontal .reel__rail { height: calc(var(--vh) * var(--n)); }
+.reel.is-horizontal .reel__sticky { position: sticky; top: 0; height: var(--vh); }
+
+/* vertical mode: a different edit, not a squeezed one */
+.reel:not(.is-horizontal) .reel__rail { height: auto; }
+.reel:not(.is-horizontal) .reel__sticky { position: static; height: auto; }
+.reel:not(.is-horizontal) .reel__track { display: block; height: auto; transform: none !important; }
+.reel:not(.is-horizontal) .reel__scene {
+  height: var(--vh);
+  scroll-snap-align: start;
+  border-bottom: 1px solid var(--line);
+}
+.reel:not(.is-horizontal) .reel__scroller { scroll-snap-type: y proximity; }
+.reel:not(.is-horizontal) .reel__plate { font-size: clamp(8rem, 46vw, 18rem); right: -2vw; opacity: 0.06; }
+.reel:not(.is-horizontal) .reel__rowrole { display: none; }
+.reel:not(.is-horizontal) .reel__row { grid-template-columns: minmax(0, 1fr) auto; }
+
+/* ==========================================================================
+   03  LATTICE
+   ========================================================================== */
+.lattice__canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+.is-fine .lattice__canvas { cursor: none; }
+
+.lattice__legend {
+  position: absolute;
+  left: clamp(1rem, 2.5vw, 2rem);
+  top: clamp(1rem, 3vh, 2rem);
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  gap: 0.0625rem;
+  align-items: flex-start;
+}
+.lattice__legend > .t-label { margin-bottom: 0.5rem; }
+.lattice__legend button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0;
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-4);
+  transition: color var(--d-ui) var(--ease-out);
+}
+.lattice__legend button i {
+  /* Fixed at the extended length and scaled down at rest, rather than
+     animating width. Same 8px-to-16px read, composited instead of laid out. */
+  width: 16px; height: 1px;
+  background: var(--h);
+  opacity: 0.5;
+  transform: scaleX(0.5);
+  transform-origin: left center;
+  transition: opacity var(--d-ui) var(--ease-out), transform var(--d-ui) var(--ease-out);
+}
+@media (hover: hover) and (pointer: fine) { .lattice__legend button:hover { color: var(--ink-2); } }
+.lattice__legend button[aria-pressed="true"] { color: var(--ink); }
+.lattice__legend button[aria-pressed="true"] i { opacity: 1; transform: scaleX(1); }
+
+.lattice__readout {
+  position: absolute;
+  right: clamp(1rem, 2.5vw, 2rem);
+  bottom: clamp(1rem, 3vh, 2rem);
+  z-index: 3;
+  display: grid;
+  grid-template-columns: auto auto;
+  gap: 0.125rem 0.625rem;
+  align-items: baseline;
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-4);
+  text-align: right;
+}
+.lattice__readout span { color: var(--ink); font-size: 0.8125rem; }
+.lattice__readout em { font-style: normal; }
+
+@media (max-width: 720px) {
+  .lattice__legend { flex-direction: row; flex-wrap: wrap; gap: 0.5rem; right: 0.75rem; }
+  .lattice__legend > .t-label { width: 100%; margin-bottom: 0.25rem; }
+  .lattice__readout { display: none; }
+}
+
+/* ==========================================================================
+   04  KINETIC
+   ========================================================================== */
+.kinetic {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: var(--void);
+  --k: clamp(3rem, 11vw, 11rem);
+}
+.kinetic.is-dragging { cursor: grabbing; }
+
+.kinetic__rail {
+  position: absolute;
+  left: clamp(0.75rem, 2vw, 1.75rem);
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  pointer-events: none;
+}
+.kinetic__rail span {
+  display: flex;
+  align-items: baseline;
+  gap: 0.625rem;
+  font-family: var(--font-mono);
+  font-size: 0.5625rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ink-4);
+  opacity: 0.5;
+  transition: opacity var(--d-ui) var(--ease-out), color var(--d-ui) var(--ease-out);
+}
+.kinetic__rail span i { color: var(--ink-4); font-style: normal; }
+.kinetic__rail span.is-on { opacity: 1; color: var(--ink); }
+@media (max-width: 900px) { .kinetic__rail { display: none; } }
+
+.kinetic__field {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: clamp(0.125rem, 0.6vh, 0.75rem);
+}
+.kinetic__row { overflow: hidden; }
+.kinetic__track {
+  display: flex;
+  align-items: baseline;
+  gap: clamp(1.5rem, 4vw, 4rem);
+  width: max-content;
+  will-change: transform;
+  transition: opacity 500ms var(--ease-out);
+}
+
+.kinetic__word {
+  display: block;
+  font-size: calc(var(--k) * (0.66 + var(--w) * 0.5));
+  font-weight: 700;
+  letter-spacing: -0.055em;
+  line-height: 0.94;
+  white-space: nowrap;
+  color: transparent;
+  -webkit-text-stroke: 1px rgba(236, 236, 239, 0.34);
+  cursor: pointer;
+  user-select: none;
+  transition:
+    color 280ms var(--ease-out),
+    -webkit-text-stroke-color 280ms var(--ease-out),
+    transform 420ms var(--ease-out),
+    opacity 280ms var(--ease-out);
+}
+@supports not (-webkit-text-stroke: 1px red) {
+  .kinetic__word { color: rgba(236, 236, 239, 0.22); }
+}
+.kinetic__word.is-lit {
+  color: var(--ink);
+  -webkit-text-stroke-color: var(--ink);
+}
+.kinetic__word:focus-visible { color: var(--ink); -webkit-text-stroke-color: var(--c-accent); }
+
+/* Reduced motion: the marquee stops and the field becomes a static,
+   readable, wrapped composition rather than a frozen off-centre crop. */
+.kinetic.is-static .kinetic__track {
+  flex-wrap: wrap;
+  width: 100%;
+  transform: none !important;
+  row-gap: 0.25rem;
+}
+.kinetic.is-static .kinetic__word[aria-hidden="true"] { display: none; }
+.kinetic.is-static .kinetic__field { overflow-y: auto; justify-content: flex-start; padding: 2rem clamp(1rem, 4vw, 3rem); }
+
+/* promoted word */
+.kinetic__focus {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  gap: clamp(1rem, 3vh, 2rem);
+  padding: clamp(1.5rem, 5vw, 5rem);
+  background: rgba(8, 8, 10, 0.92);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+.kinetic__focus.is-on { display: flex; }
+.kinetic__focusclose { position: absolute; top: clamp(1rem, 3vh, 2rem); right: clamp(1rem, 3vw, 2rem); }
+.kinetic__focusword {
+  font-size: clamp(3rem, 13vw, 13rem);
+  font-weight: 700;
+  letter-spacing: -0.06em;
+  line-height: 0.86;
+  color: var(--ink);
+  will-change: transform;
+  align-self: flex-start;
+}
+.kinetic__focusmeta {
+  display: grid;
+  gap: 0.5rem;
+  max-width: 52ch;
+  border-top: 1px solid var(--line-2);
+  padding-top: clamp(0.875rem, 2vh, 1.5rem);
+}
+.kinetic__focuscat {
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--c-accent);
+}
+.kinetic__focusrole {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+.kinetic__focusnote { color: var(--ink-2); font-size: 1rem; line-height: 1.55; }
+.kinetic__focusrel {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.06em;
+  color: var(--ink-3);
+}
+
+@media (max-width: 720px) {
+  .kinetic { --k: clamp(2.25rem, 15vw, 5rem); }
+}
+
+/* ==========================================================================
+   05  DECK
+   ========================================================================== */
+.deck {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  overflow: hidden;
+  background:
+    radial-gradient(90% 70% at 50% 120%, color-mix(in oklab, var(--c-accent) 12%, transparent), transparent 65%),
+    var(--void);
+  transition: background 600ms var(--ease-out);
+}
+
+.deck__tabs {
+  display: flex;
+  gap: 0.125rem;
+  padding: clamp(0.75rem, 2vh, 1.25rem) clamp(1rem, 4vw, 2.5rem) 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.deck__tabs::-webkit-scrollbar { display: none; }
+.deck__tabs button {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  padding: 0.5rem 0.875rem;
+  border-bottom: 1px solid transparent;
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-4);
+  white-space: nowrap;
+  transition: color var(--d-ui) var(--ease-out), border-color var(--d-ui) var(--ease-out);
+}
+.deck__tabs button i { color: var(--ink-4); font-style: normal; }
+@media (hover: hover) and (pointer: fine) { .deck__tabs button:hover { color: var(--ink-2); } }
+.deck__tabs button[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--c-accent); }
+.deck__tabs button[aria-selected="true"] i { color: var(--c-accent); }
+
+.deck__stage {
+  position: relative;
+  perspective: 1500px;
+  perspective-origin: 50% 46%;
+  touch-action: pan-y;
+}
+.is-fine .deck__stage { cursor: grab; }
+.deck.is-dragging .deck__stage { cursor: grabbing; }
+
+.deck__plane {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+
+.deck__card {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: min(21rem, 74vw);
+  height: min(27rem, 56vh);
+  margin: calc(min(27rem, 56vh) / -2) 0 0 calc(min(21rem, 74vw) / -2);
+  display: flex;
+  flex-direction: column;
+  padding: 1.25rem;
+  border: 1px solid var(--line-2);
+  border-radius: var(--r);
+  background:
+    linear-gradient(168deg, color-mix(in oklab, var(--c-accent) 12%, transparent), transparent 46%),
+    linear-gradient(180deg, #14141a, #0c0c10);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07), 0 34px 70px rgba(0, 0, 0, 0.55);
+  transform-style: preserve-3d;
+  overflow: hidden;
+  will-change: transform, opacity;
+  /* Only the swap animates through CSS. Drag/settle transforms are written
+     from the physics loop, so no transition may fight them. */
+  transition: opacity 260ms var(--ease-out);
+}
+
+.deck__cardtop {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  font-family: var(--font-mono);
+  font-size: 0.5625rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-4);
+}
+.deck__art {
+  flex: 1;
+  display: grid;
+  place-items: center;
+  min-height: 0;
+  padding: 1rem 0;
+}
+.deck__art img {
+  width: clamp(3.5rem, 11vh, 5.5rem);
+  height: clamp(3.5rem, 11vh, 5.5rem);
+  object-fit: contain;
+  filter: saturate(1.05);
+}
+.deck__mono {
+  font-size: clamp(2.5rem, 8vh, 4rem);
+  font-weight: 700;
+  letter-spacing: -0.06em;
+  color: transparent;
+  -webkit-text-stroke: 1px var(--c-accent);
+}
+.deck__name {
+  font-size: clamp(1.375rem, 3vh, 1.875rem);
+  font-weight: 500;
+  letter-spacing: -0.035em;
+  line-height: 1;
+}
+.deck__role {
+  margin-top: 0.375rem;
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--c-accent);
+}
+.deck__more {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transition: grid-template-rows 380ms var(--ease-out), opacity 260ms var(--ease-out);
+}
+.deck__more > * { overflow: hidden; }
+.deck.is-expanded .deck__card.is-front .deck__more { grid-template-rows: 1fr; opacity: 1; }
+.deck__note { color: var(--ink-2); font-size: 0.8125rem; line-height: 1.5; padding-top: 0.875rem; }
+.deck__rel { display: flex; flex-wrap: wrap; gap: 0.25rem; padding-top: 0.625rem; }
+.deck__rel span {
+  padding: 0.125rem 0.375rem;
+  border: 1px solid var(--line);
+  font-family: var(--font-mono);
+  font-size: 0.5rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.deck__cardfoot {
+  margin-top: 0.875rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--line);
+  font-size: 0.5625rem;
+  letter-spacing: 0.2em;
+  color: var(--ink-4);
+}
+
+/* specular sheen tracks the cursor across the front card only */
+.deck__sheen {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  background: radial-gradient(28% 34% at var(--mx, 50%) var(--my, 50%), rgba(255, 255, 255, 0.14), transparent 70%);
+  transition: opacity 320ms var(--ease-out);
+}
+.deck__card.is-front .deck__sheen { opacity: 1; }
+html.is-reduced .deck__sheen { display: none; }
+
+.deck__card.is-front { border-color: color-mix(in oklab, var(--c-accent) 40%, var(--line-2)); }
+
+.deck.is-swapping .deck__card { opacity: 0 !important; transform: translate3d(0, 40px, -200px) !important; }
+
+.deck__counter {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0 0 clamp(0.75rem, 2vh, 1.25rem);
+  font-size: 0.75rem;
+  letter-spacing: 0.16em;
+  color: var(--ink-3);
+}
+.deck__counter i { width: 1.5rem; height: 1px; background: var(--line-2); }
+.deck__counter [data-cur] { color: var(--ink); }
+
+/* ==========================================================================
+   06  STRATA
+   ========================================================================== */
+.strata {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(17rem, 24rem);
+  overflow: hidden;
+  background:
+    radial-gradient(80% 60% at 30% 40%, color-mix(in oklab, var(--c-accent) 9%, transparent), transparent 65%),
+    var(--void);
+  transition: background 600ms var(--ease-out);
+  --gap: 58px;
+  --n: 6;
+  --span: calc((var(--n) - 1) * var(--gap));
+}
+
+.strata__scene {
+  position: relative;
+  display: grid;
+  place-items: center;
+  perspective: 1600px;
+  min-width: 0;
+}
+.strata__stack {
+  position: relative;
+  width: min(46vh, 34vw, 30rem);
+  aspect-ratio: 1;
+  transform-style: preserve-3d;
+  transform: rotateX(58deg) rotateZ(-40deg) translateZ(calc(var(--span) / -2));
+}
+
+.strata__layer {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+  transform: translateZ(calc(var(--z) * var(--gap) * -1));
+  transition: transform 520ms var(--ease-out);
+}
+.strata__layer.is-lifted { transform: translateZ(calc(var(--z) * var(--gap) * -1 + 26px)); }
+
+.strata__slab {
+  position: absolute;
+  inset: 0;
+  border: 1px solid color-mix(in oklab, var(--c-accent) 34%, transparent);
+  background:
+    linear-gradient(135deg, color-mix(in oklab, var(--c-accent) 13%, transparent), transparent 62%),
+    rgba(14, 14, 19, 0.72);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.3), 0 20px 40px rgba(0, 0, 0, 0.35);
+  transition: background 380ms var(--ease-out), box-shadow 380ms var(--ease-out);
+}
+.strata__layer.is-active .strata__slab {
+  border-color: var(--c-accent);
+  background:
+    linear-gradient(135deg, color-mix(in oklab, var(--c-accent) 26%, transparent), transparent 62%),
+    rgba(18, 18, 24, 0.8);
+}
+.strata__layer.is-hit .strata__slab {
+  background:
+    linear-gradient(135deg, color-mix(in oklab, var(--c-accent) 48%, transparent), transparent 70%),
+    rgba(22, 22, 30, 0.85);
+  box-shadow: 0 0 0 1px var(--c-accent), 0 0 44px color-mix(in oklab, var(--c-accent) 40%, transparent);
+  transition: background 90ms linear, box-shadow 90ms linear;
+}
+
+.strata__chips {
+  position: absolute;
+  inset: 14%;
+  display: flex;
+  flex-wrap: wrap;
+  align-content: center;
+  justify-content: center;
+  gap: 7%;
+}
+.strata__chips i {
+  display: block;
+  width: calc(11% + var(--w) * 9%);
+  aspect-ratio: 1.7;
+  background: color-mix(in oklab, var(--c-accent) 55%, transparent);
+  opacity: 0.5;
+  transition: opacity 380ms var(--ease-out);
+}
+.strata__layer.is-active .strata__chips i,
+.strata__layer.is-lifted .strata__chips i { opacity: 1; }
+
+/* counter-rotated so the label faces the viewer while the slab stays iso */
+.strata__tag {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0;
+  transform: translate3d(-108%, -50%, 20px) rotateZ(40deg) rotateX(-58deg);
+  transform-origin: center;
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  white-space: nowrap;
+  transition: color var(--d-ui) var(--ease-out);
+}
+.strata__tag i { color: var(--ink-4); font-style: normal; }
+.strata__tag b { font-weight: 500; }
+.strata__tag em { font-style: normal; color: var(--ink-4); }
+.strata__layer.is-active .strata__tag { color: var(--ink); }
+.strata__layer.is-active .strata__tag i { color: var(--c-accent); }
+
+.strata__spine {
+  position: absolute;
+  left: 50%; top: 50%;
+  width: 1px;
+  height: var(--span);
+  margin-left: -0.5px;
+  background: linear-gradient(to bottom, transparent, rgba(236, 236, 239, 0.28), transparent);
+  transform-origin: 50% 0;
+  transform: rotateX(-90deg);
+}
+
+.strata__packet {
+  position: absolute;
+  left: 50%; top: 50%;
+  width: 12px; height: 12px;
+  margin: -6px 0 0 -6px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.16), 0 0 30px 6px rgba(255, 255, 255, 0.35);
+  transform: translateZ(calc(var(--pp, 0) * var(--span) * -1));
+  opacity: 0;
+  transition: opacity 240ms var(--ease-out);
+}
+.strata.is-tracing .strata__packet { opacity: 1; }
+
+/* -------------------------------------------------------------- side rail */
+.strata__side {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: clamp(1.25rem, 4vh, 2.5rem) clamp(1.25rem, 2.5vw, 2rem);
+  border-left: 1px solid var(--line);
+  background: rgba(10, 10, 13, 0.5);
+  overflow-y: auto;
+}
+.strata__side .t-label { color: var(--c-accent); }
+.strata__sidename {
+  font-size: clamp(1.75rem, 3vw, 2.5rem);
+  font-weight: 500;
+  letter-spacing: -0.04em;
+  line-height: 1;
+}
+.strata__sideblurb {
+  color: var(--ink-3);
+  font-size: 0.875rem;
+  line-height: 1.55;
+  margin-bottom: 0.75rem;
+}
+.strata__list { border-top: 1px solid var(--line); }
+.strata__list li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: 0.5rem 1rem;
+  padding: 0.5625rem 0;
+  border-bottom: 1px solid var(--line);
+  opacity: 0;
+  transform: translate3d(0, 8px, 0);
+  animation: strataIn 460ms var(--ease-out) forwards;
+  animation-delay: calc(var(--i) * 42ms);
+}
+@keyframes strataIn { to { opacity: 1; transform: none; } }
+.strata__list li span { font-size: 0.9375rem; font-weight: 500; letter-spacing: -0.015em; }
+.strata__list li em {
+  grid-column: 1;
+  font-style: normal;
+  font-family: var(--font-mono);
+  font-size: 0.5625rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-4);
+}
+.strata__list li b {
+  grid-row: 1 / span 2;
+  grid-column: 2;
+  align-self: center;
+  font-weight: 400;
+  font-size: 0.6875rem;
+  color: var(--c-accent);
+}
+
+.strata__hud {
+  position: absolute;
+  left: clamp(1rem, 3vw, 2.25rem);
+  bottom: clamp(1rem, 3vh, 2.25rem);
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+}
+.strata__trace {
+  display: flex;
+  align-items: baseline;
+  gap: 0.625rem;
+  font-size: 0.625rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.strata__trace em { font-style: normal; color: var(--c-accent); }
+
+@media (max-width: 900px) {
+  /* vertical trace: same model, different drawing */
+  .strata { grid-template-columns: 1fr; grid-template-rows: minmax(0, 1fr) auto; }
+  .strata__scene { perspective: none; align-items: stretch; padding: 1rem 1rem 4.5rem; }
+  .strata__stack {
+    width: 100%;
+    aspect-ratio: auto;
+    transform: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.375rem;
+    padding-left: 2.25rem;
+    justify-content: center;
+  }
+  .strata__layer { position: relative; inset: auto; transform: none !important; }
+  .strata__slab { position: relative; inset: auto; height: 3.25rem; }
+  .strata__chips { inset: 0.75rem 0.75rem 0.75rem 8rem; justify-content: flex-start; gap: 5%; }
+  .strata__chips i { width: 8%; aspect-ratio: 1.4; }
+  .strata__tag {
+    position: absolute;
+    left: 0.875rem; top: 50%;
+    transform: translateY(-50%) !important;
+  }
+  .strata__spine {
+    left: 1rem; top: 0; bottom: 0;
+    height: auto;
+    transform: none;
+    background: linear-gradient(to bottom, transparent, var(--line-3), transparent);
+  }
+  .strata__packet {
+    left: 1rem;
+    top: calc(var(--pp, 0) * 100%);
+    transform: translate(-50%, -50%);
+    margin: 0;
+  }
+  .strata__side {
+    border-left: 0;
+    border-top: 1px solid var(--line);
+    max-height: 44vh;
+  }
+  .strata__hud { position: relative; left: auto; bottom: auto; padding: 0.75rem 1rem 0; }
+}

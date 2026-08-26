@@ -7,6 +7,8 @@ import { usePathname } from "next/navigation";
 import {
   BookOpenText,
   BriefcaseBusiness,
+  Film,
+  Layers,
   LayoutDashboard,
   LogOut,
   Mailbox,
@@ -26,8 +28,10 @@ const menus = [
   { href: "/dashboard/reviews", label: "Reviews", icon: MessageSquareMore },
   { href: "/dashboard/messages", label: "Messages", icon: Mailbox },
   { href: "/dashboard/settings", label: "Settings", icon: Settings },
-  { href: "/dashboard/skills", label: "Skills", icon: Sparkles },
-  { href: "/dashboard/projects", label: "Projects", icon: BriefcaseBusiness },
+  { href: "/dashboard/skills", label: "Skills (v1)", icon: Sparkles },
+  { href: "/dashboard/skills-v2", label: "Skills (v2)", icon: Layers },
+  { href: "/dashboard/projects", label: "Projects (v1)", icon: BriefcaseBusiness },
+  { href: "/dashboard/projects-v2", label: "Projects (v2)", icon: Film },
   { href: "/dashboard/experience", label: "Experience", icon: Wrench },
 ] as const;
 

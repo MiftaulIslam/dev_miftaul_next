@@ -1,5 +1,11 @@
-@import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap");
+﻿@import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap");
 @import "tailwindcss";
+/* Projects reel. Kept out of this file because it is a self-contained section
+   stylesheet; its tokens (--void, --ink*) are declared in :root / .dark below. */
+@import "./projects-reel.css";
+/* Experience chart. Same reasoning as the reel above: a self-contained section
+   stylesheet reading the --void / --ink ramp declared in :root / .dark below. */
+@import "./experience-overlap.css";
 /* Theme is driven by a `.dark` class on <html> (see lib/theme.ts), not by the
    OS preference, so point Tailwind's `dark:` variant at that class. */
 @custom-variant dark (&:where(.dark, .dark *));
@@ -76,9 +82,46 @@
   --sh-blue-to: #1d4ed8;
   --sh-blue-shadow: rgba(37, 99, 235, 0.18);
 
+  /* Columns skills section */
+  --cols-strip: oklch(0.985 0.003 250);
+  --cols-strip-hover: oklch(0.96 0.005 250);
+  --cols-wash: 5;
+  --cols-row-line: color-mix(in oklab, var(--foreground) 12%, transparent);
+
+  /* Console contact section (components/contact/*) â€” light theme.
+     Dark values live in the `.dark` block; the accent darkens there for
+     contrast on near-white surfaces and the band fill thins to 12%. */
+  --console-ground: #ececef;
+  --console-panel: #f9f9fb;
+  --console-field: #ffffff;
+  --console-ink: #17171b;
+  --console-key: #66686f;
+  --console-caption: #75777f;
+  --console-hairline: rgb(23 23 27 / 10%);
+  --console-accent: #0b5fbf;
+  --console-accent-soft: rgb(11 95 191 / 12%);
+  --console-accent-ink: #ffffff;
+  --console-scan-line: rgb(23 23 27 / 45%);
+  --console-scan-head: #17171b;
+
+  /* Projects reel (components/projects/v2/*) â€” light theme.
+     A four-step ink ramp over one ground colour. The steps are not evenly
+     spaced: --ink-4 sets 0.5625rem labels, so it is pinned at the darkest
+     value that still reads as "quiet" while clearing 4.5:1 on --void.
+     Y = ((L*+16)/116)^3 puts that ceiling at L 0.489 here and at L 0.566 in
+     the dark block below, which is why the two ramps are not mirror images. */
+  --void: oklch(0.985 0.004 250);
+  --ink: oklch(0.18 0.02 250);
+  --ink-2: oklch(0.32 0.018 250);
+  --ink-3: oklch(0.42 0.016 250);
+  --ink-4: oklch(0.485 0.014 250);
+
   --font-display: "Space Grotesk", var(--font-geist-sans), sans-serif;
   --font-body: var(--font-geist-sans), sans-serif;
   --font-mono: var(--font-geist-mono), monospace;
+  /* Mono is for measurement in the reel and nowhere else: indices, years,
+     counters, captions. Never for prose. */
+  --font-measure: "JetBrains Mono", var(--font-geist-mono), monospace;
 }
 
 .dark {
@@ -150,11 +193,84 @@
   --sh-blue-from: #6f829d;
   --sh-blue-to: #93c5fd;
   --sh-blue-shadow: rgba(96, 165, 250, 0.35);
+
+  /* Columns skills section */
+  --cols-strip: oklch(0.105 0.015 250);
+  --cols-strip-hover: oklch(0.128 0.018 250);
+  --cols-wash: 7;
+  --cols-row-line: color-mix(in oklab, var(--foreground) 9%, transparent);
+
+  /* Console contact section (components/contact/*) â€” dark theme.
+     Surfaces: ground #08080a, panel #101015, fields #131319 â€” three steps,
+     no more, so the instrument reads as one surface. */
+  --console-ground: #08080a;
+  --console-panel: #101015;
+  --console-field: #131319;
+  --console-ink: #f1f1f4;
+  --console-key: #8a8c96;
+  --console-caption: #a9abb6;
+  --console-hairline: rgb(255 255 255 / 8%);
+  --console-accent: #5ba8ff;
+  --console-accent-soft: rgb(91 168 255 / 16%);
+  --console-accent-ink: #07101d;
+  --console-scan-line: rgb(255 255 255 / 50%);
+  --console-scan-head: #ffffff;
+
+  /* Projects reel â€” dark theme. --ink-4 is floored at L 0.566 rather than
+     mirrored from the light ramp; see the note in :root. */
+  --void: oklch(0.13 0.018 250);
+  --ink: oklch(0.97 0.005 250);
+  --ink-2: oklch(0.82 0.012 250);
+  --ink-3: oklch(0.68 0.014 250);
+  --ink-4: oklch(0.58 0.014 250);
+}
+
+/* ============================================================
+   Console contact section (components/contact/*)
+
+   Hover is a pointer capability, not a screen size: gate it behind
+   (hover: hover) and (pointer: fine) so touch never gets sticky borders.
+   ============================================================ */
+
+@media (hover: hover) and (pointer: fine) {
+  /* Unselected timing options only: border deepens, label ink fills. */
+  .radio-option:not(.is-selected):hover {
+    border-color: rgb(255 255 255 / 26%);
+  }
+
+  html:not(.dark) .radio-option:not(.is-selected):hover {
+    border-color: rgb(23 23 27 / 26%);
+  }
+
+  .radio-option:not(.is-selected):hover .radio-option-label {
+    color: var(--console-ink);
+  }
+
+  /* Submit: an inset 1px scrim at 34% over 140ms. */
+  .submit-scrim:not(:disabled):hover::after {
+    opacity: 1;
+  }
+}
+
+.radio-option-label {
+  transition: color 140ms ease;
+}
+
+.submit-scrim::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: rgb(0 0 0 / 34%);
+  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 34%);
+  opacity: 0;
+  transition: opacity 140ms ease;
 }
 
 @theme inline {
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --font-display: var(--font-display);
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -193,6 +309,23 @@
   --color-hairline-strong: var(--hairline-strong);
   --color-tint-soft: var(--tint-soft);
   --color-tint-strong: var(--tint-strong);
+  --color-console-ground: var(--console-ground);
+  --color-console-panel: var(--console-panel);
+  --color-console-field: var(--console-field);
+  --color-console-ink: var(--console-ink);
+  --color-console-key: var(--console-key);
+  --color-console-caption: var(--console-caption);
+  --color-console-hairline: var(--console-hairline);
+  --color-console-accent: var(--console-accent);
+  --color-console-accent-soft: var(--console-accent-soft);
+  --color-console-accent-ink: var(--console-accent-ink);
+
+  --color-void: var(--void);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-ink-4: var(--ink-4);
+  --font-measure: var(--font-measure);
 
   --font-sans: var(--font-geist-sans);
   --radius-sm: calc(var(--radius) * 0.6);
@@ -435,13 +568,13 @@ p {
 }
 
 
-/* ─────────────────────────────────────────────────────────────────────────────
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
    Theme transition (View Transitions API)
 
    ThemeToggle swaps the theme inside `document.startViewTransition`, then
    animates `::view-transition-new(root)` itself. The default cross-fade is
    removed here so only that scripted reveal is visible.
-   ───────────────────────────────────────────────────────────────────────────── */
+   â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 ::view-transition-old(root),
 ::view-transition-new(root) {
   animation: none;
@@ -471,18 +604,18 @@ p {
   }
 }
 
-/* ─────────────────────────────────────────────────────────────────────────────
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
    Light-theme compatibility layer
 
    The portfolio sections predate the theme switcher and hardcode `white`
-   utilities for ink, hairlines and tints — correct on the dark surface,
+   utilities for ink, hairlines and tints â€” correct on the dark surface,
    invisible on the light one. Rather than rewrite those (out of scope)
    sections, remap the utilities to theme tokens for the light theme only.
 
    Scoped to `.portfolio-surface` so /dashboard and /resume are untouched, and
    left unlayered so it outranks Tailwind's `utilities` layer. Elements that
    also carry a solid accent background keep real white ink.
-   ───────────────────────────────────────────────────────────────────────────── */
+   â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 html:not(.dark) .portfolio-surface :is(.text-white, .text-slate-100, .text-slate-200, .text-slate-300):not([class*="bg-blue"]):not([class*="bg-primary"]):not([class*="bg-gradient"]) {
   color: var(--foreground);
 }
@@ -517,7 +650,7 @@ html:not(.dark) .portfolio-surface [class*="from-white/"] {
 }
 
 /* Section headings paint themselves with an inline gradient that ramps from a
-   near-white blue — invisible on the light surface. Re-ramp it here (inline
+   near-white blue â€” invisible on the light surface. Re-ramp it here (inline
    styles need `!important`) rather than editing the shared heading component. */
 html:not(.dark) .portfolio-surface .sh-title {
   background-image: linear-gradient(
@@ -543,4 +676,1039 @@ html:not(.dark) .portfolio-surface :is(.text-emerald-300, .text-green-400) {
 }
 .ink-on-accent-soft {
   color: rgb(255 255 255 / 0.72);
+}
+
+/* ============================================================
+   Columns skills section (components/skills/*)
+   ============================================================ */
+
+.cols-set {
+  display: flex;
+  gap: 2px;
+  background: var(--border);
+  border: 1px solid var(--border);
+  height: clamp(22rem, 56vh, 34rem);
+}
+
+.cols-strip {
+  position: relative;
+  display: flex;
+  flex-direction: row;
+  min-width: 3.5rem;
+  min-height: 0;
+  flex: 0 0 3.5rem;
+  background: var(--cols-strip);
+  overflow: hidden;
+  transition: flex-grow 520ms cubic-bezier(0.23, 1, 0.32, 1),
+    background-color 260ms ease;
+}
+
+.cols-strip.is-open {
+  flex-grow: 5.2;
+}
+
+.cols-strip::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--layer) calc(var(--cols-wash) * 1%), transparent) 0%,
+    transparent 52%
+  );
+  transition: opacity 300ms ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .cols-strip:not(.is-open):hover {
+    background-color: var(--cols-strip-hover);
+  }
+}
+
+.cols-spine {
+  position: relative;
+  z-index: 2;
+  width: 3.5rem;
+  flex: 0 0 3.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.875rem 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+}
+
+.cols-spine:focus-visible {
+  outline: 2px solid var(--layer);
+  outline-offset: -2px;
+}
+
+.cols-spine-index,
+.cols-spine-count {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+}
+
+.cols-spine-index {
+  color: color-mix(in oklab, var(--foreground) 38%, transparent);
+}
+
+.cols-spine-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.4rem;
+  height: 1.4rem;
+  padding: 0 0.3rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--layer) 45%, transparent);
+  color: color-mix(in srgb, var(--layer) 72%, var(--foreground));
+  background: color-mix(in srgb, var(--layer) 9%, transparent);
+}
+
+.cols-spine-label {
+  writing-mode: vertical-rl;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: color-mix(in oklab, var(--foreground) 44%, transparent);
+  transition: color 200ms ease, opacity 300ms ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .cols-strip:not(.is-open):hover .cols-spine-label {
+    color: color-mix(in oklab, var(--foreground) 72%, transparent);
+  }
+}
+
+.is-open .cols-spine-label {
+  opacity: 0;
+}
+
+.cols-body {
+  position: relative;
+  z-index: 1;
+  flex: 1 1 0%;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.cols-parallax {
+  height: 100%;
+  will-change: transform;
+}
+
+.cols-inner {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: clamp(1rem, 2vw, 1.75rem);
+  opacity: 0;
+  transition: opacity 340ms ease 120ms;
+}
+
+.is-open .cols-inner {
+  opacity: 1;
+}
+
+.cols-kicker {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--layer);
+}
+
+.cols-title {
+  margin-top: 0.55rem;
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: clamp(1.25rem, 2.4vw, 2rem);
+  letter-spacing: -0.035em;
+  line-height: 1.05;
+  white-space: nowrap;
+  color: var(--foreground);
+}
+
+.cols-blurb {
+  margin-top: 0.6rem;
+  max-width: 42ch;
+  font-size: 0.84rem;
+  line-height: 1.55;
+  color: var(--muted-foreground);
+}
+
+.cols-rows {
+  margin-top: 1.15rem;
+  min-height: 0;
+  border-top: 1px solid var(--cols-row-line);
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+
+.cols-row {
+  display: grid;
+  /* icon + text. The third track used to hold a years chip; that is gone. */
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--cols-row-line);
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 420ms cubic-bezier(0.23, 1, 0.32, 1),
+    transform 480ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.is-open .cols-row {
+  opacity: 1;
+  transform: none;
+  transition-delay: calc(200ms + var(--k) * 48ms);
+}
+
+.cols-row-icon {
+  display: grid;
+  place-items: center;
+  width: calc(24px + var(--w) * 10px);
+  height: calc(24px + var(--w) * 10px);
+  padding: 4px;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--layer) 10%, transparent);
+}
+
+.cols-row-icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+html:not(.dark) .cols-row-icon img {
+  filter: saturate(0.85);
+}
+
+.cols-monogram {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: color-mix(in srgb, var(--layer) 70%, var(--foreground));
+}
+
+.cols-row-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.cols-row-name {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: calc(0.84375rem + var(--w) * 0.09375rem);
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+  color: var(--foreground);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cols-row-role {
+  margin-top: 2px;
+  font-family: var(--font-mono);
+  font-size: 8px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media (min-width: 768px) and (max-width: 1099.98px) {
+  .cols-blurb {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+}
+
+@media (max-width: 767.98px) {
+  .cols-set {
+    flex-direction: column;
+    height: auto;
+    max-height: 76vh;
+    overflow: hidden;
+  }
+
+  .cols-strip {
+    display: grid;
+    flex-direction: initial;
+    flex-basis: auto;
+    grid-template-columns: 100%;
+    grid-template-rows: auto 0fr;
+    min-width: 0;
+    min-height: 0;
+    transition: grid-template-rows 520ms cubic-bezier(0.23, 1, 0.32, 1),
+      background-color 260ms ease;
+  }
+
+  .cols-strip::before {
+    background: linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--layer) calc(var(--cols-wash) * 1%), transparent) 0%,
+      transparent 60%
+    );
+  }
+
+  .cols-strip.is-open {
+    grid-template-rows: auto 1fr;
+  }
+
+  .cols-spine {
+    width: 100%;
+    flex: none;
+    min-height: 3.5rem;
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    gap: 0.8rem;
+    padding: 0.95rem 1rem;
+  }
+
+  .cols-spine-label {
+    writing-mode: horizontal-tb;
+  }
+
+  .cols-spine-count {
+    margin-left: auto;
+  }
+
+  .cols-body {
+    flex: none;
+    min-height: 0;
+  }
+
+  .cols-parallax {
+    height: auto;
+  }
+
+  .cols-inner {
+    height: auto;
+    padding: 0.25rem 1rem 1.25rem;
+  }
+
+  .cols-rows {
+    overflow-y: visible;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cols-strip,
+  .cols-spine-label,
+  .cols-strip::before {
+    transition-duration: 120ms !important;
+  }
+
+  .cols-inner {
+    transition-delay: 0ms !important;
+    transition-duration: 120ms !important;
+  }
+
+  .cols-row {
+    transform: none;
+    transition: opacity 120ms ease !important;
+    transition-delay: 0ms !important;
+  }
+}
+
+
+
+/* ============================================================
+   Stack card (v2 accumulate / /skills page): columns in one card
+   ============================================================ */
+
+.sc-track {
+  position: relative;
+}
+
+.sc-card {
+  position: relative;
+  display: flex;
+  background: var(--cols-strip);
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+
+.sc-col {
+  position: relative;
+  flex: 1 1 0%;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.sc-col + .sc-col {
+  border-left: 1px solid var(--cols-row-line);
+}
+
+.sc-col-inner {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: clamp(1rem, 2vw, 1.75rem);
+}
+
+.sc-col::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--layer) calc(var(--cols-wash) * 1%), transparent) 0%,
+    transparent 52%
+  );
+}
+
+.sc-col > * {
+  position: relative;
+  z-index: 1;
+}
+
+.sc-col .cols-rows {
+  overflow-y: visible;
+}
+
+.sc-card .cols-row {
+  opacity: 1;
+  transform: none;
+  transition: none;
+}
+
+.sc-dots {
+  display: none;
+}
+
+.sc-card.is-scrub {
+  height: min(66vh, 34rem);
+  will-change: transform;
+}
+
+.sc-card.is-scrub .sc-col-inner {
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+
+.sc-card.is-scrub .sc-dots {
+  position: absolute;
+  left: clamp(1rem, 2vw, 1.75rem);
+  bottom: 0.85rem;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.sc-count {
+  margin-right: 0.3rem;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  color: color-mix(in oklab, var(--foreground) 45%, transparent);
+}
+
+.sc-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: color-mix(in oklab, var(--foreground) 24%, transparent);
+  transition: background-color 300ms ease, transform 300ms ease;
+}
+
+.sc-dot.is-active {
+  background: var(--layer);
+  transform: scale(1.2);
+}
+
+@media (max-width: 767.98px) {
+  .sc-card {
+    flex-direction: column;
+  }
+
+  .sc-card.is-scrub {
+    height: min(76vh, 40rem);
+    max-height: none;
+  }
+
+  .sc-col + .sc-col {
+    border-left: 0;
+    border-top: 1px solid var(--cols-row-line);
+  }
+
+  .sc-col-inner {
+    height: auto;
+    padding: 1rem 1rem 1.1rem;
+  }
+
+  .sc-card.is-scrub .sc-col-inner {
+    overflow-y: auto;
+    scrollbar-width: thin;
+  }
+
+  .cols-title {
+    white-space: normal;
+  }
+
+  .sc-card.is-scrub .sc-dots {
+    bottom: 0.65rem;
+  }
+}
+/* /skills page: the accumulate card held static, all columns open */
+.sc-card-page {
+  min-height: 30rem;
+}
+
+.sc-card-page .sc-col-inner {
+  overflow-y: visible;
+}
+
+@media (max-width: 767.98px) {
+  .sc-card-page {
+    min-height: 0;
+  }
+
+  .sc-card-page .cols-title {
+    white-space: normal;
+  }
+}
+
+
+
+/* ============================================================
+   REEL skills section (v2 home): scroll-scrubbed scene cut
+   ============================================================ */
+
+.reel {
+  --reel-bar: 2.5rem;
+  --reel-ease: cubic-bezier(0.23, 1, 0.32, 1);
+  position: relative;
+}
+
+.reel-rail {
+  position: relative;
+  height: calc(var(--scenes) * 100vh);
+}
+
+.reel-viewport {
+  position: relative;
+  top: 0;
+  height: 100vh;
+  overflow: hidden;
+  outline: none;
+  background: var(--background);
+  will-change: transform;
+}
+
+.reel-viewport:focus-visible {
+  outline: 2px solid var(--layer, #ff6a3d);
+  outline-offset: -4px;
+}
+
+.reel-grade {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.reel-grade-layer {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 700ms var(--reel-ease);
+}
+
+.reel-track {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  height: 100%;
+  width: max-content;
+}
+
+.reel-scene {
+  position: relative;
+  flex: 0 0 100vw;
+  height: 100%;
+  overflow: hidden;
+
+  /* A scene is a full viewport wide because the reel slides horizontally, but
+     its CONTENT is not allowed to be. Left to the raw viewport inset, the
+     reading column starts 8rem from the screen edge while every other section
+     on the page starts at the edge of an 88rem centred shell — so the skills
+     text sits visibly further left than the heading above it and the section
+     reads as unaligned rather than full-bleed.
+
+     This resolves to the plain inset until the viewport outgrows the shell,
+     then to whatever keeps the column on the shell's own left edge. The scene
+     itself stays 100vw, so the slide and the plate bleed are untouched.
+
+     The band is narrower than the page shell's 88rem, matching the experience
+     chart's --xp-max. At 88rem the second term below only overtakes the 7vw
+     clamp past a ~1550px viewport, so on the 1440px laptop most people read
+     this on, the column sat 128px from the screen edge with the rest of the
+     scene running unbounded to the right. 72rem keeps a real margin on both
+     sides at every desktop width. */
+  --reel-max: 72rem;
+  --reel-gutter: max(
+    clamp(1.25rem, 7vw, 8rem),
+    calc((100% - var(--reel-max)) / 2 + 2.5rem)
+  );
+}
+
+.reel-numeral {
+  position: absolute;
+  top: 50%;
+  /* Trails the shell's right edge rather than the screen's, keeping a little
+     bleed so the numeral still reads as a mark rather than a heading. */
+  right: calc(var(--reel-gutter) - 4rem);
+  transform: translateY(-50%);
+  z-index: 0;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(10rem, 34vw, 30rem);
+  line-height: 0.72;
+  letter-spacing: -0.06em;
+  color: var(--layer);
+  opacity: 0.07;
+  pointer-events: none;
+  user-select: none;
+}
+
+.reel-frame {
+  position: relative;
+  z-index: 1;
+  height: 100%;
+  display: grid;
+  align-content: center;
+  gap: 0.35rem;
+  /* Margin, not padding. `max-width` here is border-box, so a 276px inline
+     padding on a 46rem box would leave a 184px column — the wider the screen,
+     the narrower the text. Offsetting the box instead keeps the column its full
+     46rem and simply starts it at the shell edge. */
+  padding-block: clamp(2.5rem, 6vh, 5rem);
+  margin-inline-start: var(--reel-gutter);
+  max-width: 46rem;
+}
+
+.reel-rule {
+  position: absolute;
+  left: var(--reel-gutter);
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1px;
+  height: min(46vh, 26rem);
+  margin-left: -0.75rem;
+  background: linear-gradient(180deg, transparent, var(--layer), transparent);
+  opacity: 0.8;
+  pointer-events: none;
+}
+
+.reel-slate {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: 10px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--layer);
+}
+
+.reel-title {
+  margin-top: 0.75rem;
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: clamp(2.5rem, 7vw, 6rem);
+  letter-spacing: -0.05em;
+  line-height: 0.88;
+  color: var(--foreground);
+}
+
+.reel-kicker {
+  margin-top: 1rem;
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: color-mix(in oklab, var(--foreground) 62%, transparent);
+}
+
+.reel-blurb {
+  margin-top: 0.5rem;
+  max-width: 44ch;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: var(--muted-foreground);
+}
+
+.reel-rows {
+  margin-top: 1.5rem;
+  max-width: 34rem;
+}
+
+.reel-row {
+  display: grid;
+  /* icon + name + role. The fourth track used to hold a years chip. */
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.625rem 0;
+  border-bottom: 1px solid var(--cols-row-line);
+}
+
+.reel-row-icon {
+  display: grid;
+  place-items: center;
+  width: calc(22px + var(--w) * 8px);
+  height: calc(22px + var(--w) * 8px);
+  padding: 3px;
+  border-radius: 7px;
+  background: color-mix(in srgb, var(--layer) 10%, transparent);
+}
+
+.reel-row-icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.reel-row-name {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: clamp(1rem, 1.5vw, 1.25rem);
+  letter-spacing: -0.02em;
+  color: var(--foreground);
+  transition: color 180ms ease;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.reel-row-role {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+  white-space: nowrap;
+  justify-self: end;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .reel-scene:hover .reel-row:hover .reel-row-name {
+    color: var(--layer);
+  }
+}
+
+/* reveals: gated behind .js so no-JS content stays visible */
+.reel.js .rv {
+  opacity: 0;
+  transform: translateY(18px);
+  transition:
+    opacity 520ms var(--reel-ease) var(--d, 0ms),
+    transform 620ms var(--reel-ease) var(--d, 0ms);
+}
+
+.reel-scene.is-live .rv {
+  opacity: 1;
+  transform: none;
+}
+
+/* letterbox bars: page ground, absolute within the translated viewport */
+.reel-letterbox {
+  position: absolute;
+  left: 0;
+  right: 0;
+  z-index: 30;
+  height: var(--reel-bar);
+  background: var(--background);
+  pointer-events: none;
+}
+
+.reel-letterbox-top {
+  top: 0;
+  transform-origin: top center;
+}
+
+.reel-letterbox-bottom {
+  bottom: 0;
+  transform-origin: bottom center;
+}
+
+/* chapter rail + progress + timecode */
+.reel-rail-ui {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(var(--reel-bar) + 0.6875rem);
+  z-index: 30;
+  padding: 0 clamp(1.25rem, 7vw, 8rem);
+  pointer-events: none;
+}
+
+.reel-progress {
+  display: block;
+  height: 1px;
+  margin-bottom: 0.6875rem;
+  background: color-mix(in oklab, var(--foreground) 14%, transparent);
+  overflow: hidden;
+}
+
+.reel-progress-fill {
+  display: block;
+  height: 100%;
+  background: var(--layer, #ff6a3d);
+  transform: scaleX(0);
+  transform-origin: left center;
+}
+
+.reel-rail-row {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+.reel-timecode {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 10px;
+  letter-spacing: 0.24em;
+  color: color-mix(in oklab, var(--foreground) 55%, transparent);
+}
+
+.reel-ticks {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+  pointer-events: auto;
+}
+
+.reel-tick {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.3rem 0.5rem;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  color: inherit;
+  font: inherit;
+}
+
+.reel-tick:focus-visible {
+  outline: 1px solid var(--layer, #ff6a3d);
+  outline-offset: 2px;
+}
+
+.reel-tick-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--foreground);
+  opacity: 0.4;
+  transition: opacity 220ms ease;
+}
+
+.reel-tick-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: color-mix(in oklab, var(--foreground) 45%, transparent);
+  transition: color 220ms ease;
+}
+
+.reel-tick.is-active .reel-tick-dot {
+  opacity: 1;
+  background: var(--layer, #ff6a3d);
+}
+
+.reel-tick.is-active .reel-tick-label {
+  color: color-mix(in oklab, var(--foreground) 78%, transparent);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .reel-tick:hover .reel-tick-dot {
+    opacity: 1;
+  }
+
+  .reel-tick:hover .reel-tick-label {
+    color: color-mix(in oklab, var(--foreground) 68%, transparent);
+  }
+}
+
+.reel-more {
+  position: absolute;
+  right: clamp(1.25rem, 7vw, 8rem);
+  bottom: calc(var(--reel-bar) + 0.6875rem);
+  z-index: 30;
+  display: block;
+  width: fit-content;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: color-mix(in oklab, var(--foreground) 55%, transparent);
+  transition: color 180ms ease;
+  pointer-events: auto;
+}
+
+.reel-more:hover {
+  color: var(--layer, #ff6a3d);
+}
+
+.reel-more-static {
+  display: none;
+  margin: -4rem auto 0;
+  padding-bottom: 4rem;
+  width: fit-content;
+  position: static;
+}
+
+/* mobile: vertical cut â€” scene chrome hidden, static link shown */
+@media (max-width: 767.98px) {
+  .reel-rail {
+    height: auto;
+  }
+
+  .reel-viewport {
+    height: auto;
+    overflow: visible;
+    will-change: auto;
+  }
+
+  .reel-track {
+    display: block;
+    width: auto;
+    height: auto;
+  }
+
+  .reel-scene {
+    flex: none;
+    min-height: 100svh;
+    height: auto;
+    display: grid;
+    align-content: center;
+    scroll-snap-align: start;
+  }
+
+  .reel-numeral {
+    right: 0;
+    font-size: clamp(9rem, 42vw, 16rem);
+    opacity: 0.06;
+  }
+
+  .reel-frame {
+    padding: 6rem 1.5rem 6rem;
+  }
+
+  .reel-row {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+  }
+
+  .reel-row-role {
+    display: none;
+  }
+
+  .reel-rule {
+    left: 1.5rem;
+  }
+
+  .reel-letterbox,
+  .reel-rail-ui,
+  .reel-more:not(.reel-more-static) {
+    display: none;
+  }
+
+  .reel-more-static {
+    display: block;
+  }
+}
+
+/* reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .reel.js .rv {
+    transform: none;
+    transition: opacity 120ms ease var(--d, 0ms);
+  }
+
+  .reel-grade-layer {
+    transition-duration: 120ms;
+  }
+}
+
+
+/* ============================================================================
+   Hero figure — components/sections/v2/V2Hero.tsx
+   ----------------------------------------------------------------------------
+   /cyber-me.png is a full-bleed RGB frame (no alpha) of a dark portrait lit by
+   a blue rim. Measured: mean luminance 20.2, peak 105, corners 1,5,23 — the lit
+   subject carries the image and the corners are effectively black.
+
+   The rectangle is dissolved with a two-axis mask rather than
+   `mix-blend-mode: screen`: the hero section is `isolate` over a transparent
+   background, so a blend mode would have no backdrop to blend into and the box
+   edge would survive. The fade starts well inside the border box on purpose —
+   the blur bleeds past that box, and a tight mask would clip the bleed into
+   exactly the hard edge this is here to remove.
+
+   The blur is static. Animating it would re-rasterise the layer every frame;
+   holding it constant means the layer paints once and the scroll reveal stays
+   pure transform and opacity on the compositor.
+
+   Strength is tuned with `filter`, never `opacity` — GSAP owns opacity inline
+   for the reveal, and a stylesheet opacity here would simply be overridden.
+   ========================================================================== */
+
+/* Two gates, both here so there is one place to look: dark theme, and wide
+   enough that the bottom-centre of the hero is actually empty. */
+.hero-figure {
+  display: none;
+  /* Saturation pulled under 1: the source rim is an electric blue that, left
+     alone, reads as a highlight rather than as depth behind the copy. */
+  filter: blur(15px) saturate(0.88) brightness(1.02);
+  -webkit-mask-image:
+    linear-gradient(to bottom, transparent 0%, #000 32%),
+    linear-gradient(to right, transparent 0%, #000 18%, #000 82%, transparent 100%);
+  -webkit-mask-composite: source-in;
+  mask-image:
+    linear-gradient(to bottom, transparent 0%, #000 32%),
+    linear-gradient(to right, transparent 0%, #000 18%, #000 82%, transparent 100%);
+  mask-composite: intersect;
+  will-change: transform, opacity;
+}
+
+@media (min-width: 768px) {
+  :where(.dark) .hero-figure {
+    display: block;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-figure {
+    will-change: auto;
+  }
 }

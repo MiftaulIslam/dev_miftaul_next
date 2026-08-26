@@ -9,8 +9,10 @@ import { Button } from "@/components/ui/dashboard/Button";
 import { Card } from "@/components/ui/dashboard/Card";
 import { ImageUpload } from "@/components/ui/dashboard/ImageUpload";
 import { Input } from "@/components/ui/dashboard/Input";
+import { Select } from "@/components/ui/dashboard/Select";
 import { renderSummaryWithHighlights } from "@/lib/dashboard/render-summary-highlights";
 import type { PortfolioSettings } from "@/lib/dashboard/types";
+import { coerceSiteVersion, DEFAULT_SITE_VERSION, type SiteVersion } from "@/lib/siteVersion";
 
 type SettingsFormValues = {
   name: string;
@@ -29,6 +31,7 @@ type SettingsFormValues = {
   happyClients: number;
   currentlyFocusedOn: Array<{ value: string }>;
   detailedSummary: string;
+  siteVersion: SiteVersion;
 };
 
 function toFormValues(data: PortfolioSettings): SettingsFormValues {
@@ -53,6 +56,7 @@ function toFormValues(data: PortfolioSettings): SettingsFormValues {
       ? data.currentlyFocusedOn.map((value) => ({ value }))
       : [{ value: "" }],
     detailedSummary: data.detailedSummary,
+    siteVersion: coerceSiteVersion(data.siteVersion),
   };
 }
 
@@ -78,6 +82,7 @@ function fromFormValues(values: SettingsFormValues) {
       .map((item) => item.value.trim())
       .filter(Boolean),
     detailedSummary: values.detailedSummary.trim(),
+    siteVersion: coerceSiteVersion(values.siteVersion),
   };
 }
 
@@ -105,6 +110,7 @@ export default function SettingsPanel() {
       happyClients: 0,
       currentlyFocusedOn: [{ value: "" }],
       detailedSummary: "",
+      siteVersion: DEFAULT_SITE_VERSION,
     },
   });
 
@@ -154,6 +160,19 @@ export default function SettingsPanel() {
           <code className="rounded bg-white/10 px-1.5 py-0.5 text-xs text-cyan-200">/public/uploads</code>.
         </p>
       </div>
+
+      <Card title="Site Version" subtitle="Which homepage build the public portfolio serves.">
+        <div className="md:max-w-sm">
+          <Select
+            label="Active version"
+            hint="Every visitor sees this build. Takes effect as soon as you save."
+            {...form.register("siteVersion")}
+          >
+            <option value="v1">v1 — Original</option>
+            <option value="v2">v2 — Current</option>
+          </Select>
+        </div>
+      </Card>
 
       <Card>
         <div className="grid gap-4 md:grid-cols-2">

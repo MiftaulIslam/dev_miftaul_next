@@ -3,8 +3,10 @@ import path from "node:path";
 
 import { neon } from "@neondatabase/serverless";
 
-function loadLocalEnv() {
-  const envPath = path.resolve(process.cwd(), ".env.local");
+import { V2_SKILL_SECTIONS } from "./data/skills-v2.mjs";
+
+function loadEnvFile(fileName) {
+  const envPath = path.resolve(process.cwd(), fileName);
   if (!existsSync(envPath)) return;
 
   const content = readFileSync(envPath, "utf8");
@@ -337,16 +339,21 @@ const messages = [
 ];
 
 async function run() {
-  loadLocalEnv();
+  // `.env.local` first so it keeps precedence over `.env`, matching how Next
+  // layers them. This repo actually keeps DATABASE_URL in `.env`.
+  loadEnvFile(".env.local");
+  loadEnvFile(".env");
 
   if (!process.env.DATABASE_URL) {
-    throw new Error("DATABASE_URL is missing. Add it to .env.local or your environment.");
+    throw new Error("DATABASE_URL is missing. Add it to .env.local, .env, or your environment.");
   }
 
   const sql = neon(process.env.DATABASE_URL);
 
   await sql`
     TRUNCATE TABLE
+      v2_skill_items,
+      v2_skill_sections,
       stack_tools,
       stack_categories,
       projects,
@@ -413,6 +420,44 @@ async function run() {
       await sql`
         INSERT INTO stack_tools (category_id, name, color, icon_name, updated_at)
         VALUES (${categoryId}, ${tool.name}, ${tool.color}, ${tool.iconName}, NOW());
+      `;
+    }
+  }
+
+  // The v2 reel reads its own tables — authored copy per section and per skill,
+  // which the flat v1 stack above does not model. Same content as
+  // `npm run db:seed:skills`, shared from one data module so a full seed and a
+  // skills-only seed can never disagree.
+  for (const [index, section] of V2_SKILL_SECTIONS.entries()) {
+    const sectionRows = await sql`
+      INSERT INTO v2_skill_sections (key, title, subtitle, description, layer, accent, sort_order, updated_at)
+      VALUES (
+        ${section.key},
+        ${section.title},
+        ${section.subtitle ?? ""},
+        ${section.description ?? ""},
+        ${section.layer ?? ""},
+        ${section.accent ?? "#60a5fa"},
+        ${section.sortOrder ?? index},
+        NOW()
+      )
+      RETURNING id;
+    `;
+    const sectionId = Number(sectionRows[0].id);
+
+    for (const [k, skill] of (section.skills ?? []).entries()) {
+      await sql`
+        INSERT INTO v2_skill_items (section_id, name, title, icon, note, weight, sort_order, updated_at)
+        VALUES (
+          ${sectionId},
+          ${skill.name},
+          ${skill.title ?? ""},
+          ${skill.icon ?? ""},
+          ${skill.note ?? ""},
+          ${Number(skill.weight) || 0.55},
+          ${skill.sortOrder ?? k},
+          NOW()
+        );
       `;
     }
   }

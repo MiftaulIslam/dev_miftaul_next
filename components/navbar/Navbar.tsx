@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { PencilLine, FileText, Menu, X } from "lucide-react";
 import Link from "next/link";
@@ -11,6 +11,12 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { ScrollSmoother } from "gsap/ScrollSmoother";
 
 import { NAV_LINKS } from "@/lib/data";
+import {
+  scrollToSection,
+  setNavShell,
+  useActiveSectionSpy,
+  useNavShell,
+} from "@/lib/navShell";
 import ThemeToggle from "@/components/ui/ThemeToggle";
 import { LimelightNav } from "@/components/ui/limelight-nav";
 
@@ -21,15 +27,30 @@ const COMPACT_AT = 20;
 /** Past this depth, scrolling down parks the shell off-screen. */
 const AUTOHIDE_AT = 160;
 
+/**
+ * The anchor ids the spy watches, in page order.
+ *
+ * Derived from NAV_LINKS rather than written out again so the nav and the spy
+ * can never drift, and hoisted to module scope because the order is what makes
+ * the spy's windows tile — see `useActiveSectionSpy`.
+ */
+const SECTION_IDS = NAV_LINKS.map((link) => link.href.replace("#", ""));
+
 export default function Navbar() {
   const pathname = usePathname();
   const [introActive, setIntroActive] = useState(true);
-  const [scrolled, setScrolled] = useState(false);
-  const [hidden, setHidden] = useState(false);
-  const [activeSection, setActiveSection] = useState("hero");
+  // Published to the shared store so the bottom dock reads the same facts
+  // instead of running a second scroll listener and section observer.
+  const { scrolled, hidden, activeSection } = useNavShell();
+  const setScrolled = (value: boolean) => setNavShell({ scrolled: value });
+  const setHidden = (value: boolean) => setNavShell({ hidden: value });
   const [mobileOpen, setMobileOpen] = useState(false);
-  const observerRef = useRef<IntersectionObserver | null>(null);
   const isPortfolioRoute = pathname === "/";
+
+  // The spy lives in the shared store, not here: it rebinds itself whenever the
+  // page swaps its section tree, so it survives a version change that this
+  // component never hears about.
+  useActiveSectionSpy(SECTION_IDS, !introActive && isPortfolioRoute);
 
   useEffect(() => {
     if (typeof document === "undefined") return;
@@ -69,30 +90,6 @@ export default function Navbar() {
     };
   }, [introActive, isPortfolioRoute]);
 
-  // Active section via IntersectionObserver
-  useEffect(() => {
-    if (introActive || !isPortfolioRoute) return;
-    const sectionIds = NAV_LINKS.map((l) => l.href.replace("#", ""));
-
-    observerRef.current = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            setActiveSection(entry.target.id);
-          }
-        });
-      },
-      { rootMargin: "-40% 0px -55% 0px", threshold: 0 },
-    );
-
-    sectionIds.forEach((id) => {
-      const el = document.getElementById(id);
-      if (el) observerRef.current?.observe(el);
-    });
-
-    return () => observerRef.current?.disconnect();
-  }, [introActive, isPortfolioRoute]);
-
   if (
     introActive ||
     pathname.startsWith("/dashboard") ||
@@ -103,38 +100,7 @@ export default function Navbar() {
   const parked = hidden && !mobileOpen;
 
   const scrollTo = (href: string) => {
-    const id = href.replace("#", "");
-    const el = document.getElementById(id);
-    const headerOffset = id === "hero" ? 0 : 84;
-
-    if (el) {
-      window.dispatchEvent(
-        new CustomEvent("nav-section-jump", { detail: { id } }),
-      );
-      const smoother = ScrollSmoother.get();
-      if (smoother) {
-        const baseY =
-          typeof smoother.offset === "function"
-            ? smoother.offset(el, "top top")
-            : el.getBoundingClientRect().top + smoother.scrollTop();
-        smoother.scrollTo(Math.max(0, baseY - headerOffset), true);
-      } else {
-        const y = Math.max(
-          0,
-          el.getBoundingClientRect().top + window.scrollY - headerOffset,
-        );
-        window.scrollTo({ top: y, behavior: "smooth" });
-      }
-
-      setActiveSection(id);
-      window.setTimeout(() => {
-        ScrollTrigger.refresh();
-        window.dispatchEvent(
-          new CustomEvent("nav-section-settled", { detail: { id } }),
-        );
-      }, 420);
-    }
-
+    scrollToSection(href);
     setMobileOpen(false);
   };
 

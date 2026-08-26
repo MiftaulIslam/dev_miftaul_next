@@ -1,0 +1,698 @@
+- generic [active] [ref=f11e1]:
+  - link "Skip to the concept galleries" [ref=f11e2] [cursor=pointer]:
+    - /url: "#galleries"
+  - banner:
+    - link "Portfolio Design Explorer" [ref=f11e3] [cursor=pointer]:
+      - /url: "#top"
+      - generic [ref=f11e4]: Portfolio
+      - generic [ref=f11e5]: Design Explorer
+    - generic [ref=f11e6]:
+      - generic [ref=f11e7]: Concepts
+      - generic [ref=f11e8]: "36"
+  - navigation "Portfolio areas":
+    - link "Skills 11":
+      - /url: "#area-skills"
+      - text: Skills
+      - generic: "11"
+    - link "Hero 05":
+      - /url: "#area-hero"
+      - text: Hero
+      - generic: "05"
+    - link "About 05":
+      - /url: "#area-about"
+      - text: About
+      - generic: "05"
+    - link "Projects 03":
+      - /url: "#area-projects"
+      - text: Projects
+      - generic: "03"
+    - link "Experience 05":
+      - /url: "#area-experience"
+      - text: Experience
+      - generic: "05"
+    - link "Contact 03":
+      - /url: "#area-contact"
+      - text: Contact
+      - generic: "03"
+    - link "Navigation 04":
+      - /url: "#area-nav"
+      - text: Navigation
+      - generic: "04"
+  - main [ref=f11e9]:
+    - generic [ref=f11e10]:
+      - generic [ref=f11e14]:
+        - heading "Choose how your portfolio behaves" [level=1] [ref=f11e15]:
+          - generic [ref=f11e16]: Choose how your
+          - emphasis [ref=f11e20]: portfolio behaves
+        - paragraph [ref=f11e21]: Complete art directions for every section of a developer portfolio. Explore each one live, then copy a production build prompt.
+        - generic [ref=f11e22]:
+          - button "Start with Skills" [ref=f11e23] [cursor=pointer]
+          - button "Open a concept" [ref=f11e24] [cursor=pointer]
+      - navigation "Area shortcuts" [ref=f11e25]:
+        - list [ref=f11e26]:
+          - listitem [ref=f11e27]:
+            - link "11 Skills" [ref=f11e28] [cursor=pointer]:
+              - /url: "#area-skills"
+              - generic [ref=f11e29]: "11"
+              - text: Skills
+          - listitem [ref=f11e30]:
+            - link "05 Hero" [ref=f11e31] [cursor=pointer]:
+              - /url: "#area-hero"
+              - generic [ref=f11e32]: "05"
+              - text: Hero
+          - listitem [ref=f11e33]:
+            - link "05 About" [ref=f11e34] [cursor=pointer]:
+              - /url: "#area-about"
+              - generic [ref=f11e35]: "05"
+              - text: About
+          - listitem [ref=f11e36]:
+            - link "03 Projects" [ref=f11e37] [cursor=pointer]:
+              - /url: "#area-projects"
+              - generic [ref=f11e38]: "03"
+              - text: Projects
+          - listitem [ref=f11e39]:
+            - link "05 Experience" [ref=f11e40] [cursor=pointer]:
+              - /url: "#area-experience"
+              - generic [ref=f11e41]: "05"
+              - text: Experience
+          - listitem [ref=f11e42]:
+            - link "03 Contact" [ref=f11e43] [cursor=pointer]:
+              - /url: "#area-contact"
+              - generic [ref=f11e44]: "03"
+              - text: Contact
+          - listitem [ref=f11e45]:
+            - link "04 Navigation" [ref=f11e46] [cursor=pointer]:
+              - /url: "#area-nav"
+              - generic [ref=f11e47]: "04"
+              - text: Navigation
+    - generic [ref=f11e48]:
+      - generic [ref=f11e49]:
+        - generic [ref=f11e50]:
+          - heading "Skills" [level=2] [ref=f11e51]
+          - paragraph [ref=f11e52]: Twenty-nine technologies across six layers.
+          - generic [ref=f11e53]: "11"
+        - generic [ref=f11e54]:
+          - generic [ref=f11e55]:
+            - heading "In-page section" [level=3] [ref=f11e56]
+            - paragraph [ref=f11e57]: Lives between other sections. Consumes scroll, hands off, and offers a way through to the full view.
+            - generic [ref=f11e58]: "05"
+          - generic [ref=f11e59]:
+            - article [ref=f11e60]:
+              - generic [ref=f11e61]:
+                - generic [ref=f11e62]: "01"
+                - generic [ref=f11e63]: Canvas / scrubbed trace
+              - generic [ref=f11e65]:
+                - heading [level=4] [ref=f11e66]:
+                  - button "Signal" [ref=f11e67] [cursor=pointer]
+                - paragraph [ref=f11e68]: Scroll draws a single continuous trace across the section. Each technology is a peak, each layer a coloured run, and a playhead names what it crosses.
+                - paragraph [ref=f11e69]:
+                  - generic [ref=f11e70]: Interaction
+                  - generic [ref=f11e71]: Scroll to draw the trace. The playhead calls out each technology as it passes. Hover the finished trace to read any peak.
+              - generic [ref=f11e72]:
+                - button "Explore" [ref=f11e73] [cursor=pointer]
+                - button "Copy Next.js prompt" [ref=f11e74] [cursor=pointer]
+            - article [ref=f11e75]:
+              - generic [ref=f11e76]:
+                - generic [ref=f11e77]: "02"
+                - generic [ref=f11e78]: DOM / accordion strips
+              - generic [ref=f11e80]:
+                - heading [level=4] [ref=f11e81]:
+                  - button "Columns" [ref=f11e82] [cursor=pointer]
+                - paragraph [ref=f11e83]: At rest, six vertical strips. Open one and it claims the width, its label swings horizontal, and its technologies unfurl in sequence.
+                - paragraph [ref=f11e84]:
+                  - generic [ref=f11e85]: Interaction
+                  - generic [ref=f11e86]: Hover or tap a strip to open it. Scroll drifts the strips against each other. Arrow keys step between layers.
+              - generic [ref=f11e87]:
+                - button "Explore" [ref=f11e88] [cursor=pointer]
+                - button "Copy Next.js prompt" [ref=f11e89] [cursor=pointer]
+            - article [ref=f11e90]:
+              - generic [ref=f11e91]:
+                - generic [ref=f11e92]: "03"
+                - generic [ref=f11e93]: Canvas / type as window
+              - generic [ref=f11e95]:
+                - heading [level=4] [ref=f11e96]:
+                  - button "Mask" [ref=f11e97] [cursor=pointer]
+                - paragraph [ref=f11e98]: One enormous word per layer, with that layer's technologies drifting inside the letterforms. Scroll rolls the word to the next layer and the field goes with it.
+                - paragraph [ref=f11e99]:
+                  - generic [ref=f11e100]: Interaction
+                  - generic [ref=f11e101]: Scroll to roll between layers. The field drifts toward the cursor. Every word is a window onto its own contents.
+              - generic [ref=f11e102]:
+                - button "Explore" [ref=f11e103] [cursor=pointer]
+                - button "Copy Next.js prompt" [ref=f11e104] [cursor=pointer]
+            - article [ref=f11e105]:
+              - generic [ref=f11e106]:
+                - generic [ref=f11e107]: "04"
+                - generic [ref=f11e108]: Sticky stack / GSAP
+              - generic [ref=f11e110]:
+                - heading [level=4] [ref=f11e111]:
+                  - button "Plates" [ref=f11e112] [cursor=pointer]
+                - paragraph [ref=f11e113]: Each layer holds the frame while the next climbs over it. The one behind recedes instead of leaving, so the stack accumulates as you read down it.
+                - paragraph [ref=f11e114]:
+                  - generic [ref=f11e115]: Interaction
+                  - generic [ref=f11e116]: Scroll to descend through the layers. Each plate holds, then the next takes the frame. The stack stays behind you.
+              - generic [ref=f11e117]:
+                - button "Explore" [ref=f11e118] [cursor=pointer]
+                - button "Copy Next.js prompt" [ref=f11e119] [cursor=pointer]
+            - article [ref=f11e120]:
+              - generic [ref=f11e121]:
+                - generic [ref=f11e122]: "05"
+                - generic [ref=f11e123]: Canvas / forward dolly
+              - generic [ref=f11e125]:
+                - heading [level=4] [ref=f11e126]:
+                  - button "Depth" [ref=f11e127] [cursor=pointer]
+                - paragraph [ref=f11e128]: Technologies sit at real distances ahead of you and scroll flies the camera through them. Each layer is a gate; passing through it regrades the frame.
+                - paragraph [ref=f11e129]:
+                  - generic [ref=f11e130]: Interaction
+                  - generic [ref=f11e131]: Scroll to fly forward. Names resolve out of the far plane and pass you. The cursor steers.
+              - generic [ref=f11e132]:
+                - button "Explore" [ref=f11e133] [cursor=pointer]
+                - button "Copy Next.js prompt" [ref=f11e134] [cursor=pointer]
+        - generic [ref=f11e135]:
+          - generic [ref=f11e136]:
+            - heading "Full page" [level=3] [ref=f11e137]
+            - paragraph [ref=f11e138]: Owns the whole viewport. The deep view a section hands off to.
+            - generic [ref=f11e139]: "06"
+          - generic [ref=f11e140]:
+            - article [ref=f11e141]:
+              - generic [ref=f11e142]:
+                - generic [ref=f11e143]: "01"
+                - generic [ref=f11e144]: Canvas / projected 3D
+              - generic [ref=f11e146]:
+                - heading [level=4] [ref=f11e147]:
+                  - button "Orbit" [ref=f11e148] [cursor=pointer]
+                - paragraph [ref=f11e149]: "One ring per layer, one body per technology, orbiting a core. Depth, not decoration: a technology closer to the viewer is literally closer to the work."
+                - paragraph [ref=f11e150]:
+                  - generic [ref=f11e151]: Interaction
+                  - generic [ref=f11e152]: Move to steer the camera. Hover a body to raise it out of its ring. Click to focus and hold the shot.
+              - generic [ref=f11e153]:
+                - button "Explore" [ref=f11e154] [cursor=pointer]
+                - button "Copy Next.js prompt" [ref=f11e155] [cursor=pointer]
+            - article [ref=f11e156]:
+              - generic [ref=f11e157]:
+                - generic [ref=f11e158]: "02"
+                - generic [ref=f11e159]: Scroll-driven / GSAP
+              - generic [ref=f11e161]:
+                - heading [level=4] [ref=f11e162]:
+                  - button "Reel" [ref=f11e163] [cursor=pointer]
+                - paragraph [ref=f11e164]: "Six scenes, six colour grades, one lateral pan. Scroll is the edit: the reel moves, the scene cuts, the layer states its case and hands over."
+                - paragraph [ref=f11e165]:
+                  - generic [ref=f11e166]: Interaction
+                  - generic [ref=f11e167]: Scroll to pan the reel. Each scene grades the frame and cuts its contents in. Click a chapter to jump.
+              - generic [ref=f11e168]:
+                - button "Explore" [ref=f11e169] [cursor=pointer]
+                - button "Copy Next.js prompt" [ref=f11e170] [cursor=pointer]
+            - article [ref=f11e171]:
+              - generic [ref=f11e172]:
+                - generic [ref=f11e173]: "03"
+                - generic [ref=f11e174]: Canvas / graph
+              - generic [ref=f11e176]:
+                - heading [level=4] [ref=f11e177]:
+                  - button "Lattice" [ref=f11e178] [cursor=pointer]
+                - paragraph [ref=f11e179]: Every technology is a node, every adjacency is a wire. Signals travel the wires so the graph reads as a running system rather than a diagram of one.
+                - paragraph [ref=f11e180]:
+                  - generic [ref=f11e181]: Interaction
+                  - generic [ref=f11e182]: Hover a node to light its neighbourhood and dim everything else. Click to lock the trace. Filter by layer.
+              - generic [ref=f11e183]:
+                - button "Explore" [ref=f11e184] [cursor=pointer]
+                - button "Copy Next.js prompt" [ref=f11e185] [cursor=pointer]
+            - article [ref=f11e186]:
+              - generic [ref=f11e187]:
+                - generic [ref=f11e188]: "04"
+                - generic [ref=f11e189]: DOM / kinetic type
+              - generic [ref=f11e191]:
+                - heading [level=4] [ref=f11e192]:
+                  - button "Kinetic" [ref=f11e193] [cursor=pointer]
+                - paragraph [ref=f11e194]: Six drifting bands of outlined display type. Depth comes from speed and scale, not from cards. Nothing on screen is a container.
+                - paragraph [ref=f11e195]:
+                  - generic [ref=f11e196]: Interaction
+                  - generic [ref=f11e197]: Scroll or drag to shear the field. Hover to fill a word and displace its neighbours. Click to promote it to full frame.
+              - generic [ref=f11e198]:
+                - button "Explore" [ref=f11e199] [cursor=pointer]
+                - button "Copy Next.js prompt" [ref=f11e200] [cursor=pointer]
+            - article [ref=f11e201]:
+              - generic [ref=f11e202]:
+                - generic [ref=f11e203]: "05"
+                - generic [ref=f11e204]: CSS 3D / drag physics
+              - generic [ref=f11e206]:
+                - heading [level=4] [ref=f11e207]:
+                  - button "Deck" [ref=f11e208] [cursor=pointer]
+                - paragraph [ref=f11e209]: Cards with real depth, real momentum, and real resistance at the ends. Switching layers deals a new hand; opening a card expands the card itself.
+                - paragraph [ref=f11e210]:
+                  - generic [ref=f11e211]: Interaction
+                  - generic [ref=f11e212]: Drag or flick to move through the deck. Tilt follows the cursor. Click the front card to expand it.
+              - generic [ref=f11e213]:
+                - button "Explore" [ref=f11e214] [cursor=pointer]
+                - button "Copy Next.js prompt" [ref=f11e215] [cursor=pointer]
+            - article [ref=f11e216]:
+              - generic [ref=f11e217]:
+                - generic [ref=f11e218]: "06"
+                - generic [ref=f11e219]: CSS 3D / system trace
+              - generic [ref=f11e221]:
+                - heading [level=4] [ref=f11e222]:
+                  - button "Strata" [ref=f11e223] [cursor=pointer]
+                - paragraph [ref=f11e224]: Six slabs in the order a request crosses them. Send a request and watch it descend, fire each layer, and come back. The composition is the point.
+                - paragraph [ref=f11e225]:
+                  - generic [ref=f11e226]: Interaction
+                  - generic [ref=f11e227]: Hover a slab to lift it out of the stack. Send a request to trace the path. Click to open a layer.
+              - generic [ref=f11e228]:
+                - button "Explore" [ref=f11e229] [cursor=pointer]
+                - button "Copy Next.js prompt" [ref=f11e230] [cursor=pointer]
+      - generic [ref=f11e231]:
+        - generic [ref=f11e232]:
+          - heading "Hero" [level=2] [ref=f11e233]
+          - paragraph [ref=f11e234]: The first five seconds.
+          - generic [ref=f11e235]: "05"
+        - generic [ref=f11e236]:
+          - generic [ref=f11e237]:
+            - heading "Full page" [level=3] [ref=f11e238]
+            - paragraph [ref=f11e239]: Owns the whole viewport. The deep view a section hands off to.
+            - generic [ref=f11e240]: "05"
+          - generic [ref=f11e241]:
+            - article [ref=f11e242]:
+              - generic [ref=f11e243]:
+                - generic [ref=f11e244]: "01"
+                - generic [ref=f11e245]: Canvas / iris reveal
+              - generic [ref=f11e247]:
+                - heading [level=4] [ref=f11e248]:
+                  - button "Aperture" [ref=f11e249] [cursor=pointer]
+                - paragraph [ref=f11e250]: A ten bladed iris opens onto the name and a raking light crosses it once as it settles. The blades stay as a corner vignette that the pointer can stop down again.
+                - paragraph [ref=f11e251]:
+                  - generic [ref=f11e252]: Interaction
+                  - generic [ref=f11e253]: Move up and down to change the stop; the readout tracks the real aperture value.
+              - generic [ref=f11e254]:
+                - button "Explore" [ref=f11e255] [cursor=pointer]
+                - button "Copy Next.js prompt" [ref=f11e256] [cursor=pointer]
+            - article [ref=f11e257]:
+              - generic [ref=f11e258]:
+                - generic [ref=f11e259]: "02"
+                - generic [ref=f11e260]: Canvas / weighted type
+              - generic [ref=f11e262]:
+                - heading [level=4] [ref=f11e263]:
+                  - button "Mass" [ref=f11e264] [cursor=pointer]
+                - paragraph [ref=f11e265]: The name at the full measure of the frame, each glyph picking a real font weight and width from its distance to the pointer. The line is renormalised every frame, so one letter swelling compresses the rest.
+                - paragraph [ref=f11e266]:
+                  - generic [ref=f11e267]: Interaction
+                  - generic [ref=f11e268]: Move across the name. Weight is picked up fast and shed slowly, so the type feels heavy.
+              - generic [ref=f11e269]:
+                - button "Explore" [ref=f11e270] [cursor=pointer]
+                - button "Copy Next.js prompt" [ref=f11e271] [cursor=pointer]
+            - article [ref=f11e272]:
+              - generic [ref=f11e273]:
+                - generic [ref=f11e274]: "03"
+                - generic [ref=f11e275]: CSS 3D / camera dolly
+              - generic [ref=f11e277]:
+                - heading [level=4] [ref=f11e278]:
+                  - button "Corridor" [ref=f11e279] [cursor=pointer]
+                - paragraph [ref=f11e280]: Seven hairline gates and two walls recede toward a vanishing point, with the name at the mouth and the supporting lines set metres behind it. The pointer dollies the camera through the whole scene.
+                - paragraph [ref=f11e281]:
+                  - generic [ref=f11e282]: Interaction
+                  - generic [ref=f11e283]: Move to steer and dolly. Anything receiving focus eases the camera flat so type is never read at an angle.
+              - generic [ref=f11e284]:
+                - button "Explore" [ref=f11e285] [cursor=pointer]
+                - button "Copy Next.js prompt" [ref=f11e286] [cursor=pointer]
+            - article [ref=f11e287]:
+              - generic [ref=f11e288]:
+                - generic [ref=f11e289]: "04"
+                - generic [ref=f11e290]: DOM / scramble resolve
+              - generic [ref=f11e292]:
+                - heading [level=4] [ref=f11e293]:
+                  - button "Signal" [ref=f11e294] [cursor=pointer]
+                - paragraph [ref=f11e295]: Each character cycles through noise on a fixed cadence and locks on a staggered schedule. The strip beside it reports locked count, entropy, substitutions and elapsed time, all computed from the run itself.
+                - paragraph [ref=f11e296]:
+                  - generic [ref=f11e297]: Interaction
+                  - generic [ref=f11e298]: Hover a word to re-resolve it. Resolve again re-runs the whole name from the keyboard.
+              - generic [ref=f11e299]:
+                - button "Explore" [ref=f11e300] [cursor=pointer]
+                - button "Copy Next.js prompt" [ref=f11e301] [cursor=pointer]
+            - article [ref=f11e302]:
+              - generic [ref=f11e303]:
+                - generic [ref=f11e304]: "05"
+                - generic [ref=f11e305]: Canvas / volumetric field
+              - generic [ref=f11e307]:
+                - heading [level=4] [ref=f11e308]:
+                  - button "Horizon" [ref=f11e309] [cursor=pointer]
+                - paragraph [ref=f11e310]: A lit horizon with volumetric shafts and drifting particulate, painted on canvas, with the name rising through a static fade so it clears the light as it arrives.
+                - paragraph [ref=f11e311]:
+                  - generic [ref=f11e312]: Interaction
+                  - generic [ref=f11e313]: Move to slide the light source and shift the particulate against it.
+              - generic [ref=f11e314]:
+                - button "Explore" [ref=f11e315] [cursor=pointer]
+                - button "Copy Next.js prompt" [ref=f11e316] [cursor=pointer]
+      - generic [ref=f11e317]:
+        - generic [ref=f11e318]:
+          - heading "About" [level=2] [ref=f11e319]
+          - paragraph [ref=f11e320]: The person behind the stack.
+          - generic [ref=f11e321]: "05"
+        - generic [ref=f11e322]:
+          - generic [ref=f11e323]:
+            - heading "Full page" [level=3] [ref=f11e324]
+            - paragraph [ref=f11e325]: Owns the whole viewport. The deep view a section hands off to.
+            - generic [ref=f11e326]: "05"
+          - generic [ref=f11e327]:
+            - article [ref=f11e328]:
+              - generic [ref=f11e329]:
+                - generic [ref=f11e330]: "01"
+                - generic [ref=f11e331]: Canvas axis / scrubbed time
+              - generic [ref=f11e333]:
+                - heading [level=4] [ref=f11e334]:
+                  - button "Transcript" [ref=f11e335] [cursor=pointer]
+                - paragraph [ref=f11e336]: Nine exchanges laid on an eighteen minute axis you drag. The question and answer under the playhead resolve in phrases; everything else stays a timecode.
+                - paragraph [ref=f11e337]:
+                  - generic [ref=f11e338]: Interaction
+                  - generic [ref=f11e339]: Drag the axis or press Left and Right to move through the recording. Up and Down jump a whole exchange, and every timecode in the index is a button.
+              - generic [ref=f11e340]:
+                - button "Explore" [ref=f11e341] [cursor=pointer]
+                - button "Copy Next.js prompt" [ref=f11e342] [cursor=pointer]
+            - article [ref=f11e343]:
+              - generic [ref=f11e344]:
+                - generic [ref=f11e345]: "02"
+                - generic [ref=f11e346]: Canvas / signed distance field
+              - generic [ref=f11e348]:
+                - heading [level=4] [ref=f11e349]:
+                  - button "Portrait" [ref=f11e350] [cursor=pointer]
+                - paragraph [ref=f11e351]: A figure built from a distance field, lit by a key light you steer, and printed through a dot, ridge or raster screen. The name is set in two layers so the type passes behind the head and in front of the shoulder.
+                - paragraph [ref=f11e352]:
+                  - generic [ref=f11e353]: Interaction
+                  - generic [ref=f11e354]: Move to steer the key light. Press 1, 2 or 3, or use the three screen buttons, to change how the figure is printed.
+              - generic [ref=f11e355]:
+                - button "Explore" [ref=f11e356] [cursor=pointer]
+                - button "Copy Next.js prompt" [ref=f11e357] [cursor=pointer]
+            - article [ref=f11e358]:
+              - generic [ref=f11e359]:
+                - generic [ref=f11e360]: "03"
+                - generic [ref=f11e361]: DOM / scroll-lit type
+              - generic [ref=f11e363]:
+                - heading [level=4] [ref=f11e364]:
+                  - button "Manifesto" [ref=f11e365] [cursor=pointer]
+                - paragraph [ref=f11e366]: Six paragraphs held at reading measure, lit one at a time as they cross the reading line. The single authored moment is a sentence struck through and replaced by the one that is actually true.
+                - paragraph [ref=f11e367]:
+                  - generic [ref=f11e368]: Interaction
+                  - generic [ref=f11e369]: Scroll. The paragraph at the reading line is at full ink; the correction draws itself as you pass through it.
+              - generic [ref=f11e370]:
+                - button "Explore" [ref=f11e371] [cursor=pointer]
+                - button "Copy Next.js prompt" [ref=f11e372] [cursor=pointer]
+            - article [ref=f11e373]:
+              - generic [ref=f11e374]:
+                - generic [ref=f11e375]: "04"
+                - generic [ref=f11e376]: Canvas field / DOM nodes
+              - generic [ref=f11e378]:
+                - heading [level=4] [ref=f11e379]:
+                  - button "Constellation" [ref=f11e380] [cursor=pointer]
+                - paragraph [ref=f11e381]: Working principles arranged as a field with real dependencies between them. Ask the field a different question and the same seven nodes re-project while the edges hold still.
+                - paragraph [ref=f11e382]:
+                  - generic [ref=f11e383]: Interaction
+                  - generic [ref=f11e384]: Hover or Tab a node to read it, click to pin it. Press 1, 2 or 3 to ask the field a different question.
+              - generic [ref=f11e385]:
+                - button "Explore" [ref=f11e386] [cursor=pointer]
+                - button "Copy Next.js prompt" [ref=f11e387] [cursor=pointer]
+            - article [ref=f11e388]:
+              - generic [ref=f11e389]:
+                - generic [ref=f11e390]: "05"
+                - generic [ref=f11e391]: DOM table / canvas series
+              - generic [ref=f11e393]:
+                - heading [level=4] [ref=f11e394]:
+                  - button "Ledger" [ref=f11e395] [cursor=pointer]
+                - paragraph [ref=f11e396]: Nine rows of self-logged time set against the estimate written before the log started, with twelve weeks of shape behind each one. Move the probe and every mean becomes that week reading.
+                - paragraph [ref=f11e397]:
+                  - generic [ref=f11e398]: Interaction
+                  - generic [ref=f11e399]: Move across the twelve week field to set the probe, or use Left and Right. The mean column becomes the reading for the week under the probe.
+              - generic [ref=f11e400]:
+                - button "Explore" [ref=f11e401] [cursor=pointer]
+                - button "Copy Next.js prompt" [ref=f11e402] [cursor=pointer]
+      - generic [ref=f11e403]:
+        - generic [ref=f11e404]:
+          - heading "Projects" [level=2] [ref=f11e405]
+          - paragraph [ref=f11e406]: The work, and the argument each piece makes.
+          - generic [ref=f11e407]: "03"
+        - generic [ref=f11e408]:
+          - generic [ref=f11e409]:
+            - heading "Full page" [level=3] [ref=f11e410]
+            - paragraph [ref=f11e411]: Owns the whole viewport. The deep view a section hands off to.
+            - generic [ref=f11e412]: "03"
+          - generic [ref=f11e413]:
+            - article [ref=f11e414]:
+              - generic [ref=f11e415]:
+                - generic [ref=f11e416]: "01"
+                - generic [ref=f11e417]: Canvas / full-bleed cases
+              - generic [ref=f11e419]:
+                - heading [level=4] [ref=f11e420]:
+                  - button "Reel" [ref=f11e421] [cursor=pointer]
+                - paragraph [ref=f11e422]: "Each project takes the whole viewport in turn, plate behind and argument in front, and stepping hands the frame over in the direction you asked for. The reader is never comparing six things at once, which is the point: they are reading one."
+                - paragraph [ref=f11e423]:
+                  - generic [ref=f11e424]: Interaction
+                  - generic [ref=f11e425]: Step with the arrow keys, the wheel, the two controls, or a horizontal drag. Open the full case from the button or Enter.
+              - generic [ref=f11e426]:
+                - button "Explore" [ref=f11e427] [cursor=pointer]
+                - button "Copy Next.js prompt" [ref=f11e428] [cursor=pointer]
+            - article [ref=f11e429]:
+              - generic [ref=f11e430]:
+                - generic [ref=f11e431]: "02"
+                - generic [ref=f11e432]: Canvas / momentum plane
+              - generic [ref=f11e434]:
+                - heading [level=4] [ref=f11e435]:
+                  - button "Drift" [ref=f11e436] [cursor=pointer]
+                - paragraph [ref=f11e437]: Six plates on a tile that wraps forever, thrown with real momentum and read wherever they come to rest. The reticle at the centre always names what you are looking at, so wandering never means being lost.
+                - paragraph [ref=f11e438]:
+                  - generic [ref=f11e439]: Interaction
+                  - generic [ref=f11e440]: Drag or flick the plane. Arrow keys pan, Tab walks the projects and pulls each one to the centre, and clicking a plate opens its case.
+              - generic [ref=f11e441]:
+                - button "Explore" [ref=f11e442] [cursor=pointer]
+                - button "Copy Next.js prompt" [ref=f11e443] [cursor=pointer]
+            - article [ref=f11e444]:
+              - generic [ref=f11e445]:
+                - generic [ref=f11e446]: "03"
+                - generic [ref=f11e447]: DOM / fixed-frame index
+              - generic [ref=f11e449]:
+                - heading [level=4] [ref=f11e450]:
+                  - button "Index" [ref=f11e451] [cursor=pointer]
+                - paragraph [ref=f11e452]: Six rows set at editorial scale, with a fixed plate column that fills in the figure, the outcome and the stack for whichever row you are on. Nothing chases the cursor and nothing is hidden behind a hover you have to guess at.
+                - paragraph [ref=f11e453]:
+                  - generic [ref=f11e454]: Interaction
+                  - generic [ref=f11e455]: Move down the rows, or Tab through them; the plate column answers each one. Enter or click opens the full case.
+              - generic [ref=f11e456]:
+                - button "Explore" [ref=f11e457] [cursor=pointer]
+                - button "Copy Next.js prompt" [ref=f11e458] [cursor=pointer]
+      - generic [ref=f11e459]:
+        - generic [ref=f11e460]:
+          - heading "Experience" [level=2] [ref=f11e461]
+          - paragraph [ref=f11e462]: Where the time actually went.
+          - generic [ref=f11e463]: "05"
+        - generic [ref=f11e464]:
+          - generic [ref=f11e465]:
+            - heading "Full page" [level=3] [ref=f11e466]
+            - paragraph [ref=f11e467]: Owns the whole viewport. The deep view a section hands off to.
+            - generic [ref=f11e468]: "05"
+          - generic [ref=f11e469]:
+            - article [ref=f11e470]:
+              - generic [ref=f11e471]:
+                - generic [ref=f11e472]: "01"
+                - generic [ref=f11e473]: DOM / month grid
+              - generic [ref=f11e475]:
+                - heading [level=4] [ref=f11e476]:
+                  - button "Overlap" [ref=f11e477] [cursor=pointer]
+                - paragraph [ref=f11e478]: Five roles drawn as bars on a shared month grid, so length reads as length and two jobs at once reads as two bars. A marker you scrub names every role that was live on any date in the span.
+                - paragraph [ref=f11e479]:
+                  - generic [ref=f11e480]: Interaction
+                  - generic [ref=f11e481]: Move across the grid to scrub the marker, or use Left and Right to step a month at a time. Click a bar to open the role.
+              - generic [ref=f11e482]:
+                - button "Explore" [ref=f11e483] [cursor=pointer]
+                - button "Copy Next.js prompt" [ref=f11e484] [cursor=pointer]
+            - article [ref=f11e485]:
+              - generic [ref=f11e486]:
+                - generic [ref=f11e487]: "02"
+                - generic [ref=f11e488]: Canvas / plotted line
+              - generic [ref=f11e490]:
+                - heading [level=4] [ref=f11e491]:
+                  - button "Altitude" [ref=f11e492] [cursor=pointer]
+                - paragraph [ref=f11e493]: A step line across four rungs of responsibility, where every role is a plateau and every move is a climb. The contract years run as a second line below the main one, because altitude is not monotonic and pretending it is would be a lie.
+                - paragraph [ref=f11e494]:
+                  - generic [ref=f11e495]: Interaction
+                  - generic [ref=f11e496]: Move across the plot to scrub a reader line that names the rung and the roles at that date. Click or focus a plateau to open the role.
+              - generic [ref=f11e497]:
+                - button "Explore" [ref=f11e498] [cursor=pointer]
+                - button "Copy Next.js prompt" [ref=f11e499] [cursor=pointer]
+            - article [ref=f11e500]:
+              - generic [ref=f11e501]:
+                - generic [ref=f11e502]: "03"
+                - generic [ref=f11e503]: DOM / framed handoff
+              - generic [ref=f11e505]:
+                - heading [level=4] [ref=f11e506]:
+                  - button "Tenure" [ref=f11e507] [cursor=pointer]
+                - paragraph [ref=f11e508]: Each role takes the whole viewport in turn, with a field of 79 month hairlines behind it and only its own months lit. Stepping forward slides that lit window along the career, so you never lose your place in the whole.
+                - paragraph [ref=f11e509]:
+                  - generic [ref=f11e510]: Interaction
+                  - generic [ref=f11e511]: Step with the arrows, the two controls, a swipe, or a click anywhere on the career rail.
+              - generic [ref=f11e512]:
+                - button "Explore" [ref=f11e513] [cursor=pointer]
+                - button "Copy Next.js prompt" [ref=f11e514] [cursor=pointer]
+            - article [ref=f11e515]:
+              - generic [ref=f11e516]:
+                - generic [ref=f11e517]: "04"
+                - generic [ref=f11e518]: DOM / ruled document
+              - generic [ref=f11e520]:
+                - heading [level=4] [ref=f11e521]:
+                  - button "Dossier" [ref=f11e522] [cursor=pointer]
+                - paragraph [ref=f11e523]: The whole history written out at full density on a 24px baseline, with dates in a fixed tabular column and marginalia beside each role. Selecting any technology cross-references it across every role, so the years come from the record rather than from a claim.
+                - paragraph [ref=f11e524]:
+                  - generic [ref=f11e525]: Interaction
+                  - generic [ref=f11e526]: Read it. Click any technology to cross-reference it across the whole history, and the index tracks where you are.
+              - generic [ref=f11e527]:
+                - button "Explore" [ref=f11e528] [cursor=pointer]
+                - button "Copy Next.js prompt" [ref=f11e529] [cursor=pointer]
+            - article [ref=f11e530]:
+              - generic [ref=f11e531]:
+                - generic [ref=f11e532]: "05"
+                - generic [ref=f11e533]: DOM + canvas / replayed log
+              - generic [ref=f11e535]:
+                - heading [level=4] [ref=f11e536]:
+                  - button "Ledger" [ref=f11e537] [cursor=pointer]
+                - paragraph [ref=f11e538]: "Fifty timestamped events across five sources, from joining to shipping to adopting a technology, replayed by a playhead you drag. A state panel beside it answers what was true on any date: roles live, rung, stack size, months elapsed."
+                - paragraph [ref=f11e539]:
+                  - generic [ref=f11e540]: Interaction
+                  - generic [ref=f11e541]: Drag the playhead, or focus it and use the arrow keys, to replay the log forward and backward. The state panel follows.
+              - generic [ref=f11e542]:
+                - button "Explore" [ref=f11e543] [cursor=pointer]
+                - button "Copy Next.js prompt" [ref=f11e544] [cursor=pointer]
+      - generic [ref=f11e545]:
+        - generic [ref=f11e546]:
+          - heading "Contact" [level=2] [ref=f11e547]
+          - paragraph [ref=f11e548]: The last thing they read before deciding.
+          - generic [ref=f11e549]: "03"
+        - generic [ref=f11e550]:
+          - generic [ref=f11e551]:
+            - heading "Full page" [level=3] [ref=f11e552]
+            - paragraph [ref=f11e553]: Owns the whole viewport. The deep view a section hands off to.
+            - generic [ref=f11e554]: "03"
+          - generic [ref=f11e555]:
+            - article [ref=f11e556]:
+              - generic [ref=f11e557]:
+                - generic [ref=f11e558]: "01"
+                - generic [ref=f11e559]: Canvas / staged transmission
+              - generic [ref=f11e561]:
+                - heading [level=4] [ref=f11e562]:
+                  - button "Dispatch" [ref=f11e563] [cursor=pointer]
+                - paragraph [ref=f11e564]: "A contact form staged as a transmission: composing, sending and confirming are three authored states with real motion between them. The send is the only moment on the page that is allowed to be cinematic."
+                - paragraph [ref=f11e565]:
+                  - generic [ref=f11e566]: Interaction
+                  - generic [ref=f11e567]: Fill the form and submit. The message becomes a packet that crosses the lane and lands on the far marker.
+              - generic [ref=f11e568]:
+                - button "Explore" [ref=f11e569] [cursor=pointer]
+                - button "Copy Next.js prompt" [ref=f11e570] [cursor=pointer]
+            - article [ref=f11e571]:
+              - generic [ref=f11e572]:
+                - generic [ref=f11e573]: "02"
+                - generic [ref=f11e574]: Type / curtain reveal
+              - generic [ref=f11e576]:
+                - heading [level=4] [ref=f11e577]:
+                  - button "Statement" [ref=f11e578] [cursor=pointer]
+                - paragraph [ref=f11e579]: A full-viewport typographic invitation with the address in plain sight and the form one intent away. The statement does not disappear when the form arrives, it becomes the header.
+                - paragraph [ref=f11e580]:
+                  - generic [ref=f11e581]: Interaction
+                  - generic [ref=f11e582]: Press "Write to me" and the composition lifts to bring the form into view, with focus landing in the first field.
+              - generic [ref=f11e583]:
+                - button "Explore" [ref=f11e584] [cursor=pointer]
+                - button "Copy Next.js prompt" [ref=f11e585] [cursor=pointer]
+            - article [ref=f11e586]:
+              - generic [ref=f11e587]:
+                - generic [ref=f11e588]: "03"
+                - generic [ref=f11e589]: Canvas / live instrument
+              - generic [ref=f11e591]:
+                - heading [level=4] [ref=f11e592]:
+                  - button "Console" [ref=f11e593] [cursor=pointer]
+                - paragraph [ref=f11e594]: Local time, working hours and the reply window rendered as an instrument you read rather than a paragraph you skim. The clock is real; the reply window is labelled as a commitment, not a measurement.
+                - paragraph [ref=f11e595]:
+                  - generic [ref=f11e596]: Interaction
+                  - generic [ref=f11e597]: The instrument updates once a second. Fill the brief on the right, including when the work needs to start.
+              - generic [ref=f11e598]:
+                - button "Explore" [ref=f11e599] [cursor=pointer]
+                - button "Copy Next.js prompt" [ref=f11e600] [cursor=pointer]
+      - generic [ref=f11e601]:
+        - generic [ref=f11e602]:
+          - heading "Navigation" [level=2] [ref=f11e603]
+          - paragraph [ref=f11e604]: Navbars and docks. Always present, never loud.
+          - generic [ref=f11e605]: "04"
+        - generic [ref=f11e606]:
+          - generic [ref=f11e607]:
+            - heading "Full page" [level=3] [ref=f11e608]
+            - paragraph [ref=f11e609]: Owns the whole viewport. The deep view a section hands off to.
+            - generic [ref=f11e610]: "04"
+          - generic [ref=f11e611]:
+            - article [ref=f11e612]:
+              - generic [ref=f11e613]:
+                - generic [ref=f11e614]: "01"
+                - generic [ref=f11e615]: Overlay / staged reveal
+              - generic [ref=f11e617]:
+                - heading [level=4] [ref=f11e618]:
+                  - button "Atrium" [ref=f11e619] [cursor=pointer]
+                - paragraph [ref=f11e620]: A bar that stays honest about its width by putting the long tail behind a single disclosure. The panel drops from the edge it was opened from and resolves its columns in sequence.
+                - paragraph [ref=f11e621]:
+                  - generic [ref=f11e622]: Interaction
+                  - generic [ref=f11e623]: Press Everything, or Tab to it and press Enter. Escape closes and returns you to the trigger.
+              - generic [ref=f11e624]:
+                - button "Explore" [ref=f11e625] [cursor=pointer]
+                - button "Copy Next.js prompt" [ref=f11e626] [cursor=pointer]
+            - article [ref=f11e627]:
+              - generic [ref=f11e628]:
+                - generic [ref=f11e629]: "02"
+                - generic [ref=f11e630]: Palette / fuzzy filter
+              - generic [ref=f11e632]:
+                - heading [level=4] [ref=f11e633]:
+                  - button "Palette" [ref=f11e634] [cursor=pointer]
+                - paragraph [ref=f11e635]: A command surface with a scored subsequence filter, arrow navigation and full focus management. It opens with no animation on purpose, because that is what a surface opened fifty times a day earns.
+                - paragraph [ref=f11e636]:
+                  - generic [ref=f11e637]: Interaction
+                  - generic [ref=f11e638]: Press Control or Command and K. Type to filter, arrows to move, Enter to go, Escape to close.
+              - generic [ref=f11e639]:
+                - button "Explore" [ref=f11e640] [cursor=pointer]
+                - button "Copy Next.js prompt" [ref=f11e641] [cursor=pointer]
+            - article [ref=f11e642]:
+              - generic [ref=f11e643]:
+                - generic [ref=f11e644]: "03"
+                - generic [ref=f11e645]: Radial / pointer anchored
+              - generic [ref=f11e647]:
+                - heading [level=4] [ref=f11e648]:
+                  - button "Compass" [ref=f11e649] [cursor=pointer]
+                - paragraph [ref=f11e650]: Six destinations on a ring that opens under the pointer, armed by direction rather than by distance. A button and four arrow keys reach the same menu without a gesture.
+                - paragraph [ref=f11e651]:
+                  - generic [ref=f11e652]: Interaction
+                  - generic [ref=f11e653]: Hold the page for a moment, or right click, or press the Compass button. Arrow keys rotate, Enter goes.
+              - generic [ref=f11e654]:
+                - button "Explore" [ref=f11e655] [cursor=pointer]
+                - button "Copy Next.js prompt" [ref=f11e656] [cursor=pointer]
+            - article [ref=f11e657]:
+              - generic [ref=f11e658]:
+                - generic [ref=f11e659]: "04"
+                - generic [ref=f11e660]: Type / mask reveal
+              - generic [ref=f11e662]:
+                - heading [level=4] [ref=f11e663]:
+                  - button "Index" [ref=f11e664] [cursor=pointer]
+                - paragraph [ref=f11e665]: A takeover built from nothing but type. Lines rise out of their own mask, the one under the pointer holds full ink while the rest step back, and closing sends them the way they came.
+                - paragraph [ref=f11e666]:
+                  - generic [ref=f11e667]: Interaction
+                  - generic [ref=f11e668]: Open the index, then move or Tab through the lines. Escape closes and returns to the trigger.
+              - generic [ref=f11e669]:
+                - button "Explore" [ref=f11e670] [cursor=pointer]
+                - button "Copy Next.js prompt" [ref=f11e671] [cursor=pointer]
+    - generic [ref=f11e672]:
+      - heading "This page picks the direction. Claude builds it." [level=2] [ref=f11e674]
+      - generic [ref=f11e675]:
+        - generic [ref=f11e676]:
+          - generic [ref=f11e677]: "01"
+          - generic [ref=f11e678]:
+            - heading "Explore, do not preview" [level=3] [ref=f11e679]
+            - paragraph [ref=f11e680]: Every concept is live. Steer the camera, drag the deck, scrub the reel, trace a request. What you judge is the real interaction model, not a screenshot of one.
+        - generic [ref=f11e681]:
+          - generic [ref=f11e682]: "02"
+          - generic [ref=f11e683]:
+            - heading "Section or full page" [level=3] [ref=f11e684]
+            - paragraph [ref=f11e685]: Section concepts are shown inside a real scrolling page, with a neighbour above and below, so you can judge how they sit. Each one hands off to its full-page counterpart.
+        - generic [ref=f11e686]:
+          - generic [ref=f11e687]: "03"
+          - generic [ref=f11e688]:
+            - heading "Copy the Next.js prompt" [level=3] [ref=f11e689]
+            - paragraph [ref=f11e690]: "Each concept generates its own implementation brief: philosophy, choreography with exact values, data shape, packages, component tree, and accessibility and performance budgets. Paste it into Claude in this repository."
+  - contentinfo [ref=f11e691]:
+    - generic [ref=f11e692]: Portfolio Design Explorer
+    - generic [ref=f11e693]: Concept playground, not production code
+  - status:
+    - generic: Next.js prompt copied

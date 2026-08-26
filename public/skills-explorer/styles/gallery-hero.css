@@ -1,0 +1,1364 @@
+/* ============================================================================
+   AREA: HERO  -  styles for the ten hero concepts.
+   ----------------------------------------------------------------------------
+   Every selector here starts from a .hero-* concept root. Nothing in this file
+   may style a bare element or a shell class, because seven areas are authored
+   in parallel against the same document.
+
+   Shared vocabulary, deliberately thin:
+     .is-page / .is-section   which host the concept was mounted into
+     .is-open / .is-in        entry state, toggled once by the concept
+     --c-accent               the concept signature hue, scoped to its own root
+
+   The corner radius for the whole application is 2px. The only round things
+   below are things that are genuinely dots.
+   ========================================================================== */
+
+/* ==========================================================================
+   P01  APERTURE
+   ========================================================================== */
+.hero-aperture {
+  --c-accent: #c9a96a;
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  /* The interior of the opening is lit and the surround is not. Without this
+     step the plate is the same value as the page and the aperture is an
+     invisible rectangle. Painted once, never animated. */
+  background:
+    radial-gradient(118% 96% at 46% 44%, #16161d 0%, #0d0d12 42%, #08080a 76%);
+  isolation: isolate;
+}
+
+.hero-aperture__frame {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 0.64fr);
+  align-items: end;
+  align-content: center;
+  gap: clamp(2rem, 6vw, 6rem);
+  padding: clamp(1.5rem, 5vh, 3rem) var(--gutter);
+}
+
+.hero-aperture__lead,
+.hero-aperture__aside {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 0;
+}
+
+.hero-aperture__name {
+  font-weight: 500;
+  font-size: clamp(3.5rem, 12vw, 11rem);
+  letter-spacing: -0.055em;
+  line-height: 0.84;
+}
+.hero-aperture__line {
+  display: block;
+  overflow: hidden;
+  /* Descenders on a 0.84 line-height clip against an overflow box, so the
+     line box is padded and pulled back by the same amount. */
+  padding-bottom: 0.08em;
+  margin-bottom: -0.08em;
+}
+.hero-aperture__line > span {
+  display: block;
+  transform: translate3d(0, 108%, 0);
+  transition: transform 900ms var(--ease-out);
+}
+.hero-aperture__line:nth-child(2) > span { transition-delay: 90ms; }
+.hero-aperture.is-open .hero-aperture__line > span { transform: none; }
+
+/* The role caption belongs to the name, so it sits tight under it. The value
+   line does not, so it gets its own column. */
+.hero-aperture__role {
+  margin-top: 0.875rem;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.hero-aperture__value {
+  max-width: 34ch;
+  font-size: clamp(1rem, 1.6vw, 1.375rem);
+  line-height: 1.5;
+  color: var(--ink-2);
+}
+
+.hero-aperture__meta {
+  align-self: stretch;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.875rem 2rem;
+  margin-top: 1.5rem;
+  border-top: 1px solid var(--line);
+  padding-top: 0.875rem;
+}
+.hero-aperture__meta dt {
+  font-family: var(--font-mono);
+  font-size: 0.5625rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ink-4);
+}
+.hero-aperture__meta dd {
+  margin: 0.25rem 0 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8125rem;
+  color: var(--ink-2);
+}
+/* The one genuinely semantic dot in the composition: it marks a live state. */
+.hero-aperture__meta dd i {
+  width: 5px;
+  height: 5px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--c-accent);
+}
+
+.hero-aperture__cta {
+  display: flex;
+  gap: 0.625rem;
+  margin-top: 1.75rem;
+}
+
+/* The support content resolves after the plate has cleared it. Delays are
+   staggered 80ms, the upper edge before a group reads as a queue. */
+.hero-aperture__role,
+.hero-aperture__value,
+.hero-aperture__meta,
+.hero-aperture__cta {
+  opacity: 0;
+  transform: translate3d(0, 14px, 0);
+  transition: opacity 620ms var(--ease-out), transform 620ms var(--ease-out);
+}
+.hero-aperture.is-open .hero-aperture__role,
+.hero-aperture.is-open .hero-aperture__value,
+.hero-aperture.is-open .hero-aperture__meta,
+.hero-aperture.is-open .hero-aperture__cta {
+  opacity: 1;
+  transform: none;
+}
+.hero-aperture.is-open .hero-aperture__value { transition-delay: 340ms; }
+.hero-aperture.is-open .hero-aperture__role  { transition-delay: 420ms; }
+.hero-aperture.is-open .hero-aperture__meta  { transition-delay: 420ms; }
+.hero-aperture.is-open .hero-aperture__cta   { transition-delay: 500ms; }
+
+.hero-aperture__iris {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.hero-aperture__stop {
+  position: absolute;
+  z-index: 3;
+  top: clamp(1.5rem, 5vh, 3rem);
+  right: var(--gutter);
+  display: flex;
+  align-items: baseline;
+  gap: 0.625rem;
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-4);
+}
+.hero-aperture__stop b { font-weight: 500; color: var(--c-accent); }
+
+/* Mobile is a different composition: single column, name first, meta halved,
+   actions full width. The iris drops to six blades in the concept itself. */
+@media (max-width: 767px) {
+  .hero-aperture__frame {
+    grid-template-columns: minmax(0, 1fr);
+    align-items: stretch;
+    gap: 1.25rem;
+    padding-bottom: clamp(2rem, 8vh, 4rem);
+  }
+  .hero-aperture__name  { font-size: 16vw; }
+  .hero-aperture__value { margin-top: 0; max-width: none; font-size: 1.0625rem; }
+  .hero-aperture__meta  { grid-template-columns: minmax(0, 1fr); margin-top: 1.25rem; }
+  /* Two rows, not four. The two that answer "can I hire him" survive. */
+  .hero-aperture__meta div:nth-child(3),
+  .hero-aperture__meta div:nth-child(4) { display: none; }
+  .hero-aperture__cta {
+    margin-top: 1.5rem;
+    align-self: stretch;
+    flex-direction: column;
+  }
+  .hero-aperture__cta .btn { justify-content: center; }
+  .hero-aperture__stop { top: 1rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-aperture__line > span,
+  .hero-aperture__role,
+  .hero-aperture__value,
+  .hero-aperture__meta,
+  .hero-aperture__cta {
+    transform: none !important;
+    opacity: 1 !important;
+    transition: none !important;
+  }
+}
+
+/* ==========================================================================
+   P02  MASS
+   ========================================================================== */
+.hero-mass {
+  --c-accent: #5b6ef5;
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  background: var(--void);
+}
+
+/* min-height:0 or the canvas refuses to shrink inside the grid row and the
+   bottom bar gets pushed off the frame. */
+.hero-mass__type { width: 100%; height: 100%; min-height: 0; }
+
+.hero-mass__bar {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: clamp(1rem, 3vw, 2.5rem);
+  padding: clamp(0.875rem, 2vh, 1.25rem) var(--gutter);
+  border-top: 1px solid var(--line);
+  opacity: 0;
+  transform: translate3d(0, 12px, 0);
+  transition: opacity 560ms var(--ease-out), transform 560ms var(--ease-out);
+  transition-delay: 420ms;
+}
+.hero-mass.is-open .hero-mass__bar { opacity: 1; transform: none; }
+
+.hero-mass__role,
+.hero-mass__avail {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  white-space: nowrap;
+}
+.hero-mass__avail i {
+  width: 5px; height: 5px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--c-accent);
+}
+.hero-mass__value {
+  min-width: 0;
+  max-width: 40ch;
+  font-size: clamp(0.9375rem, 1.3vw, 1.125rem);
+  line-height: 1.45;
+  color: var(--ink-2);
+}
+.hero-mass__cta { display: flex; gap: 0.625rem; }
+
+@media (max-width: 1099px) {
+  .hero-mass__avail { display: none; }
+  .hero-mass__bar { grid-template-columns: auto minmax(0, 1fr) auto; }
+}
+
+/* Mobile: the bar moves above the name and becomes two stacked lines. */
+@media (max-width: 767px) {
+  .hero-mass { grid-template-rows: auto minmax(0, 1fr); }
+  .hero-mass__type { grid-row: 2; }
+  .hero-mass__bar {
+    grid-row: 1;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.75rem;
+    border-top: 0;
+    border-bottom: 1px solid var(--line);
+    padding-top: clamp(1.25rem, 4vh, 2rem);
+  }
+  .hero-mass__value { max-width: none; font-size: 1rem; }
+  .hero-mass__cta { flex-direction: column; }
+  .hero-mass__cta .btn { justify-content: center; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-mass__bar { opacity: 1 !important; transform: none !important; transition: none !important; }
+}
+
+/* ==========================================================================
+   P03  CORRIDOR
+   ========================================================================== */
+.hero-corridor {
+  --c-accent: #2cbfa6;
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: var(--void);
+  perspective: 1200px;
+  perspective-origin: 50% 44%;
+}
+
+.hero-corridor__world {
+  position: absolute;
+  inset: 0;
+  transform: var(--cam, none);
+  transform-style: preserve-3d;
+  /* On the world element only. Promoting every plane would create nine
+     compositor layers in order to move one. */
+  will-change: transform;
+}
+
+/* Same box at seven depths. Same box is what makes them read as one corridor
+   instead of seven rectangles. */
+.hero-corridor__gate {
+  position: absolute;
+  inset: 16% 9%;
+  border: 1px solid var(--ink);
+  transform: translate3d(0, 0, var(--z));
+}
+.hero-corridor__gate.is-far {
+  background: radial-gradient(60% 60% at 50% 50%, color-mix(in oklab, var(--c-accent) 14%, transparent), transparent 72%);
+}
+
+.hero-corridor__wall {
+  position: absolute;
+  top: -20%;
+  height: 140%;
+  width: 2400px;
+  background-image: repeating-linear-gradient(
+    90deg,
+    rgba(236, 236, 239, 0.05) 0 1px,
+    transparent 1px 84px
+  );
+}
+.hero-corridor__wall--l {
+  left: 0;
+  transform-origin: left center;
+  transform: rotateY(90deg);
+  -webkit-mask-image: linear-gradient(90deg, rgba(0, 0, 0, 0.9), transparent 78%);
+  mask-image: linear-gradient(90deg, rgba(0, 0, 0, 0.9), transparent 78%);
+}
+.hero-corridor__wall--r {
+  right: 0;
+  transform-origin: right center;
+  transform: rotateY(-90deg);
+  -webkit-mask-image: linear-gradient(270deg, rgba(0, 0, 0, 0.9), transparent 78%);
+  mask-image: linear-gradient(270deg, rgba(0, 0, 0, 0.9), transparent 78%);
+}
+
+.hero-corridor__plane {
+  position: absolute;
+  left: var(--gutter);
+  right: var(--gutter);
+  transform: translate3d(0, 0, var(--z));
+}
+.hero-corridor__plane--deep { top: 6%; }
+.hero-corridor__plane--mid  { top: 32%; }
+.hero-corridor__plane--near { top: 46%; }
+.hero-corridor__plane--lift {
+  top: auto;
+  bottom: clamp(1.5rem, 5vh, 3rem);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 2rem;
+}
+
+/* The sign at the end of the corridor. Set large because the perspective
+   divide at -900px renders it at 57% of its CSS size. */
+.hero-corridor__sign {
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 2.75rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  line-height: 1.2;
+  color: color-mix(in oklab, var(--c-accent) 62%, transparent);
+}
+
+.hero-corridor__name {
+  font-weight: 500;
+  font-size: clamp(3rem, 9.5vw, 8.5rem);
+  letter-spacing: -0.05em;
+  line-height: 0.88;
+}
+.hero-corridor__role {
+  margin-top: 0.875rem;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+/* Set larger than it needs to be at z 0: the perspective divide at -300px
+   renders it at about 80% of its CSS size. Design against the second number. */
+.hero-corridor__value {
+  max-width: 30ch;
+  margin-left: auto;
+  font-size: 1.375rem;
+  line-height: 1.45;
+  color: var(--ink-2);
+  text-align: right;
+}
+.hero-corridor__meta {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.5rem 1.5rem;
+  border-top: 1px solid var(--line);
+  padding-top: 0.875rem;
+  max-width: 44rem;
+}
+.hero-corridor__meta dt {
+  font-family: var(--font-mono);
+  font-size: 0.5625rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-4);
+}
+.hero-corridor__meta dd {
+  margin: 0.3125rem 0 0;
+  display: flex;
+  align-items: center;
+  gap: 0.4375rem;
+  font-size: 0.8125rem;
+  color: var(--ink-3);
+}
+.hero-corridor__meta dd i {
+  width: 5px; height: 5px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--c-accent);
+}
+.hero-corridor__cta { display: flex; gap: 0.625rem; }
+
+/* Entry. The corridor builds from the vanishing point forward, because a
+   space has to exist before anything can stand in it. */
+.hero-corridor__gate {
+  opacity: 0;
+  transition: opacity 900ms var(--ease-out);
+  transition-delay: calc(var(--k) * 70ms);
+}
+.hero-corridor.is-open .hero-corridor__gate { opacity: var(--o, 1); }
+
+.hero-corridor__wall {
+  opacity: 0;
+  transition: opacity 1100ms var(--ease-out) 240ms;
+}
+.hero-corridor.is-open .hero-corridor__wall { opacity: 1; }
+
+.hero-corridor__name,
+.hero-corridor__role,
+.hero-corridor__value,
+.hero-corridor__meta,
+.hero-corridor__sign,
+.hero-corridor__cta {
+  opacity: 0;
+  transform: translate3d(0, 40px, 0);
+  transition: opacity 820ms var(--ease-out), transform 820ms var(--ease-out);
+}
+.hero-corridor.is-open .hero-corridor__name,
+.hero-corridor.is-open .hero-corridor__role,
+.hero-corridor.is-open .hero-corridor__value,
+.hero-corridor.is-open .hero-corridor__meta,
+.hero-corridor.is-open .hero-corridor__sign,
+.hero-corridor.is-open .hero-corridor__cta {
+  opacity: 1;
+  transform: none;
+}
+/* Nearer arrives first: in a corridor, things reach you in order of distance. */
+.hero-corridor.is-open .hero-corridor__name  { transition-delay: 380ms; }
+.hero-corridor.is-open .hero-corridor__role  { transition-delay: 440ms; }
+.hero-corridor.is-open .hero-corridor__cta   { transition-delay: 460ms; }
+.hero-corridor.is-open .hero-corridor__value { transition-delay: 520ms; }
+.hero-corridor.is-open .hero-corridor__meta  { transition-delay: 560ms; }
+.hero-corridor.is-open .hero-corridor__sign  { transition-delay: 660ms; }
+
+@media (max-width: 1099px) {
+  .hero-corridor__meta { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .hero-corridor__meta div:nth-child(3) { display: none; }
+  .hero-corridor__value { font-size: 1.125rem; }
+  .hero-corridor__sign { font-size: 2rem; }
+}
+
+/* Mobile removes the perspective entirely. Depth needs a wide frame and a
+   pointer; a phone has neither, so the same hierarchy is stated with rules
+   and spacing instead of with Z. */
+@media (max-width: 767px) {
+  .hero-corridor { perspective: none; display: grid; align-content: center; }
+  .hero-corridor__world { position: relative; inset: auto; transform: none; transform-style: flat; }
+  .hero-corridor__plane {
+    position: relative;
+    left: auto; right: auto; top: auto;
+    transform: none;
+    padding: 0 var(--gutter);
+  }
+  .hero-corridor__plane--near { order: 1; }
+  .hero-corridor__plane--mid  { order: 2; margin-top: 1.25rem; }
+  .hero-corridor__plane--deep { order: 3; margin-top: 1.5rem; }
+  .hero-corridor__plane--lift {
+    order: 4;
+    margin-top: 1.5rem;
+    bottom: auto;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1.25rem;
+  }
+  .hero-corridor__sign { text-align: left; font-size: 1rem; letter-spacing: 0.16em; }
+  .hero-corridor__world { display: flex; flex-direction: column; }
+  .hero-corridor__name { font-size: 15vw; }
+  .hero-corridor__value { text-align: left; margin-left: 0; max-width: none; font-size: 1.0625rem; }
+  .hero-corridor__meta {
+    grid-template-columns: minmax(0, 1fr);
+    border-top: 1px solid var(--line);
+    padding-top: 1rem;
+  }
+  .hero-corridor__meta div:nth-child(3) { display: none; }
+  .hero-corridor__cta { flex-direction: column; }
+  .hero-corridor__cta .btn { justify-content: center; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-corridor__name,
+  .hero-corridor__role,
+  .hero-corridor__value,
+  .hero-corridor__meta,
+  .hero-corridor__sign,
+  .hero-corridor__cta {
+    transform: none !important;
+    transition: opacity 300ms linear !important;
+  }
+}
+
+/* ==========================================================================
+   P04  SIGNAL
+   ========================================================================== */
+.hero-signal {
+  --c-accent: #93dd52;
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: stretch;
+  background: var(--void);
+}
+
+.hero-signal__main {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  min-width: 0;
+  padding: clamp(1.5rem, 5vh, 3rem) clamp(2rem, 5vw, 4rem) clamp(1.5rem, 5vh, 3rem) var(--gutter);
+}
+
+.hero-signal__name {
+  font-weight: 500;
+  font-size: clamp(3rem, 12vw, 11rem);
+  letter-spacing: -0.045em;
+  line-height: 0.9;
+}
+.hero-signal__word { display: block; }
+/* Fixed box per character, width written by the concept from the real glyph.
+   The scramble happens inside a stable grid, so the line never jitters. */
+.hero-signal__ch {
+  display: inline-block;
+  font-style: normal;
+  text-align: center;
+  color: var(--c-accent);
+  opacity: 0.55;
+  transition: color 220ms var(--ease-out), opacity 220ms var(--ease-out);
+}
+.hero-signal__ch.is-locked { color: var(--ink); opacity: 1; }
+
+.hero-signal__role {
+  margin-top: 0.875rem;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.hero-signal__value {
+  margin-top: 1.75rem;
+  max-width: 36ch;
+  font-size: clamp(1rem, 1.5vw, 1.25rem);
+  line-height: 1.5;
+  color: var(--ink-2);
+}
+.hero-signal__cta { display: flex; gap: 0.625rem; margin-top: 1.75rem; }
+
+/* A full height rule, not a floating block. The empty middle is then the
+   field the signal resolved in, bounded on both sides, instead of a gap. */
+.hero-signal__rail {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  width: clamp(11rem, 18vw, 15rem);
+  border-left: 1px solid var(--line);
+  padding: clamp(1.5rem, 5vh, 3rem) var(--gutter) clamp(1.5rem, 5vh, 3rem) clamp(1.25rem, 2.5vw, 2rem);
+}
+.hero-signal__read { display: flex; flex-direction: column; gap: 0.625rem; }
+.hero-signal__read dt {
+  font-family: var(--font-mono);
+  font-size: 0.5625rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ink-4);
+}
+.hero-signal__read dd {
+  margin: 0.1875rem 0 0;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.1em;
+  color: var(--c-accent);
+}
+
+/* One tick per character. A register of discrete states, not a progress bar. */
+.hero-signal__reg {
+  display: flex;
+  gap: 3px;
+  margin-top: 1.25rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--line);
+}
+.hero-signal__reg i {
+  flex: 1 1 0;
+  height: 10px;
+  background: var(--ink-4);
+  transform: scaleY(0.35);
+  transform-origin: bottom;
+  transition: transform 180ms var(--ease-out), background 180ms var(--ease-out);
+}
+.hero-signal__reg i.is-lit { background: var(--c-accent); transform: none; }
+
+.hero-signal__value,
+.hero-signal__cta,
+.hero-signal__rail {
+  opacity: 0;
+  transform: translate3d(0, 12px, 0);
+  transition: opacity 520ms var(--ease-out), transform 520ms var(--ease-out);
+}
+.hero-signal.is-open .hero-signal__value,
+.hero-signal.is-open .hero-signal__cta,
+.hero-signal.is-open .hero-signal__rail { opacity: 1; transform: none; }
+.hero-signal.is-open .hero-signal__value { transition-delay: 900ms; }
+.hero-signal.is-open .hero-signal__cta   { transition-delay: 980ms; }
+.hero-signal.is-open .hero-signal__rail  { transition-delay: 1060ms; }
+
+@media (max-width: 1099px) {
+  .hero-signal { grid-template-columns: minmax(0, 1fr); align-content: center; }
+  .hero-signal__main { padding-right: var(--gutter); }
+  .hero-signal__rail {
+    width: auto;
+    border-left: 0;
+    border-top: 1px solid var(--line);
+    padding: 1.5rem var(--gutter) clamp(1.5rem, 5vh, 3rem);
+  }
+  .hero-signal__read { flex-direction: row; flex-wrap: wrap; gap: 0.75rem 2rem; }
+}
+
+/* Mobile: three fields, register full width, value line above the name so the
+   invitation is what lands under the thumb first. */
+@media (max-width: 767px) {
+  .hero-signal { align-content: center; gap: 0; }
+  .hero-signal__name { font-size: 13vw; }
+  .hero-signal__value { order: -1; margin: 0 0 1.5rem; max-width: none; font-size: 1.0625rem; }
+  .hero-signal__cta { flex-direction: column; align-self: stretch; }
+  .hero-signal__cta .btn { justify-content: center; }
+  .hero-signal__read div:nth-child(3),
+  .hero-signal__read div:nth-child(4) { display: none; }
+  .hero-signal__reg i { height: 8px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-signal__value,
+  .hero-signal__cta,
+  .hero-signal__rail {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+  .hero-signal__ch { transition: none !important; }
+}
+
+/* ==========================================================================
+   P05  HORIZON
+   ========================================================================== */
+.hero-horizon {
+  --c-accent: #e8517e;
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: var(--void);
+  isolation: isolate;
+}
+
+.hero-horizon__field {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* The static fade the name rises through. The mask never moves, so nothing
+   re-rasterises per frame: the letterforms simply clear it as they travel. */
+.hero-horizon__namewrap {
+  position: absolute;
+  z-index: 1;
+  left: var(--gutter);
+  right: var(--gutter);
+  bottom: 38%;
+  overflow: hidden;
+  /* The name size lives on the WRAPPER so the padding below can be expressed
+     in em of the name. On the h1 it would resolve against the inherited 16px
+     and the fade would sit inside the letterforms forever. */
+  font-size: clamp(3.25rem, 11vw, 10rem);
+  /* The padding is what puts the fade zone below the letterforms once the
+     name has risen. Without it the mask eats the glyphs permanently. */
+  padding-bottom: 0.8em;
+  -webkit-mask-image: linear-gradient(180deg, #000 0 52%, rgba(0, 0, 0, 0.12) 82%, transparent 100%);
+  mask-image: linear-gradient(180deg, #000 0 52%, rgba(0, 0, 0, 0.12) 82%, transparent 100%);
+}
+.hero-horizon__name {
+  font-weight: 500;
+  font-size: 1em;
+  letter-spacing: -0.05em;
+  line-height: 0.9;
+  text-align: center;
+  transform: translate3d(0, 60%, 0);
+  opacity: 0;
+  transition: transform 1150ms var(--ease-out) 260ms, opacity 1150ms var(--ease-out) 260ms;
+}
+.hero-horizon.is-open .hero-horizon__name { transform: none; opacity: 1; }
+
+.hero-horizon__copy {
+  position: absolute;
+  z-index: 2;
+  left: var(--gutter);
+  bottom: clamp(1.5rem, 5vh, 3rem);
+  max-width: min(42ch, 52%);
+}
+.hero-horizon__role {
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.hero-horizon__value {
+  margin-top: 0.75rem;
+  font-size: clamp(1rem, 1.4vw, 1.1875rem);
+  line-height: 1.5;
+  color: var(--ink-2);
+}
+.hero-horizon__cta { display: flex; gap: 0.625rem; margin-top: 1.75rem; }
+
+.hero-horizon__avail {
+  position: absolute;
+  z-index: 2;
+  right: var(--gutter);
+  bottom: clamp(1.5rem, 5vh, 3rem);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.hero-horizon__avail i {
+  width: 5px; height: 5px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--c-accent);
+}
+
+.hero-horizon__role,
+.hero-horizon__value,
+.hero-horizon__cta,
+.hero-horizon__avail {
+  opacity: 0;
+  transform: translate3d(0, 14px, 0);
+  transition: opacity 620ms var(--ease-out), transform 620ms var(--ease-out);
+}
+.hero-horizon.is-open .hero-horizon__role,
+.hero-horizon.is-open .hero-horizon__value,
+.hero-horizon.is-open .hero-horizon__cta,
+.hero-horizon.is-open .hero-horizon__avail { opacity: 1; transform: none; }
+.hero-horizon.is-open .hero-horizon__role  { transition-delay: 760ms; }
+.hero-horizon.is-open .hero-horizon__value { transition-delay: 840ms; }
+.hero-horizon.is-open .hero-horizon__cta   { transition-delay: 920ms; }
+.hero-horizon.is-open .hero-horizon__avail { transition-delay: 920ms; }
+
+/* Mobile: flush left rather than centred, copy stacked under the name. */
+@media (max-width: 767px) {
+  .hero-horizon__namewrap { bottom: auto; top: 16%; font-size: 15vw; }
+  .hero-horizon__name { text-align: left; }
+  .hero-horizon__copy { max-width: none; right: var(--gutter); bottom: 4.5rem; }
+  .hero-horizon__cta { flex-direction: column; }
+  .hero-horizon__cta .btn { justify-content: center; }
+  .hero-horizon__avail { left: var(--gutter); right: auto; bottom: 1.5rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-horizon__name,
+  .hero-horizon__role,
+  .hero-horizon__value,
+  .hero-horizon__cta,
+  .hero-horizon__avail {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+}
+
+/* ==========================================================================
+   S01  CURTAIN
+   ========================================================================== */
+.hero-curtain { --c-accent: #4fc8e8; position: relative; display: block; }
+.hero-curtain.is-page { position: absolute; inset: 0; display: flex; }
+
+.hero-curtain__view {
+  position: relative;
+  flex: 1;
+  width: 100%;
+  overflow: hidden;
+  background: var(--void);
+}
+
+.hero-curtain__canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+
+.hero-curtain__cap {
+  position: absolute;
+  left: var(--gutter);
+  bottom: clamp(1.5rem, 5vh, 3rem);
+  max-width: min(40ch, 46%);
+  z-index: 2;
+}
+.hero-curtain__role,
+.hero-curtain__avail {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.hero-curtain__avail { margin-top: 0.875rem; }
+.hero-curtain__avail i {
+  width: 5px; height: 5px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--c-accent);
+}
+.hero-curtain__value {
+  margin-top: 0.75rem;
+  font-size: clamp(0.9375rem, 1.3vw, 1.125rem);
+  line-height: 1.5;
+  color: var(--ink-2);
+}
+
+.hero-curtain__more {
+  position: absolute;
+  right: var(--gutter);
+  bottom: clamp(1.5rem, 5vh, 3rem);
+  z-index: 2;
+}
+
+@media (max-width: 767px) {
+  .hero-curtain__cap { max-width: none; right: var(--gutter); bottom: 4.75rem; }
+  .hero-curtain__more { left: var(--gutter); right: auto; bottom: 1.5rem; }
+}
+
+/* ==========================================================================
+   S02  MAGNET
+   ========================================================================== */
+.hero-magnet { --c-accent: #6e9bd1; position: relative; display: block; }
+.hero-magnet.is-page { position: absolute; inset: 0; display: flex; }
+
+.hero-magnet__view {
+  position: relative;
+  flex: 1;
+  width: 100%;
+  display: grid;
+  align-content: center;
+  overflow: hidden;
+  padding: clamp(2rem, 6vh, 4rem) var(--gutter);
+  background: var(--void-2);
+}
+
+.hero-magnet__field { position: relative; display: flex; flex-direction: column; align-items: flex-start; }
+
+/* Every attractable element is promoted once. Seven layers is a fixed cost,
+   not a per frame one. */
+.hero-magnet__name,
+.hero-magnet__role,
+.hero-magnet__value,
+.hero-magnet__cta,
+.hero-magnet__avail,
+.hero-magnet__mark { will-change: transform; }
+
+.hero-magnet__name {
+  font-weight: 500;
+  font-size: clamp(2.75rem, 7.5vw, 6.5rem);
+  letter-spacing: -0.045em;
+  line-height: 0.9;
+}
+.hero-magnet__role {
+  margin-top: 0.875rem;
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.hero-magnet__value {
+  margin-top: 1.5rem;
+  max-width: 38ch;
+  font-size: clamp(1rem, 1.4vw, 1.1875rem);
+  line-height: 1.5;
+  color: var(--ink-2);
+}
+.hero-magnet__cta { margin-top: 2rem; }
+.hero-magnet__ctarow { display: flex; gap: 0.625rem; }
+.hero-magnet__avail {
+  margin-top: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.hero-magnet__avail i {
+  width: 5px; height: 5px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--c-accent);
+}
+
+/* Free particles. They exist so the reader can see the whole plane is live
+   where there is no content. */
+.hero-magnet__mark {
+  position: absolute;
+  right: 4%;
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.2em;
+  color: var(--c-accent);
+  opacity: 0.5;
+}
+
+.hero-magnet__more { position: absolute; right: var(--gutter); bottom: clamp(1.5rem, 5vh, 3rem); }
+
+/* Focus produces the same emphasis a pointer produces, and the control does
+   not move once it has focus. */
+.hero-magnet__ctarow .btn:focus-visible { transform: translate3d(0, -3px, 0); }
+.hero-magnet__ctarow .btn { transition: transform 240ms var(--ease-out), border-color var(--d-ui) var(--ease-out), color var(--d-ui) var(--ease-out); }
+
+@media (max-width: 767px) {
+  .hero-magnet__name { font-size: 12vw; }
+  .hero-magnet__value { max-width: none; }
+  .hero-magnet__ctarow { flex-direction: column; align-items: stretch; }
+  .hero-magnet__ctarow .btn { justify-content: center; }
+  .hero-magnet__more { position: static; margin-top: 1.75rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-magnet__name,
+  .hero-magnet__role,
+  .hero-magnet__value,
+  .hero-magnet__cta,
+  .hero-magnet__avail,
+  .hero-magnet__mark {
+    transform: none !important;
+    opacity: 1 !important;
+    will-change: auto !important;
+  }
+}
+
+/* ==========================================================================
+   S03  ASSEMBLY
+   ========================================================================== */
+.hero-assembly { --c-accent: #e2ded3; position: relative; display: block; }
+.hero-assembly.is-page { position: absolute; inset: 0; display: flex; }
+
+.hero-assembly__view {
+  position: relative;
+  flex: 1;
+  width: 100%;
+  display: grid;
+  align-content: center;
+  overflow: hidden;
+  padding: clamp(1.5rem, 5vh, 3rem) var(--gutter);
+  background: var(--void-2);
+}
+
+/* Content layer. Both layers carry the same template, so the copy lands on
+   the same lines the cells are drawn on. */
+.hero-assembly__grid {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(var(--cols), minmax(0, 1fr));
+  grid-template-rows: repeat(var(--rows), minmax(0, 1fr));
+  height: min(66vh, 40rem);
+  gap: 2px;
+}
+
+/* Field layer. */
+.hero-assembly__field {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  display: grid;
+  grid-template-columns: repeat(var(--cols), minmax(0, 1fr));
+  grid-template-rows: repeat(var(--rows), minmax(0, 1fr));
+  gap: 2px;
+}
+
+.hero-assembly__cell {
+  background: rgba(236, 236, 239, 0.03);
+  opacity: 0;
+  transform: scale(0.94);
+  transition: opacity 520ms var(--ease-out), transform 520ms var(--ease-out);
+  transition-delay: calc(var(--k) * 26ms);
+}
+.hero-assembly__cell.is-occupied { background: rgba(236, 236, 239, 0.06); }
+.hero-assembly.is-in .hero-assembly__cell { opacity: 1; transform: none; }
+
+/* Exit in bands. Six class toggles for the whole disassembly, and the last
+   band is the one the name sits in. */
+.hero-assembly__field.is-out-0 [data-band="0"],
+.hero-assembly__field.is-out-1 [data-band="1"],
+.hero-assembly__field.is-out-2 [data-band="2"],
+.hero-assembly__field.is-out-3 [data-band="3"],
+.hero-assembly__field.is-out-4 [data-band="4"],
+.hero-assembly__field.is-out-5 [data-band="5"] {
+  opacity: 0;
+  transform: scale(0.96) translate3d(0, -14px, 0);
+  transition: opacity 420ms var(--ease-in-out), transform 420ms var(--ease-in-out);
+  transition-delay: 0ms;
+}
+
+.hero-assembly__name,
+.hero-assembly__value,
+.hero-assembly__role,
+.hero-assembly__avail,
+.hero-assembly__cta {
+  position: relative;
+  z-index: 2;
+  padding: 0 1.25rem;
+  opacity: 0;
+  transform: translate3d(0, 18px, 0);
+  transition: opacity 640ms var(--ease-out), transform 640ms var(--ease-out);
+}
+.hero-assembly.is-in .hero-assembly__name,
+.hero-assembly.is-in .hero-assembly__value,
+.hero-assembly.is-in .hero-assembly__role,
+.hero-assembly.is-in .hero-assembly__avail,
+.hero-assembly.is-in .hero-assembly__cta { opacity: 1; transform: none; }
+.hero-assembly.is-in .hero-assembly__name  { transition-delay: 620ms; }
+.hero-assembly.is-in .hero-assembly__value { transition-delay: 700ms; }
+.hero-assembly.is-in .hero-assembly__role  { transition-delay: 760ms; }
+.hero-assembly.is-in .hero-assembly__avail { transition-delay: 760ms; }
+.hero-assembly.is-in .hero-assembly__cta   { transition-delay: 820ms; }
+
+.hero-assembly__name {
+  grid-area: 2 / 1 / 4 / 8;
+  align-self: center;
+  font-weight: 500;
+  font-size: clamp(2.5rem, 6.5vw, 5.5rem);
+  letter-spacing: -0.04em;
+  line-height: 0.92;
+}
+.hero-assembly__value {
+  grid-area: 3 / 8 / 4 / 13;
+  align-self: end;
+  max-width: 32ch;
+  font-size: 1rem;
+  line-height: 1.5;
+  color: var(--ink-2);
+}
+.hero-assembly__role {
+  grid-area: 4 / 1 / 5 / 5;
+  align-self: center;
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.hero-assembly__avail {
+  grid-area: 4 / 9 / 5 / 13;
+  align-self: center;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.hero-assembly__avail i {
+  width: 5px; height: 5px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--c-accent);
+}
+.hero-assembly__cta {
+  grid-area: 5 / 1 / 6 / 6;
+  align-self: center;
+  display: flex;
+  gap: 0.625rem;
+}
+
+.hero-assembly__more { position: absolute; right: var(--gutter); bottom: clamp(1.5rem, 5vh, 3rem); }
+
+@media (max-width: 1099px) {
+  .hero-assembly__name  { grid-area: 2 / 1 / 4 / 6; }
+  .hero-assembly__value { grid-area: 3 / 6 / 4 / 9; }
+  .hero-assembly__role  { grid-area: 4 / 1 / 5 / 4; }
+  .hero-assembly__avail { grid-area: 4 / 5 / 5 / 9; }
+  .hero-assembly__cta   { grid-area: 5 / 1 / 6 / 5; }
+}
+
+/* Mobile: 4 by 6, copy stacked rather than set as a marginal note, and a
+   faster shuffle because nobody waits a second for a grid on a phone. */
+@media (max-width: 767px) {
+  .hero-assembly__cell { transition-delay: calc(var(--k) * 18ms); }
+  .hero-assembly__name  { grid-area: 2 / 1 / 4 / 5; font-size: 12vw; }
+  .hero-assembly__value { grid-area: 4 / 1 / 5 / 5; align-self: center; max-width: none; }
+  .hero-assembly__role  { grid-area: 5 / 1 / 6 / 3; }
+  .hero-assembly__avail { grid-area: 5 / 3 / 6 / 5; }
+  .hero-assembly__cta   { grid-area: 6 / 1 / 7 / 5; flex-direction: column; }
+  .hero-assembly__grid  { height: auto; min-height: min(74vh, 38rem); }
+  .hero-assembly__cta .btn { justify-content: center; }
+  .hero-assembly__more { position: static; margin-top: 1.5rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-assembly__cell,
+  .hero-assembly__name,
+  .hero-assembly__value,
+  .hero-assembly__role,
+  .hero-assembly__avail,
+  .hero-assembly__cta {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+}
+
+/* ==========================================================================
+   S04  TICKER
+   ========================================================================== */
+.hero-ticker { --c-accent: #b466f0; position: relative; display: block; }
+.hero-ticker.is-page { position: absolute; inset: 0; display: flex; }
+
+.hero-ticker__view {
+  position: relative;
+  flex: 1;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  overflow: hidden;
+  background: var(--void);
+}
+
+.hero-ticker__band {
+  position: relative;
+  overflow: hidden;
+  border-top: 1px solid var(--line);
+  font-weight: 300;
+  font-size: clamp(2.5rem, 5.5vw, 4.5rem);
+  line-height: 1.34;
+  letter-spacing: -0.02em;
+  color: rgba(236, 236, 239, 0.14);
+  white-space: nowrap;
+  transform-origin: center center;
+}
+.hero-ticker__band:first-child { border-top: 0; }
+/* The name band is texture, not the message. It is identifiable and clearly
+   subordinate to the block set beneath it. */
+.hero-ticker__band.is-hue {
+  font-weight: 500;
+  color: color-mix(in oklab, var(--c-accent) 52%, transparent);
+}
+
+.hero-ticker__track {
+  display: flex;
+  width: max-content;
+  will-change: transform;
+}
+.hero-ticker__track > span { display: block; padding-right: 0; }
+
+.hero-ticker__block {
+  position: relative;
+  padding: clamp(2rem, 5vh, 3.5rem) var(--gutter);
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  will-change: transform;
+}
+.hero-ticker__name {
+  font-weight: 500;
+  font-size: clamp(2rem, 4.5vw, 3.5rem);
+  letter-spacing: -0.04em;
+  line-height: 0.96;
+}
+.hero-ticker__value {
+  margin-top: 0.875rem;
+  max-width: 40ch;
+  font-size: clamp(0.9375rem, 1.3vw, 1.125rem);
+  line-height: 1.5;
+  color: var(--ink-2);
+}
+.hero-ticker__cta { display: flex; gap: 0.625rem; margin-top: 1.5rem; }
+
+.hero-ticker__more { position: absolute; right: var(--gutter); bottom: clamp(2rem, 5vh, 3.5rem); }
+
+@media (max-width: 767px) {
+  .hero-ticker__band { font-size: 8vw; }
+  .hero-ticker__cta { flex-direction: column; }
+  .hero-ticker__cta .btn { justify-content: center; }
+  .hero-ticker__more { position: static; margin-top: 1.25rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-ticker__band { transform: none !important; }
+  .hero-ticker__track { will-change: auto !important; }
+  .hero-ticker__block { opacity: 1 !important; transform: none !important; }
+}
+
+/* ==========================================================================
+   S05  HANDOFF
+   ========================================================================== */
+.hero-handoff { --c-accent: #f09a3e; position: relative; display: block; }
+.hero-handoff.is-page { position: absolute; inset: 0; display: flex; }
+
+.hero-handoff__view {
+  position: relative;
+  flex: 1;
+  width: 100%;
+  overflow: hidden;
+  padding: clamp(1.5rem, 5vh, 3rem) var(--gutter);
+  background: var(--void);
+}
+
+/* transform-origin left top for the whole path, so the scale never pulls the
+   title away from the edge it is docking to. */
+.hero-handoff__title {
+  position: absolute;
+  left: var(--gutter);
+  top: 34%;
+  margin: 0;
+  transform-origin: left top;
+  will-change: transform;
+  font-weight: 500;
+  font-size: clamp(2.75rem, 8vw, 7rem);
+  letter-spacing: -0.045em;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.hero-handoff__rule {
+  position: absolute;
+  left: var(--gutter);
+  right: var(--gutter);
+  top: calc(8% + 3.25rem);
+  height: 1px;
+  background: var(--c-accent);
+  transform: scaleX(0);
+  transform-origin: left center;
+}
+
+.hero-handoff__support {
+  position: absolute;
+  left: var(--gutter);
+  bottom: clamp(1.5rem, 5vh, 3rem);
+  max-width: min(38ch, 52%);
+}
+.hero-handoff__role,
+.hero-handoff__avail {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.hero-handoff__avail { margin-top: 1rem; }
+.hero-handoff__avail i {
+  width: 5px; height: 5px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--c-accent);
+}
+.hero-handoff__value {
+  margin-top: 0.75rem;
+  font-size: clamp(1rem, 1.4vw, 1.1875rem);
+  line-height: 1.5;
+  color: var(--ink-2);
+}
+.hero-handoff__cta { display: flex; gap: 0.625rem; margin-top: 1.5rem; }
+
+/* The index the docked title becomes the label of. */
+.hero-handoff__next {
+  position: absolute;
+  left: var(--gutter);
+  right: var(--gutter);
+  top: calc(8% + 5.5rem);
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 2.5rem;
+  opacity: 0;
+}
+.hero-handoff__next dt {
+  font-size: clamp(1.125rem, 1.8vw, 1.5rem);
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
+.hero-handoff__next dd {
+  margin: 0.5rem 0 0;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--line);
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--ink-3);
+}
+
+.hero-handoff__more { position: absolute; right: var(--gutter); bottom: clamp(1.5rem, 5vh, 3rem); }
+
+@media (max-width: 767px) {
+  .hero-handoff__title { font-size: 11vw; top: 26%; }
+  .hero-handoff__next { grid-template-columns: minmax(0, 1fr); gap: 1.25rem; top: calc(8% + 4.5rem); }
+  .hero-handoff__next div:nth-child(3) { display: none; }
+  .hero-handoff__support { max-width: none; right: var(--gutter); bottom: 4.75rem; }
+  .hero-handoff__cta { flex-direction: column; }
+  .hero-handoff__cta .btn { justify-content: center; }
+  .hero-handoff__more { left: var(--gutter); right: auto; bottom: 1.5rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-handoff__title { will-change: auto !important; }
+}

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Activity, Briefcase, Inbox, Layers3, MessageSquare, NotepadText, Sparkles, Star } from "lucide-react";
+import { Activity, Briefcase, Film, Inbox, Layers3, MessageSquare, NotepadText, Sparkles, Star } from "lucide-react";
 
 import { requestJson } from "@/components/dashboard/api";
 import { Card } from "@/components/ui/dashboard/Card";
@@ -10,11 +10,19 @@ import type { DashboardOverview, PortfolioSettings } from "@/lib/dashboard/types
 const kpiConfig = [
   {
     key: "projects" as const,
-    label: "Projects",
+    label: "Projects (v1)",
     icon: Briefcase,
     gradient: "from-blue-500/25 to-blue-600/5",
     ring: "shadow-[0_0_0_1px_rgba(59,130,246,0.25)]",
     iconBg: "bg-blue-500/15 text-blue-300",
+  },
+  {
+    key: "v2Projects" as const,
+    label: "Reel projects (v2)",
+    icon: Film,
+    gradient: "from-indigo-500/22 to-indigo-600/5",
+    ring: "shadow-[0_0_0_1px_rgba(99,102,241,0.22)]",
+    iconBg: "bg-indigo-500/15 text-indigo-300",
   },
   {
     key: "reviews" as const,

@@ -1,0 +1,704 @@
+/* ============================================================================
+   SHELL  -  masthead, hero, concept index, stage chrome, page transition.
+   ========================================================================== */
+
+/* --------------------------------------------------------------- masthead */
+.masthead {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: var(--z-chrome);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  height: 64px;
+  padding: 0 var(--gutter);
+  pointer-events: none;
+}
+.masthead > * { pointer-events: auto; }
+.masthead::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(to bottom, rgba(8, 8, 10, 0.92), rgba(8, 8, 10, 0));
+  opacity: 0;
+  transition: opacity var(--d-slow) var(--ease-out);
+}
+.masthead.is-stuck::after { opacity: 1; }
+
+.wordmark {
+  display: flex;
+  align-items: baseline;
+  gap: 0.625rem;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+.wordmark b { font-weight: 600; color: var(--ink); }
+.wordmark span { color: var(--ink-3); }
+
+.masthead__right {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+@media (max-width: 640px) { .masthead__right .is-wide { display: none; } }
+
+/* ------------------------------------------------------------------- hero */
+.hero {
+  position: relative;
+  min-height: 100dvh;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: var(--gutter);
+  padding: 6rem var(--gutter) clamp(2.5rem, 7vh, 5rem);
+  overflow: hidden;
+}
+.hero__bg {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+}
+.hero__bg canvas { width: 100%; height: 100%; }
+.hero__vig {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(120% 90% at 15% 100%, rgba(255, 74, 28, 0.10), transparent 55%),
+    radial-gradient(90% 70% at 85% 0%, rgba(76, 201, 240, 0.07), transparent 60%),
+    linear-gradient(to bottom, rgba(8, 8, 10, 0.15), rgba(8, 8, 10, 0.62));
+}
+
+.hero__main { min-width: 0; max-width: 64rem; }
+
+.hero__title {
+  font-size: clamp(2.25rem, 6.6vw, 6rem);
+  font-weight: 500;
+  letter-spacing: -0.05em;
+  line-height: 0.86;
+  margin-bottom: clamp(1.25rem, 3vh, 2rem);
+}
+/* Each line gets its own overflow-hidden box so the mask reveal has an edge to
+   hide behind. `nowrap` is load-bearing: a line that wraps inside the mask
+   would have its second line clipped away entirely. */
+.hero__title .word {
+  display: block;
+  overflow: hidden;
+  padding-bottom: 0.08em;
+  white-space: nowrap;
+}
+.hero__title .word > span { display: block; will-change: transform; }
+.hero__title em {
+  font-style: normal;
+  font-weight: 300;
+  color: var(--ink-3);
+}
+
+.hero__sub {
+  color: var(--ink-2);
+  font-size: clamp(0.9375rem, 1.15vw, 1.125rem);
+  line-height: 1.55;
+  max-width: 34ch;
+  margin-bottom: clamp(1.75rem, 4vh, 2.75rem);
+}
+
+.hero__cta { display: flex; flex-wrap: wrap; gap: 0.75rem; }
+
+/* Right-hand vertical index. Doubles as navigation and as the hero's asset,
+   which is why the hero has no decorative image: the list IS the visual. */
+.hero__index {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  align-self: end;
+  padding-bottom: 0.375rem;
+}
+.hero__index { width: max-content; }
+.hero__index li a {
+  display: grid;
+  grid-template-columns: 2.25rem minmax(5.5rem, auto);
+  align-items: baseline;
+  gap: 1rem;
+  text-align: right;
+  padding: 0.4375rem 0;
+  border-top: 1px solid var(--line);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  transition: color var(--d-ui) var(--ease-out), transform var(--d-ui) var(--ease-out);
+}
+.hero__index li:last-child a { border-bottom: 1px solid var(--line); }
+.hero__index li a i {
+  font-style: normal;
+  color: var(--ink-4);
+  transition: color var(--d-ui) var(--ease-out);
+}
+@media (hover: hover) and (pointer: fine) {
+  .hero__index li a:hover { color: var(--ink); transform: translateX(-6px); }
+  .hero__index li a:hover i { color: var(--accent); }
+}
+
+@media (max-width: 1000px) {
+  .hero { grid-template-columns: 1fr; align-items: end; }
+  .hero__index { display: none; }
+  .hero__main { max-width: none; }
+}
+
+/* --------------------------------------------------------------- sections */
+.section { padding: clamp(4.5rem, 12vh, 9rem) var(--gutter); }
+.section__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  margin-bottom: clamp(2rem, 5vh, 3.5rem);
+  padding-bottom: 1.25rem;
+  border-bottom: 1px solid var(--line);
+}
+.section__title {
+  font-size: clamp(1.5rem, 3vw, 2.5rem);
+  font-weight: 400;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+}
+.section__count { color: var(--ink-3); }
+
+/* ----------------------------------------------------------- concept grid */
+/* Asymmetric on purpose: 7/5, 5/7, 6/6. Three different row rhythms means the
+   eye never settles into "three identical cards" mode. */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: clamp(1rem, 2vw, 1.75rem);
+  max-width: var(--maxw);
+  margin: 0 auto;
+}
+/* Spans are composed per group in shell.js from the SPANS table, because a
+   group can hold anywhere from one to six concepts and a fixed nth-child
+   pattern would only ever be right for one of those counts. */
+@media (max-width: 1000px) {
+  .card { grid-column: span 6 !important; }
+}
+@media (max-width: 680px) {
+  .card { grid-column: span 12 !important; }
+}
+
+.card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.015), rgba(255, 255, 255, 0));
+  overflow: hidden;
+  isolation: isolate;
+  /* Hover is hit constantly while browsing the galleries, so it stays at UI
+     speed. The 420ms used elsewhere reads as sluggish on something this
+     frequent; the reveal below is the slow one because it happens once. */
+  transition:
+    border-color var(--d-ui) var(--ease-out),
+    transform var(--d-ui) var(--ease-out);
+}
+/* Reveal state, cleared by the scroll-reveal orchestration in shell.js. */
+.card.is-hidden {
+  opacity: 0;
+  transform: translate3d(0, 26px, 0);
+  transition:
+    opacity var(--d-slow) var(--ease-out),
+    transform var(--d-slow) var(--ease-out);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .card:hover { border-color: var(--line-2); transform: translate3d(0, -4px, 0); }
+  .card:hover .card__glow { opacity: 1; }
+}
+.card:focus-within { border-color: var(--line-2); }
+
+.card__glow {
+  position: absolute;
+  inset: -1px;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0;
+  background: radial-gradient(60% 50% at 50% 0%, var(--card-hue), transparent 70%);
+  transition: opacity var(--d-slow) var(--ease-out);
+}
+
+.card__pane {
+  position: relative;
+  aspect-ratio: var(--pane-ratio, 16 / 9);
+  border-bottom: 1px solid var(--line);
+  background: #0a0a0d;
+  overflow: hidden;
+}
+.card__pane canvas { width: 100%; height: 100%; }
+.card__num {
+  position: absolute;
+  top: 0.875rem; left: 1rem;
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.2em;
+  color: var(--ink-3);
+  z-index: 2;
+}
+.card__kind {
+  position: absolute;
+  top: 0.875rem; right: 1rem;
+  font-family: var(--font-mono);
+  font-size: 0.5625rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-4);
+  z-index: 2;
+}
+
+.card__meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  padding: 1.25rem 1.25rem 0;
+  flex: 1;
+}
+.card__name {
+  margin: 0;
+  font-size: clamp(1.25rem, 1.9vw, 1.875rem);
+  font-weight: 500;
+  letter-spacing: -0.035em;
+  line-height: 1;
+}
+/* Stretched hit area: the whole card opens the concept, but the Copy button
+   sits above it in the stacking order so it stays independently clickable. */
+.card__name button { text-align: left; }
+.card__name button::after { content: ""; position: absolute; inset: 0; z-index: 1; }
+
+.card__desc { color: var(--ink-2); font-size: 0.9375rem; line-height: 1.55; }
+
+.card__inter {
+  display: flex;
+  gap: 0.625rem;
+  align-items: baseline;
+  font-size: 0.8125rem;
+  color: var(--ink-3);
+  line-height: 1.5;
+}
+.card__inter b {
+  flex: none;
+  font-family: var(--font-mono);
+  font-size: 0.5625rem;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-4);
+}
+
+.card__actions {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  gap: 0.5rem;
+  padding: 1.25rem;
+  margin-top: auto;
+}
+
+/* ------------------------------------------------------------ how it works */
+.how {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: clamp(1rem, 2vw, 2rem);
+  max-width: var(--maxw);
+  margin: 0 auto;
+  align-items: start;
+}
+.how__step { grid-column: span 6; display: flex; gap: clamp(1rem, 2vw, 2rem); }
+.how__step i {
+  font-style: normal;
+  font-family: var(--font-mono);
+  font-size: clamp(2.5rem, 6vw, 5rem);
+  line-height: 0.8;
+  color: var(--ink-4);
+  flex: none;
+}
+.how__step h3 {
+  font-size: 1.125rem;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  margin-bottom: 0.5rem;
+}
+@media (max-width: 800px) { .how__step { grid-column: span 12; } }
+
+/* ----------------------------------------------------------------- footer */
+.foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.75rem var(--gutter) 2.5rem;
+  border-top: 1px solid var(--line);
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-4);
+}
+
+/* ------------------------------------------------------------------ stage */
+.stage {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-stage);
+  background: var(--void);
+  display: none;
+  flex-direction: column;
+}
+.stage.is-open { display: flex; }
+
+.stage__chrome {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex: none;
+  padding: 0.875rem var(--gutter);
+  pointer-events: none;
+}
+.stage__chrome > * { pointer-events: auto; }
+.stage__chrome--top { border-bottom: 1px solid var(--line); }
+.stage__chrome--bottom { border-top: 1px solid var(--line); }
+
+.stage__id { display: flex; align-items: baseline; gap: 0.875rem; min-width: 0; }
+.stage__id .n {
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.2em;
+  color: var(--c-accent);
+}
+.stage__id .nm {
+  font-size: 1rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.stage__id .hint {
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.14em;
+  color: var(--ink-4);
+  white-space: nowrap;
+}
+@media (max-width: 900px) { .stage__id .hint { display: none; } }
+
+.stage__body { position: relative; flex: 1; min-height: 0; overflow: hidden; }
+.stage__mount { position: absolute; inset: 0; }
+
+.stage__dots { display: flex; align-items: center; gap: 0.4375rem; }
+.stage__dots button {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--ink-4);
+  transition: background var(--d-ui) var(--ease-out), transform var(--d-ui) var(--ease-out);
+}
+.stage__dots button[aria-current="true"] { background: var(--c-accent); transform: scale(1.5); }
+@media (hover: hover) and (pointer: fine) {
+  .stage__dots button:hover { background: var(--ink-2); }
+}
+
+.stage__nav { display: flex; align-items: center; gap: 0.75rem; }
+
+@media (max-width: 720px) {
+  .stage__chrome { padding: 0.75rem 1rem; }
+  .stage__chrome--bottom { flex-wrap: wrap; gap: 0.625rem; }
+  .stage__chrome--bottom .btn { flex: 1; justify-content: center; }
+}
+
+/* ------------------------------------------------------------- page wipe */
+/* Five bands sweep in from the left to cover, then out to the right to
+   uncover. transform: scaleX only, so it never touches layout. */
+.wipe {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-overlay);
+  display: grid;
+  grid-template-rows: repeat(5, 1fr);
+  pointer-events: none;
+  visibility: hidden;
+}
+.wipe.is-active { visibility: visible; }
+.wipe span {
+  display: block;
+  background: var(--void-2);
+  transform: scaleX(0);
+  transform-origin: left center;
+  will-change: transform;
+}
+.wipe span:nth-child(odd) { background: var(--void); }
+
+/* Boot state: the shell starts covered and the entry timeline uncovers it. */
+.boot .wipe { visibility: visible; }
+.boot .wipe span { transform: scaleX(1); }
+
+/* ------------------------------------------------- shared detail surfaces */
+/* Used by ORBIT and LATTICE. Lives in the shell rather than in concepts.css
+   because both concepts need the identical panel and duplicating it would
+   guarantee they drift apart. */
+.detail {
+  position: absolute;
+  z-index: 4;
+  right: clamp(1rem, 2.5vw, 2rem);
+  top: clamp(1rem, 3vh, 2.25rem);
+  width: min(23rem, calc(100% - 2rem));
+  padding: 1.25rem;
+  border: 1px solid var(--line-2);
+  border-radius: var(--r);
+  background: rgba(12, 12, 16, 0.9);
+  backdrop-filter: blur(18px) saturate(140%);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 30px 70px rgba(0, 0, 0, 0.55);
+  opacity: 0;
+  transform: translate3d(12px, 0, 0);
+  pointer-events: none;
+  transition: opacity var(--d-ui) var(--ease-out), transform var(--d-ui) var(--ease-out);
+}
+.detail.is-on { opacity: 1; transform: none; pointer-events: auto; }
+.detail__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.875rem;
+}
+.detail__cat {
+  font-family: var(--font-mono);
+  font-size: 0.5625rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--c-accent);
+}
+.detail__name {
+  font-size: 1.5rem;
+  font-weight: 500;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+  margin-bottom: 0.375rem;
+}
+.detail__role {
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin-bottom: 0.875rem;
+}
+.detail__note { color: var(--ink-2); font-size: 0.875rem; line-height: 1.55; }
+.detail__rel {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+  margin-top: 1rem;
+  padding-top: 0.875rem;
+  border-top: 1px solid var(--line);
+}
+.detail__rel span {
+  padding: 0.25rem 0.5rem;
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  font-family: var(--font-mono);
+  font-size: 0.5625rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+.detail__stat {
+  display: flex;
+  gap: 1.25rem;
+  margin-top: 0.875rem;
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.detail__stat b { color: var(--ink); font-weight: 500; }
+
+@media (max-width: 720px) {
+  /* Bottom sheet on small screens rather than a shrunken side panel. */
+  .detail {
+    right: 0; left: 0; top: auto; bottom: 0;
+    width: auto;
+    border-left: 0; border-right: 0; border-bottom: 0;
+    border-radius: 0;
+    transform: translate3d(0, 100%, 0);
+    transition: opacity var(--d-ui) var(--ease-out), transform 320ms var(--ease-drawer);
+  }
+  .detail.is-on { transform: translate3d(0, 0, 0); }
+}
+
+/* ------------------------------------------------------------ stage hints */
+.hint-strip {
+  position: absolute;
+  left: 50%;
+  bottom: clamp(0.75rem, 2vh, 1.25rem);
+  transform: translateX(-50%);
+  z-index: 3;
+  display: flex;
+  gap: 1.25rem;
+  padding: 0.5rem 0.875rem;
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  background: rgba(10, 10, 13, 0.7);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  font-family: var(--font-mono);
+  font-size: 0.5625rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+/* A hint is onboarding. Once the reader has acted on it, it is only sitting on
+   top of the content - literally, on a reading-heavy concept. It retires on the
+   first interaction of any kind; see SE.hintStrip in core.js. */
+.hint-strip.is-gone {
+  opacity: 0;
+  transform: translateX(-50%) translateY(6px);
+}
+.hint-strip { transition: opacity 420ms var(--ease-out), transform 420ms var(--ease-out); }
+.hint-strip kbd {
+  font: inherit;
+  color: var(--ink-2);
+  border: 1px solid var(--line-2);
+  border-radius: var(--r);
+  padding: 0 0.25rem;
+}
+@media (max-width: 720px) { .hint-strip { display: none; } }
+
+
+/* ==========================================================================
+   GALLERIES  -  one per portfolio area, each split into section and page.
+   ========================================================================== */
+.gallery {
+  padding: clamp(3.5rem, 10vh, 7rem) var(--gutter) clamp(2rem, 6vh, 4rem);
+  border-top: 1px solid var(--line);
+}
+.gallery:first-child { border-top: 0; }
+
+.gallery__head {
+  display: grid;
+  grid-template-columns: minmax(0, auto) minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: 0.5rem clamp(1rem, 3vw, 2.5rem);
+  max-width: var(--maxw);
+  margin: 0 auto clamp(1.75rem, 5vh, 3rem);
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--line);
+}
+.gallery__title {
+  font-size: clamp(1.75rem, 4vw, 3.25rem);
+  font-weight: 500;
+  letter-spacing: -0.045em;
+  line-height: 0.95;
+}
+.gallery__blurb { color: var(--ink-3); font-size: 0.9375rem; line-height: 1.5; }
+.gallery__count { color: var(--ink-4); font-size: 0.6875rem; letter-spacing: 0.2em; }
+
+@media (max-width: 780px) {
+  .gallery__head { grid-template-columns: 1fr auto; }
+  .gallery__blurb { grid-column: 1 / -1; }
+}
+
+.gallery__group { max-width: var(--maxw); margin: 0 auto clamp(2rem, 6vh, 4rem); }
+.gallery__group:last-child { margin-bottom: 0; }
+
+.gallery__grouphead {
+  display: flex;
+  align-items: baseline;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+.gallery__grouphead h3 {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--ink);
+  white-space: nowrap;
+}
+.gallery__grouphead p {
+  flex: 1;
+  min-width: 0;
+  color: var(--ink-4);
+  font-size: 0.8125rem;
+  line-height: 1.5;
+}
+.gallery__grouphead span { color: var(--ink-4); font-size: 0.625rem; letter-spacing: 0.2em; }
+@media (max-width: 780px) { .gallery__grouphead p { display: none; } }
+
+/* ------------------------------------------------------------- area rail */
+.arearail {
+  position: fixed;
+  top: 64px; left: 0; right: 0;
+  z-index: calc(var(--z-chrome) - 1);
+  display: flex;
+  gap: 0.125rem;
+  padding: 0 var(--gutter) 0.625rem;
+  overflow-x: auto;
+  scrollbar-width: none;
+  background: linear-gradient(to bottom, rgba(8, 8, 10, 0.94) 55%, rgba(8, 8, 10, 0));
+  opacity: 0;
+  transform: translate3d(0, -8px, 0);
+  pointer-events: none;
+  transition: opacity var(--d-slow) var(--ease-out), transform var(--d-slow) var(--ease-out);
+}
+.arearail::-webkit-scrollbar { display: none; }
+.arearail.is-on { opacity: 1; transform: none; pointer-events: auto; }
+.arearail a {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4375rem;
+  padding: 0.375rem 0.75rem;
+  border-bottom: 1px solid transparent;
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-4);
+  white-space: nowrap;
+  transition: color var(--d-ui) var(--ease-out), border-color var(--d-ui) var(--ease-out);
+}
+.arearail a i { font-style: normal; color: var(--ink-4); opacity: 0.6; }
+@media (hover: hover) and (pointer: fine) { .arearail a:hover { color: var(--ink-2); } }
+.arearail a[aria-current="true"] { color: var(--ink); border-bottom-color: var(--accent); }
+.arearail a[aria-current="true"] i { color: var(--accent); opacity: 1; }
+body.stage-open .arearail { opacity: 0; pointer-events: none; }
+
+/* ------------------------------------------------------- stage additions */
+.stage__page { position: absolute; inset: 0; }
+.stage__id .area {
+  font-family: var(--font-mono);
+  font-size: 0.5625rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-4);
+  white-space: nowrap;
+}
+@media (max-width: 900px) { .stage__id .area { display: none; } }

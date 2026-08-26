@@ -1,0 +1,3237 @@
+/* ============================================================================
+   AREA STYLES: ABOUT
+   ----------------------------------------------------------------------------
+   Ten directions for the part of a portfolio that usually goes limp. Every
+   selector below starts from one of the ten concept roots, all prefixed
+   `about-`. Nothing here styles a bare element or a shell class.
+
+   THE SHARED RULES
+   ----------------
+   - One radius for everything: var(--r) = 2px. The only round things are dots.
+   - Mono carries time, counts, years and measurements. It never carries a
+     sentence. Prose is always the display face.
+   - Body copy is held between 65ch and 75ch. Below that the eye has to jump
+     back too often; above it, the return sweep starts losing the line.
+   - The signature hue lives in --c-accent, written on the root by the
+     concept's own JS along with --c-line / --c-mid / --c-soft / --c-wash.
+     Nothing in this file hardcodes an accent hex.
+   - Page roots are `position: absolute; inset: 0` because `.stage__page` is,
+     and each one owns its overflow explicitly. Section roots are ordinary
+     block flow, because they live inside somebody else's scrolling page.
+   - There are no eyebrows above headings anywhere in this file.
+   ========================================================================== */
+
+/* ==========================================================================
+   ROOTS
+   ========================================================================== */
+.about {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: var(--void);
+  color: var(--ink);
+}
+
+.about-sec {
+  position: relative;
+  display: block;
+  background: var(--void);
+  color: var(--ink);
+}
+
+.about,
+.about-sec {
+  /* One inset token for the whole area so ten concepts cannot drift. */
+  --pad: clamp(1.125rem, 3.4vw, 3.25rem);
+  /* Clearance for the shell hint strip, which is absolutely positioned
+     against a page root and would otherwise land on top of a bottom rail. */
+  --hint: 3.25rem;
+  --measure: 68ch;
+}
+
+/* A page concept that needs to scroll brings its own scroller: the stage body
+   clips, so it cannot borrow the document scroll. */
+.about-scroll {
+  position: absolute;
+  inset: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+}
+
+/* ==========================================================================
+   SHARED TYPE
+   ========================================================================== */
+.about__title,
+.about-sec__title {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: clamp(1.5rem, 3.1vw, 2.5rem);
+  line-height: 0.98;
+  letter-spacing: -0.038em;
+  text-wrap: balance;
+  color: var(--ink);
+}
+
+.about__lede,
+.about-sec__lede {
+  margin-top: 0.875rem;
+  max-width: var(--measure);
+  font-size: clamp(0.9375rem, 1.05vw, 1.0625rem);
+  line-height: 1.62;
+  color: var(--ink-2);
+  text-wrap: pretty;
+}
+
+/* Every numeric column in this area is tabular, so a stack of times or hours
+   never shifts by a pixel between two frames. */
+.about .t-num,
+.about-sec .t-num {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+}
+
+/* ==========================================================================
+   THE SECTION AFFORDANCE
+   ==========================================================================
+   SE.seeMore builds a `btn btn--accent`, which reads the SHELL accent. Inside
+   a concept stage that is the one hue that is not supposed to appear, so the
+   two custom properties the button is built from are re-pointed at this
+   concept's own hue. Scoped to the area root; the shell's own buttons are
+   untouched.
+   ========================================================================== */
+.about .seemore,
+.about-sec .seemore {
+  --btn-ink: var(--c-accent);
+  --btn-line: var(--c-line);
+}
+
+/* ==========================================================================
+   PAGE 01  -  TRANSCRIPT
+   ========================================================================== */
+.about-transcript__wrap {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  padding: var(--pad) var(--pad) 0;
+}
+
+.about-transcript__head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  column-gap: 1.5rem;
+  padding-bottom: clamp(1.25rem, 3vh, 2.25rem);
+  border-bottom: 1px solid var(--line);
+}
+.about-transcript__head .about__lede { grid-column: 1; }
+.about-transcript__runtime {
+  grid-row: 1;
+  grid-column: 2;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  color: var(--c-accent);
+  /* Optically aligned to the h2 cap height rather than its box top. */
+  padding-top: 0.35em;
+}
+
+.about-transcript__body {
+  display: grid;
+  grid-template-columns: 15rem minmax(0, 1fr);
+  column-gap: clamp(1.5rem, 3vw, 3.5rem);
+  min-height: 0;
+  padding: clamp(1.25rem, 3vh, 2.5rem) 0;
+}
+
+/* ------------------------------------------------------------------ index */
+.about-transcript__index {
+  min-width: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border-right: 1px solid var(--line);
+  padding-right: 1.25rem;
+  /* Nine rows do not fit a laptop stage, so the column scrolls and the JS
+     keeps the active row in view. The bar itself is removed and replaced by a
+     mask that fades the last 3rem: a scrollbar inside a 15rem column is more
+     chrome than the column has content. */
+  scrollbar-width: none;
+  -webkit-mask-image: linear-gradient(180deg, #000 0, #000 calc(100% - 3rem), transparent 100%);
+  mask-image: linear-gradient(180deg, #000 0, #000 calc(100% - 3rem), transparent 100%);
+}
+.about-transcript__index::-webkit-scrollbar { width: 0; height: 0; }
+.about-transcript__index li + li { border-top: 1px solid var(--line); }
+.about-transcript__index button {
+  position: relative;
+  display: grid;
+  gap: 0.25rem;
+  width: 100%;
+  padding: 0.6875rem 0 0.6875rem 0.75rem;
+  text-align: left;
+  color: var(--ink-3);
+  transition: color var(--d-ui) var(--ease-out);
+}
+.about-transcript__index button::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.375rem;
+  bottom: 0.375rem;
+  width: 2px;
+  background: var(--c-accent);
+  transform: scaleY(0);
+  transform-origin: top;
+  transition: transform 260ms var(--ease-out);
+}
+.about-transcript__index button[aria-current="true"]::before { transform: scaleY(1); }
+.about-transcript__index button i {
+  font-family: var(--font-mono);
+  font-style: normal;
+  font-size: 0.625rem;
+  letter-spacing: 0.18em;
+  color: var(--ink-4);
+  transition: color var(--d-ui) var(--ease-out);
+}
+.about-transcript__index button b {
+  font-weight: 400;
+  font-size: 0.8125rem;
+  line-height: 1.35;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.about-transcript__index button[aria-current="true"] { color: var(--ink); }
+.about-transcript__index button[aria-current="true"] i { color: var(--c-accent); }
+
+@media (hover: hover) and (pointer: fine) {
+  .about-transcript__index button:hover { color: var(--ink); }
+  .about-transcript__index button:hover i { color: var(--ink-2); }
+}
+
+/* ------------------------------------------------------------------- pane */
+.about-transcript__pane {
+  min-width: 0;
+  align-self: center;
+  padding-right: var(--pad);
+}
+.about-transcript__cue {
+  display: flex;
+  align-items: baseline;
+  gap: 1rem;
+  margin-bottom: clamp(1.25rem, 3vh, 2.5rem);
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  color: var(--c-accent);
+}
+.about-transcript__cue em {
+  font-style: normal;
+  color: var(--ink-4);
+}
+
+.about-transcript__q {
+  max-width: 22ch;
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: clamp(1.5rem, 3vw, 2.375rem);
+  line-height: 1.06;
+  letter-spacing: -0.035em;
+  color: var(--c-accent);
+  text-wrap: balance;
+}
+
+/* The answer is deliberately a step below the question: the question is the
+   structure of the interview, the answer is its content, and a content block
+   set larger than its own heading reads as a pull quote. */
+.about-transcript__a {
+  margin-top: 1.5rem;
+  max-width: var(--measure);
+  font-size: clamp(1rem, 1.1vw, 1.1875rem);
+  line-height: 1.62;
+  color: var(--ink);
+  text-wrap: pretty;
+}
+
+/* The word is the unit of resolve. Delays are capped so a long answer never
+   takes longer to finish arriving than the answer takes to read. */
+.about-transcript__w {
+  display: inline-block;
+  opacity: 0;
+  transform: translate3d(0, 0.42em, 0);
+}
+.about-transcript__pane.is-in .about-transcript__q .about-transcript__w {
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity 300ms var(--ease-out),
+    transform 300ms var(--ease-out);
+  transition-delay: min(calc(var(--i) * 16ms), 260ms);
+}
+.about-transcript__pane.is-in .about-transcript__a .about-transcript__w {
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity 420ms var(--ease-out),
+    transform 420ms var(--ease-out);
+  transition-delay: min(calc(var(--i) * 9ms), 380ms);
+}
+
+/* ------------------------------------------------------------------- axis */
+.about-transcript__axis {
+  position: relative;
+  height: 132px;
+  margin: 0 calc(var(--pad) * -1);
+  padding: 0 var(--pad);
+  margin-bottom: var(--hint);
+  border-top: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.02);
+  cursor: ew-resize;
+  touch-action: none;
+  transition: background var(--d-fast) var(--ease-out);
+}
+.about-transcript__axis.is-drag { background: rgba(255, 255, 255, 0.045); }
+.about-transcript__wave { width: 100%; height: 100%; }
+
+.about-transcript__ghost {
+  position: absolute;
+  left: var(--pad);
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: rgba(236, 236, 239, 0.16);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 140ms var(--ease-out);
+}
+.about-transcript__ghost::after {
+  content: attr(data-t);
+  position: absolute;
+  top: 6px;
+  left: 5px;
+  font-family: var(--font-mono);
+  font-size: 0.5625rem;
+  letter-spacing: 0.16em;
+  color: var(--ink-3);
+}
+@media (hover: hover) and (pointer: fine) {
+  .about-transcript__axis.is-hover .about-transcript__ghost { opacity: 1; }
+  .about-transcript__axis.is-drag .about-transcript__ghost { opacity: 0; }
+}
+
+/* ------------------------------------------------------------- responsive */
+@media (max-width: 1099px) {
+  .about-transcript__body { grid-template-columns: 11rem minmax(0, 1fr); }
+  .about-transcript__index button b { display: none; }
+  .about-transcript__axis { height: 108px; }
+  .about-transcript { --measure: 66ch; }
+}
+
+/* Below 768px the composition inverts rather than shrinking: the axis moves
+   up under the header, the index becomes a snap row of timecode chips, and
+   the pane takes whatever height is left. */
+@media (max-width: 767px) {
+  .about-transcript__wrap {
+    grid-template-rows: auto auto auto minmax(0, 1fr);
+    padding: var(--pad) var(--pad) var(--hint);
+  }
+  .about-transcript__head {
+    grid-template-columns: minmax(0, 1fr);
+    padding-bottom: 1rem;
+  }
+  .about-transcript__runtime { grid-row: 2; grid-column: 1; padding-top: 0.5rem; }
+  .about-transcript__axis {
+    order: -1;
+    height: 84px;
+    margin: 1rem calc(var(--pad) * -1) 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .about-transcript__body {
+    display: block;
+    padding: 0;
+    min-height: 0;
+  }
+  .about-transcript__index {
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+    padding: 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-snap-type: x mandatory;
+  }
+  .about-transcript__index ol { display: flex; }
+  .about-transcript__index li + li { border-top: 0; }
+  .about-transcript__index button {
+    display: block;
+    width: auto;
+    min-width: 4.5rem;
+    height: 44px;
+    padding: 0 0.75rem;
+    scroll-snap-align: start;
+  }
+  .about-transcript__index button::before {
+    inset: auto 0 0 0;
+    width: auto;
+    height: 2px;
+    transform: scaleX(0);
+    transform-origin: left;
+  }
+  .about-transcript__index button[aria-current="true"]::before { transform: scaleX(1); }
+  .about-transcript__index button b { display: none; }
+  .about-transcript__index button i { font-size: 0.6875rem; line-height: 44px; }
+  .about-transcript__pane { padding: 1.5rem 0 0; align-self: start; }
+  .about-transcript__q { font-size: 1.375rem; max-width: none; }
+  .about-transcript__a { font-size: 1rem; margin-top: 1rem; }
+  .about-transcript__cue { margin-bottom: 1rem; }
+}
+
+/* ---------------------------------------------------------------- reduced */
+@media (prefers-reduced-motion: reduce) {
+  .about-transcript__w {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+  .about-transcript__pane { transition: opacity 160ms linear; }
+  .about-transcript__index button::before { transition: none !important; }
+}
+
+/* ==========================================================================
+   PAGE 02  -  PORTRAIT
+   ==========================================================================
+   Three painting layers with the figure in the middle. The interlock is the
+   composition, so the two type layers are positioned against the stage and not
+   against each other: the head has to clear the first baseline and the
+   shoulder has to cross the second.
+   ========================================================================== */
+.about-portrait__stage {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+.about-portrait__canvas {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+}
+
+.about-portrait__type {
+  position: absolute;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(4rem, 15vw, 13rem);
+  line-height: 0.78;
+  letter-spacing: -0.06em;
+  white-space: nowrap;
+  pointer-events: none;
+  user-select: none;
+}
+/* These two numbers are the composition. The head has to clear the first
+   baseline and the shoulder has to cross the second; everything else in the
+   layout is arranged around that pair. */
+.about-portrait__type--back {
+  z-index: 0;
+  top: 24%;
+  color: rgba(236, 236, 239, 0.09);
+}
+.about-portrait__type--front {
+  z-index: 2;
+  top: 62%;
+  color: rgba(236, 236, 239, 0.9);
+}
+
+/* --------------------------------------------------------------- the copy */
+/* Four corners around a central figure. The copy takes the strongest corner,
+   the disclosure takes the weakest. */
+.about-portrait__copy {
+  position: absolute;
+  left: var(--pad);
+  top: calc(var(--pad) + 1.5rem);
+  z-index: 3;
+  /* Narrower than the shared 68ch token on purpose: this is a three line
+     standfirst in a column beside a figure, not a long-form read, and the
+     figure needs the space more than the paragraph does. */
+  max-width: 42ch;
+  padding-top: 1rem;
+  border-top: 1px solid var(--c-line);
+}
+/* The display layers carry the name on desktop, so the real heading is only
+   there for the accessibility tree and for narrow screens. */
+.about-portrait__name {
+  position: absolute;
+  width: 1px; height: 1px;
+  margin: -1px; padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.about-portrait__thesis {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(1.25rem, 2.2vw, 1.75rem);
+  line-height: 1.14;
+  letter-spacing: -0.02em;
+  color: var(--c-accent);
+  text-wrap: balance;
+}
+.about-portrait__note {
+  margin-top: 0.875rem;
+  font-size: 1rem;
+  line-height: 1.62;
+  color: var(--ink-2);
+  text-wrap: pretty;
+}
+
+.about-portrait__facts {
+  position: absolute;
+  right: var(--pad);
+  bottom: calc(var(--hint) + 1.25rem);
+  z-index: 3;
+  display: grid;
+  gap: 0.5rem;
+  padding-top: 0.875rem;
+  border-top: 1px solid var(--line);
+  text-align: right;
+}
+.about-portrait__facts dt {
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ink-4);
+}
+.about-portrait__facts dd {
+  margin: 0.125rem 0 0;
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  color: var(--ink);
+}
+
+/* ------------------------------------------------------ screen switcher */
+.about-portrait__screens {
+  position: absolute;
+  right: var(--pad);
+  top: var(--pad);
+  z-index: 3;
+  display: grid;
+  gap: 0.5rem;
+}
+.about-portrait__screens button {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.625rem;
+  height: 2.25rem;
+  min-width: 8.5rem;
+  padding: 0 0.75rem;
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  color: var(--ink-3);
+  transition:
+    border-color 180ms var(--ease-out),
+    color 180ms var(--ease-out);
+}
+.about-portrait__screens button i {
+  font-family: var(--font-mono);
+  font-style: normal;
+  font-size: 0.625rem;
+  letter-spacing: 0.16em;
+  color: var(--ink-4);
+  transition: color 180ms var(--ease-out);
+}
+.about-portrait__screens button b {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: 0.625rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+.about-portrait__screens button[aria-checked="true"] {
+  border-color: var(--c-line);
+  color: var(--ink);
+}
+.about-portrait__screens button[aria-checked="true"] i { color: var(--c-accent); }
+@media (hover: hover) and (pointer: fine) {
+  .about-portrait__screens button:hover { color: var(--ink); }
+}
+
+.about-portrait__caption {
+  position: absolute;
+  left: var(--pad);
+  bottom: calc(var(--hint) + 1.25rem);
+  z-index: 3;
+  max-width: 46ch;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  color: var(--ink-3);
+}
+.about-portrait__caption [data-screen] { color: var(--ink-2); }
+
+/* -------------------------------------------------------------- entry */
+.about-portrait .about-portrait__type--back,
+.about-portrait .about-portrait__canvas,
+.about-portrait .about-portrait__type--front {
+  animation: about-portrait-in 700ms var(--ease-out) both;
+}
+.about-portrait .about-portrait__canvas { animation-duration: 520ms; animation-delay: 120ms; }
+.about-portrait .about-portrait__type--front { animation-delay: 200ms; }
+@keyframes about-portrait-in {
+  from { opacity: 0; transform: translate3d(0, 40px, 0); }
+  to   { opacity: 1; transform: none; }
+}
+.about-portrait .about-portrait__type--front { --rise: 24px; }
+
+/* ------------------------------------------------------------- responsive */
+@media (max-width: 1099px) {
+  .about-portrait__type--back { top: 20%; }
+  .about-portrait__type--front { top: 64%; }
+  .about-portrait__copy { max-width: 34ch; }
+  .about-portrait__caption { max-width: 34ch; }
+}
+
+/* Below 768px the interlock is abandoned rather than shrunk: a 375px column
+   cannot support type passing behind a head, so the page becomes a document
+   with a figure in it. */
+@media (max-width: 767px) {
+  .about-portrait { overflow-y: auto; overflow-x: hidden; overscroll-behavior: contain; }
+  .about-portrait__stage {
+    position: relative;
+    inset: auto;
+    height: 52vh;
+    margin-top: 1.25rem;
+  }
+
+  /* Both display layers go. The interlock needs three z-layers and a figure
+     wide enough to sit between them, and neither is available in 375px, so
+     the real heading stops being visually hidden and carries the name
+     instead. One name, one element, no pretend typography. */
+  .about-portrait__type { display: none; }
+  .about-portrait__name {
+    position: static;
+    width: auto;
+    height: auto;
+    margin: 3.25rem var(--pad) 0;
+    clip-path: none;
+    white-space: normal;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 2.25rem;
+    line-height: 0.94;
+    letter-spacing: -0.045em;
+    color: var(--ink);
+  }
+  .about-portrait__caption {
+    position: static;
+    margin: 1.5rem var(--pad) 0;
+    max-width: none;
+  }
+  .about-portrait__copy {
+    position: static;
+    margin: 1.5rem var(--pad) 0;
+    max-width: none;
+    top: auto;
+  }
+  .about-portrait__facts {
+    position: static;
+    margin: 1.5rem var(--pad) 0;
+    grid-template-columns: 1fr 1fr;
+    text-align: left;
+  }
+  .about-portrait__screens {
+    position: static;
+    margin: 1.75rem var(--pad) var(--hint);
+    grid-auto-flow: column;
+    grid-auto-columns: 1fr;
+  }
+  .about-portrait__screens button {
+    height: 44px;
+    min-width: 0;
+    justify-content: center;
+  }
+}
+
+/* ---------------------------------------------------------------- reduced */
+@media (prefers-reduced-motion: reduce) {
+  .about-portrait .about-portrait__type--back,
+  .about-portrait .about-portrait__canvas,
+  .about-portrait .about-portrait__type--front {
+    animation: none !important;
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ==========================================================================
+   PAGE 03  -  MANIFESTO
+   ==========================================================================
+   The type is the whole design. One face, one weight for the argument, one
+   hue for the correction, and nothing else on the page.
+   ========================================================================== */
+.about-manifesto__inner {
+  /* 34rem lands at roughly 68 rendered characters in Space Grotesk, which is
+     inside the comfortable measure band for a long read. */
+  max-width: 34rem;
+  margin: 0 auto;
+  /* Both paddings exist so the first and last blocks can reach the reading
+     line and be fully lit. Without them the argument opens and closes dim. */
+  padding: 22vh 1.25rem 34vh;
+}
+
+.about-manifesto__head { margin-bottom: 3.5em; }
+
+/* --lit is written from the frame loop. No transition on it: the value is
+   already continuous, and easing a scrub introduces lag behind the scrollbar. */
+.about-manifesto__p,
+.about-manifesto__end,
+.about-manifesto__turn {
+  --lit: 1;
+  opacity: calc(0.22 + var(--lit) * 0.78);
+}
+
+.about-manifesto__p {
+  margin-top: 1.6em;
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(1.0625rem, 1.3vw, 1.25rem);
+  line-height: 1.72;
+  color: var(--ink);
+  text-wrap: pretty;
+}
+
+/* -------------------------------------------------------------- the turn */
+.about-manifesto__turn {
+  margin: 3.5em 0;
+  padding-left: 1.5rem;
+  border-left: 1px solid var(--c-line);
+}
+
+.about-manifesto__strike {
+  position: relative;
+  display: inline-block;
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(1.0625rem, 1.3vw, 1.25rem);
+  line-height: 1.5;
+  color: var(--ink-3);
+}
+/* The native strike is removed and redrawn as a scalable rule, because a
+   text-decoration cannot be animated from left to right. */
+.about-manifesto__strike s { text-decoration: none; }
+.about-manifesto__rule {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0.72em;
+  height: 1px;
+  background: var(--c-accent);
+  transform: scaleX(0);
+  transform-origin: left center;
+}
+
+.about-manifesto__fixed {
+  margin-top: 0.875em;
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: clamp(1.25rem, 2vw, 1.625rem);
+  line-height: 1.3;
+  letter-spacing: -0.03em;
+  color: var(--c-accent);
+  opacity: 0;
+  transform: translate3d(0, 18px, 0);
+  text-wrap: balance;
+}
+
+/* -------------------------------------------------------------- the end */
+.about-manifesto__end {
+  margin-top: 4em;
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(1.375rem, 2.4vw, 1.875rem);
+  line-height: 1.3;
+  letter-spacing: -0.03em;
+  color: var(--ink);
+  text-wrap: balance;
+}
+
+.about-manifesto__foot {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 4em;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--line);
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.2em;
+  color: var(--ink-4);
+}
+
+/* --------------------------------------------------------------- the tick */
+/* A position readout, not a progress bar: one travelling mark and no filled
+   track behind it. */
+.about-manifesto__rail {
+  position: absolute;
+  /* Sits 48px outside the left edge of the 34rem column, so it reads as a
+     margin mark on this document rather than as furniture stuck to the
+     viewport. Clamped so it never leaves the stage on a narrow window. */
+  left: max(1.25rem, calc(50% - 20rem));
+  top: 12vh;
+  bottom: calc(var(--hint) + 6vh);
+  width: 2px;
+  pointer-events: none;
+}
+.about-manifesto__rail i {
+  display: block;
+  width: 2px;
+  height: 34px;
+  background: var(--c-accent);
+  opacity: 0.9;
+}
+
+/* ------------------------------------------------------------- responsive */
+@media (max-width: 1099px) {
+  .about-manifesto__inner { max-width: 30rem; }
+  .about-manifesto__rail { left: max(1rem, calc(50% - 18rem)); }
+}
+
+/* Below 768px the dimming floor rises: a 375px column shows fewer paragraphs
+   at once, and heavy dimming there reads as a rendering fault rather than as
+   emphasis. */
+@media (max-width: 767px) {
+  .about-manifesto__p,
+  .about-manifesto__end,
+  .about-manifesto__turn { opacity: calc(0.46 + var(--lit) * 0.54); }
+  .about-manifesto__inner { padding: 16vh 1.25rem calc(24vh + var(--hint)); }
+  .about-manifesto__p { font-size: 1.0625rem; line-height: 1.68; }
+  .about-manifesto__rail { display: none; }
+  .about-manifesto__turn { margin: 2.5em 0; padding-left: 1rem; }
+  .about-manifesto__fixed { font-size: 1.25rem; }
+  .about-manifesto__end { font-size: 1.375rem; }
+}
+
+/* ---------------------------------------------------------------- reduced */
+.about-manifesto.is-static .about-manifesto__p,
+.about-manifesto.is-static .about-manifesto__end,
+.about-manifesto.is-static .about-manifesto__turn { opacity: 1; }
+/* With motion off the frame loop is never subscribed, so the tick would sit
+   at the top of the rail forever. A position readout that does not read a
+   position is furniture, so it goes; the native scrollbar is the accessible
+   indicator and it is still there. */
+.about-manifesto.is-static .about-manifesto__rail { display: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .about-manifesto__p,
+  .about-manifesto__end,
+  .about-manifesto__turn { opacity: 1 !important; }
+  .about-manifesto__fixed { opacity: 1 !important; transform: none !important; }
+  .about-manifesto__rule { transform: scaleX(1) !important; }
+}
+
+/* ==========================================================================
+   PAGE 04  -  CONSTELLATION
+   ==========================================================================
+   A canvas field with DOM labels on top. The canvas draws the grid, the edges
+   and the dots; every piece of type on the plot is a real focusable button,
+   moved with a transform and never with left / top.
+   ========================================================================== */
+.about-constellation {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 24rem;
+  /* Title, questions, field. The third row takes whatever is left, which is
+     what makes the plot fill the stage instead of sizing to its contents. */
+  grid-template-rows: auto auto minmax(0, 1fr);
+  column-gap: clamp(1.25rem, 2.5vw, 2.5rem);
+  padding: var(--pad) var(--pad) var(--hint);
+}
+
+.about-constellation__head { grid-column: 1 / -1; }
+
+.about-constellation__asks {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 1.25rem 0 0.5rem;
+}
+.about-constellation__asks button {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  height: 2.25rem;
+  padding: 0 0.875rem;
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  color: var(--ink-3);
+  transition:
+    border-color 180ms var(--ease-out),
+    color 180ms var(--ease-out);
+}
+.about-constellation__asks button i {
+  font-family: var(--font-mono);
+  font-style: normal;
+  font-size: 0.625rem;
+  letter-spacing: 0.16em;
+  color: var(--ink-4);
+  transition: color 180ms var(--ease-out);
+}
+.about-constellation__asks button b {
+  font-weight: 400;
+  font-size: 0.8125rem;
+}
+.about-constellation__asks button[aria-checked="true"] {
+  border-color: var(--c-line);
+  color: var(--ink);
+}
+.about-constellation__asks button[aria-checked="true"] i { color: var(--c-accent); }
+@media (hover: hover) and (pointer: fine) {
+  .about-constellation__asks button:hover { color: var(--ink); }
+}
+
+/* -------------------------------------------------------------- the plot */
+.about-constellation__plot {
+  position: relative;
+  grid-column: 1;
+  grid-row: 3;
+  min-height: 0;
+}
+.about-constellation__canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.about-constellation__nodes { position: absolute; inset: 0; }
+
+/* The button is anchored at the dot; the label hangs off it. JS writes the
+   independent `translate` property once per frame and CSS owns `transform`,
+   so the two compose without the frame loop ever needing to know how wide a
+   label is. That is what makes the flip below possible at zero measurement
+   cost. */
+.about-constellation__node {
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.375rem 0;
+  white-space: nowrap;
+  color: var(--ink-2);
+  /* -4.5px puts the 9px dot marker exactly on the anchor point the canvas
+     painted; -50% centres the label on it. */
+  transform: translate(-4.5px, -50%);
+  transition: color 160ms var(--ease-out);
+}
+.about-constellation__node i {
+  width: 9px;
+  height: 9px;
+  flex: none;
+}
+.about-constellation__node b {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 0.8125rem;
+  letter-spacing: -0.01em;
+}
+.about-constellation__node.is-on { color: var(--ink); }
+/* Labels past the right of the field flip to the other side of their dot so
+   nothing hangs off the edge. Instant, because easing a label across its own
+   anchor reads as a bug. */
+.about-constellation__node.is-flip {
+  flex-direction: row-reverse;
+  transform: translate(calc(-100% + 4.5px), -50%);
+}
+
+.about-constellation__nline,
+.about-constellation__nmeta { display: none; }
+
+@media (hover: hover) and (pointer: fine) {
+  .about-constellation__node:hover { color: var(--ink); }
+}
+
+/* ------------------------------------------------------------- the axes */
+.about-constellation__axes { position: absolute; inset: 0; pointer-events: none; }
+.about-constellation__ax {
+  position: absolute;
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-4);
+}
+.about-constellation__ax--x0 { left: 52px; bottom: 14px; }
+.about-constellation__ax--x1 { right: 52px; bottom: 14px; text-align: right; }
+.about-constellation__ax--y0 { left: 52px; bottom: 40px; transform: rotate(-90deg); transform-origin: left bottom; }
+.about-constellation__ax--y1 { left: 52px; top: 40px; transform: rotate(-90deg) translateX(-100%); transform-origin: left top; }
+
+/* ------------------------------------------------------------- the panel */
+.about-constellation__panel {
+  grid-column: 2;
+  grid-row: 3;
+  align-self: center;
+  padding-left: clamp(1.25rem, 2vw, 2rem);
+  border-left: 1px solid var(--c-line);
+  opacity: 0;
+  transform: translate3d(0, 10px, 0);
+  transition:
+    opacity 220ms var(--ease-out),
+    transform 220ms var(--ease-out);
+}
+.about-constellation__panel.is-on { opacity: 1; transform: none; }
+.about-constellation__panel h3 {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: clamp(1.25rem, 1.9vw, 1.625rem);
+  line-height: 1.06;
+  letter-spacing: -0.03em;
+  color: var(--ink);
+  text-wrap: balance;
+}
+.about-constellation__line {
+  margin-top: 0.875rem;
+  font-size: 1.0625rem;
+  line-height: 1.5;
+  color: var(--c-accent);
+  text-wrap: pretty;
+}
+.about-constellation__body {
+  margin-top: 1.25rem;
+  max-width: 42ch;
+  font-size: 0.9375rem;
+  line-height: 1.62;
+  color: var(--ink-2);
+  text-wrap: pretty;
+}
+.about-constellation__cost,
+.about-constellation__leans {
+  display: grid;
+  gap: 0.25rem;
+  margin-top: 1.25rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--line);
+}
+.about-constellation__cost span,
+.about-constellation__leans span {
+  font-family: var(--font-mono);
+  font-size: 0.5625rem;
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  color: var(--ink-4);
+}
+.about-constellation__cost em,
+.about-constellation__leans em {
+  font-style: normal;
+  font-size: 0.875rem;
+  color: var(--ink-2);
+}
+
+/* ------------------------------------------------------------- responsive */
+@media (max-width: 1099px) {
+  .about-constellation { grid-template-columns: minmax(0, 1fr) 19rem; }
+  .about-constellation__node b { font-size: 0.75rem; }
+  .about-constellation__ax--x0,
+  .about-constellation__ax--y0,
+  .about-constellation__ax--y1 { left: 36px; }
+  .about-constellation__ax--x1 { right: 36px; }
+}
+
+/* Below 768px the plot is abandoned, not shrunk: seven labelled nodes in a
+   375px square is an unreadable pile. The same seven buttons become the rows
+   of a list ordered by the current question's vertical axis, and the line, the
+   coordinate and the connections that were hidden on the plot become the
+   content of each row. */
+@media (max-width: 767px) {
+  .about-constellation {
+    display: block;
+    overflow-y: auto;
+    overflow-x: hidden;
+    overscroll-behavior: contain;
+  }
+  .about-constellation__asks {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    margin: 1.25rem 0;
+  }
+  .about-constellation__asks button { height: 44px; flex: none; scroll-snap-align: start; }
+  .about-constellation__canvas,
+  .about-constellation__axes { display: none; }
+  .about-constellation__plot { min-height: 0; }
+  .about-constellation__nodes {
+    position: static;
+    display: flex;
+    flex-direction: column;
+  }
+  .about-constellation__node {
+    position: static;
+    display: grid;
+    grid-template-columns: 9px minmax(0, 1fr);
+    align-items: start;
+    gap: 0.25rem 0.75rem;
+    width: 100%;
+    margin: 0;
+    padding: 1rem 0;
+    border-top: 1px solid var(--line);
+    white-space: normal;
+    text-align: left;
+    transform: none;
+    /* The order is written by JS when the question changes; the transition is
+       on opacity only, because reordering flex children cannot be tweened and
+       a fake one would lie about where a row went. */
+    transition: opacity 320ms var(--ease-out), color 160ms var(--ease-out);
+  }
+  .about-constellation__node i {
+    margin-top: 0.4rem;
+    background: var(--c-accent);
+    border-radius: 50%;
+    width: 7px;
+    height: 7px;
+  }
+  .about-constellation__node b { grid-column: 2; transform: none; font-size: 1rem; }
+  .about-constellation__node.is-flip { flex-direction: row; transform: none; }
+  .about-constellation__nline {
+    display: block;
+    grid-column: 2;
+    font-size: 0.9375rem;
+    line-height: 1.55;
+    color: var(--ink-2);
+  }
+  .about-constellation__nmeta {
+    display: grid;
+    gap: 0.25rem;
+    grid-column: 2;
+    margin-top: 0.5rem;
+  }
+  .about-constellation__nmeta em {
+    font-style: normal;
+    font-size: 0.6875rem;
+    color: var(--ink-4);
+  }
+  .about-constellation__panel {
+    position: static;
+    margin-top: 1.5rem;
+    padding: 1.25rem 0 var(--hint);
+    border-left: 0;
+    border-top: 1px solid var(--c-line);
+    max-height: none;
+  }
+}
+
+/* ---------------------------------------------------------------- reduced */
+@media (prefers-reduced-motion: reduce) {
+  .about-constellation__panel {
+    transform: none !important;
+    transition: opacity 120ms linear !important;
+  }
+}
+
+/* ==========================================================================
+   PAGE 05  -  LEDGER
+   ==========================================================================
+   A ledger, not a dashboard. Hairlines, tabular figures and one polyline per
+   row. The only saturated element is the probe the reader is holding.
+   ========================================================================== */
+.about-ledger__wrap {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(1.25rem, 2.5vh, 2rem);
+  padding: var(--pad) var(--pad) calc(var(--hint) + 1.5rem);
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+}
+
+.about-ledger__head .about__lede { max-width: 74ch; }
+
+/* ------------------------------------------------------------- the table */
+.about-ledger__table {
+  position: relative;
+  cursor: col-resize;
+  touch-action: pan-y;
+}
+/* The whole table is the slider track, so the focus ring is genuinely that
+   large. It is retinted to the concept hue so it does not read as the shell's
+   own vermillion leaking into a stage. */
+.about-ledger__table:focus-visible {
+  outline: 2px solid var(--c-accent);
+  outline-offset: 4px;
+}
+.about-ledger__spark {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+.about-ledger__grid { position: relative; }
+
+.about-ledger__row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 6.5rem 6.5rem 6.5rem minmax(9rem, 22rem);
+  align-items: center;
+  column-gap: 1rem;
+  /* Row height follows the viewport height rather than being fixed: eleven
+     rows plus a header, a lede and a note have to fit a laptop stage without
+     the note falling under the hint strip. */
+  min-height: clamp(2.5rem, 4.6vh, 3.25rem);
+  border-bottom: 1px solid var(--line);
+}
+.about-ledger__row--head {
+  min-height: 2.25rem;
+  border-bottom-color: var(--line-2);
+}
+.about-ledger__row--total {
+  margin-top: 0.75rem;
+  border-top: 1px solid var(--line-2);
+  border-bottom: 0;
+}
+
+.about-ledger__k {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(0.9375rem, 1.15vw, 1.0625rem);
+  color: var(--ink);
+}
+.about-ledger__row--head .about-ledger__k,
+.about-ledger__row--head .about-ledger__n,
+.about-ledger__row--head .about-ledger__s {
+  font-family: var(--font-mono);
+  font-size: 0.5625rem;
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ink-4);
+}
+.about-ledger__row--total .about-ledger__k {
+  font-family: var(--font-mono);
+  font-size: 0.5625rem;
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ink-4);
+}
+
+.about-ledger__n {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: 0.9375rem;
+  text-align: right;
+  color: var(--ink);
+}
+.about-ledger__n--dim { color: var(--ink-3); }
+/* The sign is a character, never only a hue: up and down are stated, and no
+   direction is implied to be the good one. */
+.about-ledger__n--delta { color: var(--ink-2); }
+
+.about-ledger__s { min-width: 0; }
+.about-ledger__row--total .about-ledger__s {
+  font-family: var(--font-mono);
+  font-size: 0.5625rem;
+  letter-spacing: 0.2em;
+  color: var(--c-accent);
+  text-align: right;
+}
+
+/* The head cell of the probed column carries the state, and the rule is the
+   state change; the text is only its label. */
+.about-ledger__row--head [data-head] { position: relative; }
+.about-ledger__row--head [data-head]::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -0.4rem;
+  height: 1px;
+  background: var(--c-accent);
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 180ms var(--ease-out);
+}
+.about-ledger__table.is-probing .about-ledger__row--head [data-head] { color: var(--c-accent); }
+.about-ledger__table.is-probing .about-ledger__row--head [data-head]::after { transform: scaleX(1); }
+
+/* Entry: rows arrive, the series do not draw. A chart animation delays the
+   only thing the reader came for. */
+.about-ledger__grid .about-ledger__row {
+  animation: about-ledger-row 420ms var(--ease-out) both;
+}
+.about-ledger__grid .about-ledger__row:nth-child(1)  { animation-delay: 0ms; }
+.about-ledger__grid .about-ledger__row:nth-child(2)  { animation-delay: 26ms; }
+.about-ledger__grid .about-ledger__row:nth-child(3)  { animation-delay: 52ms; }
+.about-ledger__grid .about-ledger__row:nth-child(4)  { animation-delay: 78ms; }
+.about-ledger__grid .about-ledger__row:nth-child(5)  { animation-delay: 104ms; }
+.about-ledger__grid .about-ledger__row:nth-child(6)  { animation-delay: 130ms; }
+.about-ledger__grid .about-ledger__row:nth-child(7)  { animation-delay: 156ms; }
+.about-ledger__grid .about-ledger__row:nth-child(8)  { animation-delay: 182ms; }
+.about-ledger__grid .about-ledger__row:nth-child(9)  { animation-delay: 208ms; }
+.about-ledger__grid .about-ledger__row:nth-child(10) { animation-delay: 234ms; }
+.about-ledger__grid .about-ledger__row:nth-child(11) { animation-delay: 260ms; }
+@keyframes about-ledger-row {
+  from { opacity: 0; transform: translate3d(0, 8px, 0); }
+  to   { opacity: 1; transform: none; }
+}
+
+.about-ledger__note {
+  max-width: 74ch;
+  font-size: 0.75rem;
+  line-height: 1.55;
+  color: var(--ink-3);
+}
+.about-ledger__note b { font-weight: 500; color: var(--c-accent); }
+
+/* ------------------------------------------------------------- responsive */
+@media (max-width: 1099px) {
+  .about-ledger__row {
+    grid-template-columns: minmax(0, 1fr) 5.5rem 5.5rem 5.5rem minmax(9rem, 16rem);
+  }
+  .about-ledger__n { font-size: 0.875rem; }
+}
+
+/* Below 768px the table is not a table. Each activity becomes a stacked block
+   with its own full width series, because five columns of mono figures in a
+   375px viewport is either a horizontal scroll or an unreadable squeeze. */
+@media (max-width: 767px) {
+  .about-ledger__row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    align-items: start;
+    row-gap: 0.375rem;
+    padding: 0.875rem 0;
+    min-height: 0;
+  }
+  .about-ledger__row--head { display: none; }
+  .about-ledger__k { font-size: 1rem; }
+  .about-ledger__n {
+    display: inline;
+    text-align: left;
+    font-size: 0.8125rem;
+  }
+  /* The three figures become one mono strip, each labelled by a prefix, so
+     nothing depends on a column head that is no longer there. */
+  .about-ledger__n::before {
+    font-size: 0.5625rem;
+    letter-spacing: 0.2em;
+    color: var(--ink-4);
+    margin-right: 0.375rem;
+  }
+  .about-ledger__row [data-logged]::before { content: "LOGGED"; }
+  .about-ledger__n--dim::before { content: "GUESSED"; }
+  .about-ledger__n--delta::before { content: "DELTA"; }
+  .about-ledger__row > .about-ledger__n {
+    grid-column: 1;
+    margin-right: 0.875rem;
+  }
+  .about-ledger__s { min-height: 44px; }
+  .about-ledger__row--total .about-ledger__s { text-align: left; min-height: 0; }
+  .about-ledger__table { touch-action: pan-y; }
+}
+
+/* ---------------------------------------------------------------- reduced */
+@media (prefers-reduced-motion: reduce) {
+  .about-ledger__grid .about-ledger__row {
+    animation: none !important;
+    opacity: 1;
+    transform: none;
+  }
+  .about-ledger__row--head [data-head]::after { transition: none !important; }
+}
+
+/* ==========================================================================
+   SECTION 01  -  ANCHOR
+   ==========================================================================
+   Sticky, not pinned. The left column holds for exactly as long as the six
+   beats beside it need and then releases with the page.
+   ========================================================================== */
+.about-anchor {
+  padding: clamp(4rem, 12vh, 8rem) var(--gutter);
+}
+
+.about-anchor__wrap {
+  display: grid;
+  grid-template-columns: minmax(0, 27rem) minmax(0, 1fr);
+  column-gap: clamp(2rem, 6vw, 6rem);
+  max-width: var(--maxw);
+  margin: 0 auto;
+}
+
+/* ---------------------------------------------------------------- the hold */
+.about-anchor__hold {
+  position: sticky;
+  top: 0;
+  align-self: start;
+  /* svh rather than vh so the hold does not jump when a mobile browser bar
+     hides mid-scroll. */
+  min-height: 100svh;
+  display: flex;
+  align-items: center;
+  border-right: 1px solid var(--line);
+  padding-right: clamp(1rem, 3vw, 3rem);
+}
+.about-anchor__holdin { width: 100%; }
+
+.about-anchor__role {
+  margin-top: 0.875rem;
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  font-weight: 500;
+  letter-spacing: 0.24em;
+  color: var(--ink-4);
+}
+.about-anchor__thesis {
+  margin-top: 1.5rem;
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(1.125rem, 1.7vw, 1.375rem);
+  line-height: 1.24;
+  letter-spacing: -0.025em;
+  color: var(--c-accent);
+  text-wrap: balance;
+}
+.about-anchor .about-sec__lede { margin-top: 1.25rem; }
+
+.about-anchor__count {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  margin-top: 2rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--line);
+}
+.about-anchor__rail {
+  position: relative;
+  display: block;
+  width: 2px;
+  height: 112px;
+  background: var(--line);
+}
+.about-anchor__rail i {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 2px;
+  height: 12px;
+  background: var(--c-accent);
+}
+.about-anchor__now {
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  color: var(--ink-2);
+  white-space: pre;
+}
+
+.about-anchor__more { margin-top: 1.75rem; }
+
+/* ---------------------------------------------------------------- the move */
+.about-anchor__move { max-width: 62ch; }
+
+.about-anchor__beat {
+  position: relative;
+  padding: clamp(4rem, 16vh, 9rem) 0 clamp(4rem, 16vh, 9rem) 3.5rem;
+  opacity: 0;
+  transform: translate3d(0, 22px, 0);
+  transition:
+    opacity 620ms var(--ease-out),
+    transform 620ms var(--ease-out);
+}
+.about-anchor__beat.is-in { opacity: 1; transform: none; }
+
+/* The years hang in their own margin so the sequence reads as a column
+   without a single title being read. */
+.about-anchor__yr {
+  position: absolute;
+  left: 0;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  color: var(--ink-4);
+  transition: color 320ms var(--ease-out);
+}
+.about-anchor__beat::before {
+  content: "";
+  position: absolute;
+  left: -1px;
+  top: clamp(4rem, 16vh, 9rem);
+  height: 2.5rem;
+  width: 1px;
+  background: var(--c-accent);
+  transform: scaleY(0);
+  transform-origin: top;
+  transition: transform 320ms var(--ease-out);
+}
+.about-anchor__beat.is-now .about-anchor__yr { color: var(--c-accent); }
+.about-anchor__beat.is-now::before { transform: scaleY(1); }
+
+.about-anchor__bt {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: clamp(1.375rem, 2.4vw, 1.875rem);
+  line-height: 1.06;
+  letter-spacing: -0.035em;
+  color: var(--ink);
+  text-wrap: balance;
+}
+.about-anchor__bb {
+  margin-top: 1rem;
+  font-size: 1.0625rem;
+  line-height: 1.66;
+  color: var(--ink-2);
+  text-wrap: pretty;
+}
+
+/* ------------------------------------------------------------- responsive */
+@media (max-width: 1099px) {
+  .about-anchor__wrap { grid-template-columns: minmax(0, 20rem) minmax(0, 1fr); }
+  .about-anchor .about-sec__lede { max-width: 56ch; }
+}
+
+/* Below 768px there is no split: a 375px column cannot hold two of anything.
+   The statement becomes a normal opening block, the counter goes (the beats
+   are adjacent now, so counting them off is redundant), and See more moves to
+   the end where it is the natural next action. */
+@media (max-width: 767px) {
+  .about-anchor__wrap { display: block; }
+  .about-anchor__hold {
+    position: static;
+    min-height: 0;
+    display: block;
+    border-right: 0;
+    padding-right: 0;
+    padding-bottom: 2.5rem;
+    border-bottom: 1px solid var(--line);
+  }
+  .about-anchor__count { display: none; }
+  .about-anchor__more { margin-top: 1.5rem; }
+  .about-anchor__move { max-width: none; }
+  .about-anchor__beat {
+    padding: 2.5rem 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .about-anchor__beat::before { display: none; }
+  .about-anchor__yr {
+    position: static;
+    display: block;
+    margin-bottom: 0.5rem;
+  }
+  .about-anchor__move::after {
+    content: "";
+    display: block;
+    height: 0;
+  }
+}
+
+/* ---------------------------------------------------------------- reduced */
+@media (prefers-reduced-motion: reduce) {
+  .about-anchor__beat {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+  .about-anchor__beat::before { transition: none !important; }
+}
+
+/* ==========================================================================
+   SECTION 02  -  SENTENCE
+   ==========================================================================
+   One custom property drives forty eight words. The JS writes --p; every word
+   works out its own opacity from --p, --n and its own --i in the style engine,
+   which is where that arithmetic belongs.
+   ========================================================================== */
+.about-sentence {
+  padding: clamp(4rem, 12vh, 8rem) 0;
+}
+
+.about-sentence__stage {
+  position: relative;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 var(--gutter);
+}
+.about-sentence__inner {
+  position: relative;
+  width: 100%;
+  max-width: var(--maxw);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+}
+
+.about-sentence__line {
+  --p: 0;
+  --n: 48;
+  max-width: 24ch;
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(1.5rem, 3.4vw, 3rem);
+  /* 1.22 rather than a reading leading: at this size the sentence has to read
+     as one block of type, and 1.6 would break it into seven separate lines. */
+  line-height: 1.22;
+  letter-spacing: -0.035em;
+  color: var(--ink);
+  text-align: center;
+  margin: auto 0;
+}
+
+/* No transition on the word: the value is already continuous, and easing on
+   top of a scrub puts the text behind the scrollbar. The 2.6 multiplier keeps
+   the transition band about a third of a word wide, so words arrive as words
+   rather than as a smear. */
+.about-sentence__w {
+  display: inline;
+  opacity: clamp(0.14, calc((var(--p) * var(--n) - var(--i)) * 2.6), 1);
+}
+
+.about-sentence__w--tail {
+  transition: color 420ms var(--ease-out);
+}
+.about-sentence.is-done .about-sentence__w--tail { color: var(--c-accent); }
+
+.about-sentence__foot {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.about-sentence__count {
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  color: var(--ink-4);
+}
+
+/* ------------------------------------------------------------- responsive */
+@media (max-width: 1099px) {
+  .about-sentence__line { max-width: 26ch; }
+}
+
+/* Below 768px the sentence is left aligned: centred ragged type at small
+   sizes is measurably harder to scan, and the gain in composition is not
+   worth the loss in reading. */
+@media (max-width: 767px) {
+  .about-sentence__line {
+    max-width: 20ch;
+    font-size: 1.5rem;
+    text-align: left;
+    margin: auto auto auto 0;
+  }
+  .about-sentence__foot {
+    position: static;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.875rem;
+    margin-top: 2rem;
+  }
+  .about-sentence__more { justify-content: center; min-height: 44px; }
+}
+
+/* ---------------------------------------------------------------- reduced */
+@media (prefers-reduced-motion: reduce) {
+  .about-sentence__w { opacity: 1 !important; }
+  .about-sentence__w--tail { color: var(--c-accent); transition: none !important; }
+}
+
+/* ==========================================================================
+   SECTION 03  -  RESOLVE
+   ==========================================================================
+   A plate with a hard edge that never moves and ink inside it that arrives.
+   ========================================================================== */
+.about-resolve {
+  padding: clamp(4rem, 12vh, 8rem) 0;
+}
+
+.about-resolve__stage {
+  width: 100%;
+  display: grid;
+  grid-template-columns: minmax(0, 0.86fr) minmax(0, 1fr);
+  align-items: center;
+  column-gap: clamp(2rem, 5vw, 5rem);
+  max-width: var(--maxw);
+  margin: 0 auto;
+  padding: 0 var(--gutter);
+}
+
+/* ------------------------------------------------------------- the plate */
+.about-resolve__plate {
+  position: relative;
+  /* The width has to be explicit. A grid item with `align-items: center` is
+     not stretched, so an auto width falls back to shrink-to-fit, and the only
+     child here is an absolutely positioned canvas: the plate would collapse to
+     nothing. The height cap is expressed as a max-WIDTH derived from the same
+     ratio, so clamping on a short screen shrinks the plate rather than
+     silently breaking its 4:5. */
+  width: 100%;
+  max-width: calc(72svh * 0.8);
+  aspect-ratio: 4 / 5;
+  margin-inline: auto;
+  border: 1px solid var(--c-line);
+  border-radius: var(--r);
+}
+.about-resolve__canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.about-resolve__cap {
+  position: absolute;
+  left: 0;
+  top: calc(100% + 0.75rem);
+  font-family: var(--font-mono);
+  font-size: 0.5625rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-4);
+  white-space: nowrap;
+}
+
+/* -------------------------------------------------------------- the copy */
+.about-resolve__copy { min-width: 0; }
+.about-resolve__copy .about-sec__title { max-width: 18ch; }
+.about-resolve__note {
+  margin-top: 1.75rem;
+  max-width: 62ch;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  color: var(--ink-3);
+  text-wrap: pretty;
+}
+.about-resolve__more { margin-top: 1.75rem; }
+
+/* Entry: the copy arrives on sight, the plate arrives on scrub. Two different
+   jobs, so two different triggers. */
+.about-resolve__copy h2,
+.about-resolve__copy p {
+  opacity: 0;
+  transform: translate3d(0, 18px, 0);
+  transition:
+    opacity 620ms var(--ease-out) var(--d, 0ms),
+    transform 620ms var(--ease-out) var(--d, 0ms);
+}
+.about-resolve__copy h2.is-in,
+.about-resolve__copy p.is-in { opacity: 1; transform: none; }
+
+/* ------------------------------------------------------------- responsive */
+@media (max-width: 1099px) {
+  .about-resolve__stage { grid-template-columns: minmax(0, 0.7fr) minmax(0, 1fr); }
+  .about-resolve .about-sec__lede { max-width: 56ch; }
+}
+
+/* Below 768px the split is abandoned: the plate becomes a full width band
+   above the copy, because a 4:5 plate beside a paragraph in a 375px column
+   leaves neither of them readable. */
+@media (max-width: 767px) {
+  .about-resolve__stage {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 2.25rem;
+  }
+  .about-resolve__plate {
+    aspect-ratio: auto;
+    width: 100%;
+    max-width: none;
+    height: 42svh;
+  }
+  .about-resolve__cap {
+    position: static;
+    display: block;
+    margin-top: 0.625rem;
+    white-space: normal;
+  }
+  .about-resolve__copy .about-sec__title { max-width: none; }
+  .about-resolve__more { display: flex; justify-content: center; min-height: 44px; }
+}
+
+/* ---------------------------------------------------------------- reduced */
+.about-resolve.is-static .about-resolve__copy h2,
+.about-resolve.is-static .about-resolve__copy p { opacity: 1; transform: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .about-resolve__copy h2,
+  .about-resolve__copy p {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+}
+
+/* ==========================================================================
+   SECTION 04  -  TENETS
+   ==========================================================================
+   A native disclosure strip. The open row grows in place; nothing opens
+   anywhere else on the page.
+   ========================================================================== */
+.about-tenets {
+  padding: clamp(4rem, 12vh, 8rem) var(--gutter);
+}
+.about-tenets__wrap {
+  max-width: 62rem;
+  margin: 0 auto;
+}
+.about-tenets__head { margin-bottom: clamp(2rem, 5vh, 3rem); }
+
+.about-tenets__list { border-top: 1px solid var(--line); }
+
+.about-tenets__row {
+  position: relative;
+  border-bottom: 1px solid var(--line);
+  opacity: 0;
+  transform: translate3d(0, 14px, 0);
+  transition:
+    opacity 520ms var(--ease-out) var(--d, 0ms),
+    transform 520ms var(--ease-out) var(--d, 0ms);
+}
+.about-tenets__row.is-in { opacity: 1; transform: none; }
+
+/* The only marks on an open row besides ink weight: an accent index and a
+   1px rule. No fill, no card, no shadow. */
+.about-tenets__row::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 3.5rem;
+  width: 1px;
+  background: var(--c-accent);
+  transform: scaleY(0);
+  transform-origin: top;
+  transition: transform 300ms var(--ease-out);
+}
+.about-tenets__row.is-open::before { transform: scaleY(1); }
+
+.about-tenets__h { margin: 0; font-weight: 400; }
+.about-tenets__btn {
+  position: relative;
+  display: grid;
+  grid-template-columns: 2.5rem minmax(0, 14rem) minmax(0, 1fr) 2rem;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+  min-height: 3.5rem;
+  text-align: left;
+  color: var(--ink-2);
+  transition: color 160ms var(--ease-out);
+}
+.about-tenets__btn i {
+  font-family: var(--font-mono);
+  font-style: normal;
+  font-size: 0.625rem;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  color: var(--ink-4);
+  transition: color 200ms var(--ease-out);
+}
+.about-tenets__btn b {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 1.0625rem;
+  letter-spacing: -0.015em;
+  color: var(--ink-2);
+  transition: color 160ms var(--ease-out);
+}
+.about-tenets__line {
+  font-size: 0.9375rem;
+  line-height: 1.45;
+  color: var(--ink-2);
+  display: -webkit-box;
+  /* Two lines holds every one of the seven at desktop width, so nothing is
+     truncated in practice; the clamp exists to stop a narrow window turning
+     a compact strip into a wall. Opening a row lifts it entirely, so a
+     sentence can never be permanently cut off. */
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.about-tenets__mark {
+  justify-self: end;
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: var(--ink-4);
+  stroke-width: 1.4;
+  stroke-linecap: round;
+  transition: stroke 200ms var(--ease-out);
+}
+/* A plus becomes a minus by rotating and collapsing one stroke. One path, one
+   transform, no icon swap. */
+.about-tenets__markv {
+  transform-origin: 50% 50%;
+  transition: transform 300ms var(--ease-out);
+}
+
+.about-tenets__row.is-open .about-tenets__btn b { color: var(--ink); }
+.about-tenets__row.is-open .about-tenets__btn i { color: var(--c-accent); }
+.about-tenets__row.is-open .about-tenets__mark { stroke: var(--c-accent); }
+.about-tenets__row.is-open .about-tenets__markv { transform: rotate(90deg) scaleX(0); }
+.about-tenets__row.is-open .about-tenets__line { -webkit-line-clamp: 6; }
+
+@media (hover: hover) and (pointer: fine) {
+  .about-tenets__btn:hover b { color: var(--ink); }
+  .about-tenets__btn:hover .about-tenets__mark { stroke: var(--ink-2); }
+}
+
+/* ------------------------------------------------------------- the panel */
+/* 0fr to 1fr animates to the real measured height. A max-height accordion is
+   always a guess: too small clips, too large runs the tail of the transition
+   against nothing and reads as lag. */
+.about-tenets__panel {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 340ms var(--ease-drawer);
+}
+.about-tenets__panelin {
+  overflow: hidden;
+  opacity: 0;
+  transition: opacity 120ms var(--ease-out);
+}
+.about-tenets__row.is-open .about-tenets__panel { grid-template-rows: 1fr; }
+.about-tenets__row.is-open .about-tenets__panelin {
+  opacity: 1;
+  transition: opacity 260ms var(--ease-out) 80ms;
+}
+
+.about-tenets__body {
+  max-width: 68ch;
+  /* 3.5rem is the 2.5rem index column plus the 1rem grid gap, so the
+     paragraph starts exactly under the key rather than floating between the
+     index and it. */
+  padding: 0 0 0 3.5rem;
+  font-size: 0.9375rem;
+  line-height: 1.62;
+  color: var(--ink-2);
+  text-wrap: pretty;
+}
+.about-tenets__cost {
+  display: flex;
+  align-items: baseline;
+  gap: 0.875rem;
+  margin: 1rem 0 1.75rem;
+  padding: 0.75rem 0 0 3.5rem;
+}
+.about-tenets__cost span {
+  font-family: var(--font-mono);
+  font-size: 0.5625rem;
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  color: var(--ink-4);
+  flex: none;
+}
+.about-tenets__cost em {
+  font-style: normal;
+  font-size: 0.875rem;
+  color: var(--ink-2);
+}
+/* The hairline is inset to the body column, not to the row edge, so the cost
+   reads as belonging to the paragraph above it. */
+.about-tenets__cost::before {
+  content: "";
+  position: absolute;
+  left: 3.5rem;
+  right: 0;
+  height: 1px;
+  background: var(--line);
+  transform: translateY(-0.75rem);
+}
+.about-tenets__cost { position: relative; }
+
+.about-tenets__more { margin-top: 2rem; }
+
+/* ------------------------------------------------------------- responsive */
+@media (max-width: 1099px) {
+  .about-tenets__btn { grid-template-columns: 2.25rem minmax(0, 11rem) minmax(0, 1fr) 2rem; }
+  .about-tenets__line { font-size: 0.875rem; }
+}
+
+/* Below 768px four columns do not fit 375px, so the header becomes two lines
+   inside one taller target: index and key, then the position line. */
+@media (max-width: 767px) {
+  .about-tenets__btn {
+    grid-template-columns: 2.25rem minmax(0, 1fr);
+    grid-template-rows: auto auto;
+    align-items: start;
+    gap: 0.25rem 0.75rem;
+    min-height: 56px;
+    padding: 0.875rem 2rem 0.875rem 0;
+  }
+  .about-tenets__btn i { grid-row: 1; align-self: center; }
+  .about-tenets__btn b { grid-column: 2; grid-row: 1; }
+  .about-tenets__line { grid-column: 2; grid-row: 2; -webkit-line-clamp: 2; }
+  .about-tenets__mark {
+    position: absolute;
+    right: 0;
+    top: 1.25rem;
+  }
+  .about-tenets__row::before { height: 56px; }
+  .about-tenets__body,
+  .about-tenets__cost { padding-left: 3rem; }
+  .about-tenets__cost::before { left: 3rem; }
+  .about-tenets__more { display: flex; justify-content: center; min-height: 44px; }
+}
+
+/* ---------------------------------------------------------------- reduced */
+@media (prefers-reduced-motion: reduce) {
+  .about-tenets__row {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+  .about-tenets__panel { transition: none !important; }
+  .about-tenets__panelin { transition: none !important; }
+  .about-tenets__markv { transition: none !important; }
+  .about-tenets__row::before { transition: none !important; }
+}
+
+/* ==========================================================================
+   SECTION 05  -  MEASURE
+   ==========================================================================
+   The quiet one. Two elements move, once. Everything else is type, a held
+   measure and two hairlines.
+   ========================================================================== */
+.about-measure {
+  padding: clamp(5rem, 14vh, 9rem) var(--gutter);
+}
+
+.about-measure__wrap {
+  display: grid;
+  grid-template-columns: minmax(0, 16rem) minmax(0, 1fr);
+  column-gap: clamp(2rem, 6vw, 5rem);
+  max-width: 68rem;
+  margin: 0 auto;
+}
+
+/* The heading hangs in its own margin. It is a margin note on the column, not
+   a banner across the top of it, and it is not sticky: this section holds
+   nothing. */
+.about-measure__title {
+  max-width: 14ch;
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: clamp(1.75rem, 3vw, 2.5rem);
+  line-height: 1;
+  letter-spacing: -0.04em;
+  color: var(--ink);
+  text-wrap: balance;
+}
+
+.about-measure__col { max-width: 68ch; }
+
+.about-measure__p {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 1rem;
+  line-height: 1.68;
+  color: var(--ink-2);
+  text-wrap: pretty;
+}
+.about-measure__p + .about-measure__p { margin-top: 1.5em; }
+/* The only size change in the running text. It does the work an eyebrow would
+   otherwise be asked to do, which is why there is no eyebrow. */
+.about-measure__p--lede {
+  font-size: clamp(1.0625rem, 1.35vw, 1.25rem);
+  line-height: 1.62;
+  color: var(--ink);
+}
+
+.about-measure__sub {
+  margin-top: 3rem;
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 1rem;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+}
+
+/* Column position IS the trade: left is what is optimised for, right is what
+   is given up. One structural idea, and everything else stays out of its way. */
+.about-measure__opt {
+  margin-top: 1.25rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--line);
+}
+.about-measure__opt > div {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 0.875rem;
+  padding: 0.875rem 0;
+}
+.about-measure__opt dt {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 1rem;
+  color: var(--ink);
+}
+.about-measure__opt dd {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 0.9375rem;
+  line-height: 1.45;
+  color: var(--c-accent);
+}
+
+.about-measure__sign {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 3rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--line);
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  color: var(--ink-4);
+}
+
+.about-measure__more { margin-top: 2rem; }
+
+/* -------------------------------------------------------------- arrival */
+/* Two elements, one 90ms step. That is the entire choreography. 16px rather
+   than 40: a long travel on body copy makes it unreadable during the
+   transition and draws attention to the animation instead of the writing. */
+.about-measure__title,
+.about-measure__col {
+  opacity: 0;
+  transform: translate3d(0, 16px, 0);
+  transition:
+    opacity 520ms var(--ease-out) var(--d, 0ms),
+    transform 520ms var(--ease-out) var(--d, 0ms);
+}
+.about-measure__title.is-in,
+.about-measure__col.is-in { opacity: 1; transform: none; }
+
+/* ------------------------------------------------------------- responsive */
+@media (max-width: 1099px) {
+  .about-measure__wrap { grid-template-columns: minmax(0, 12rem) minmax(0, 1fr); }
+  .about-measure__col { max-width: 62ch; }
+}
+
+/* Below 768px the hang is abandoned. The optimises pairs stack, with the trade
+   indented under its own term and still in the accent hue, so the relationship
+   survives without a column to carry it. */
+@media (max-width: 767px) {
+  .about-measure__wrap { display: block; }
+  .about-measure__title {
+    max-width: 20ch;
+    font-size: 1.625rem;
+    margin-bottom: 2rem;
+  }
+  .about-measure__col { max-width: none; }
+  .about-measure__opt > div {
+    display: block;
+    padding: 0.75rem 0;
+  }
+  .about-measure__opt dd {
+    margin-top: 0.25rem;
+    padding-left: 1rem;
+  }
+  .about-measure__sign { flex-direction: column; gap: 0.375rem; }
+  .about-measure__more { display: flex; justify-content: center; min-height: 44px; }
+}
+
+/* ---------------------------------------------------------------- reduced */
+@media (prefers-reduced-motion: reduce) {
+  .about-measure__title,
+  .about-measure__col {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+}
+
+/* ==========================================================================
+   LEGIBLE SET  -  shared furniture for pages 06 to 10
+   --------------------------------------------------------------------------
+   Pages 06 to 10 are pages you read. They share three things and nothing else:
+   a reading measure, one action pair, and one entrance. Everything after that
+   is a different layout, not a different skin.
+   ========================================================================== */
+
+/* ------------------------------------------------------------- action pair */
+.about .about-act {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 1rem;
+}
+
+.about .about-act__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.5rem;
+  padding: 0 1.125rem;
+  border: 1px solid var(--line-2);
+  border-radius: var(--r);
+  background: none;
+  font-family: var(--font-display);
+  font-size: 0.875rem;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    border-color 180ms var(--ease-out),
+    color 180ms var(--ease-out);
+}
+
+.about .about-act__btn--lead {
+  border-color: var(--c-line);
+  color: var(--c-accent);
+}
+
+.about .about-act__note {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.12em;
+  color: var(--ink-4);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .about .about-act__btn:hover {
+    border-color: var(--c-accent);
+    color: var(--c-accent);
+  }
+}
+
+.about .about-act__btn:focus-visible {
+  outline: 2px solid var(--c-accent);
+  outline-offset: 2px;
+}
+
+/* ==========================================================================
+   PAGE 06  -  PROFILE
+   ========================================================================== */
+.about-profile__inner {
+  padding: var(--pad) var(--pad) calc(var(--hint) + 2rem);
+  max-width: 84rem;
+  margin: 0 auto;
+}
+
+.about-profile__top {
+  display: grid;
+  grid-template-columns: minmax(0, 0.72fr) minmax(0, 1fr);
+  column-gap: clamp(2rem, 4.5vw, 4.5rem);
+  align-items: start;
+  padding-top: clamp(0.5rem, 3vh, 2.5rem);
+}
+
+/* ------------------------------------------------------------------ plate */
+/* A photograph slot. Fixed 4:5, framed, one step above the void. The canvas
+   inside is a placeholder; production swaps in an image at the same aspect. */
+.about-profile__plate {
+  position: sticky;
+  top: var(--pad);
+  margin: 0;
+  aspect-ratio: 4 / 5;
+  max-height: 62vh;
+  border: 1px solid var(--c-line);
+  border-radius: var(--r);
+  background: var(--surface);
+  overflow: hidden;
+  opacity: 0;
+  transform: translate3d(0, 18px, 0);
+  transition:
+    opacity 520ms var(--ease-out),
+    transform 520ms var(--ease-out);
+}
+.about-profile.is-in .about-profile__plate {
+  opacity: 1;
+  transform: none;
+}
+.about-profile__canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* ----------------------------------------------------------------- column */
+.about-profile__col {
+  opacity: 0;
+  transform: translate3d(0, 18px, 0);
+  transition:
+    opacity 520ms var(--ease-out) 90ms,
+    transform 520ms var(--ease-out) 90ms;
+}
+.about-profile.is-in .about-profile__col {
+  opacity: 1;
+  transform: none;
+}
+
+.about-profile__name {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: clamp(2.25rem, 5.2vw, 4.25rem);
+  line-height: 0.94;
+  letter-spacing: -0.04em;
+  color: var(--ink);
+}
+
+.about-profile__role {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.5rem 1rem;
+  margin: 1rem 0 0;
+  padding-bottom: 1.25rem;
+  border-bottom: 1px solid var(--line);
+  font-size: 0.9375rem;
+  color: var(--ink);
+}
+.about-profile__where {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-4);
+}
+
+.about-profile__bio {
+  max-width: 66ch;
+  margin-top: 1.5rem;
+}
+.about-profile__bio p {
+  margin: 0 0 1.125rem;
+  font-size: clamp(1rem, 1.15vw, 1.0625rem);
+  line-height: 1.68;
+  color: var(--ink-2);
+  text-wrap: pretty;
+}
+.about-profile__bio p:first-child { color: var(--ink); }
+.about-profile__bio p:last-child { margin-bottom: 0; }
+
+.about-profile__act { margin-top: 1.75rem; }
+
+/* ------------------------------------------------------------------ notes */
+.about-profile__notes {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(1.5rem, 3vw, 3rem);
+  margin-top: 3.5rem;
+  padding-top: 2.5rem;
+  border-top: 1px solid var(--line);
+}
+
+.about-profile__note {
+  opacity: 0;
+  transform: translate3d(0, 14px, 0);
+  transition:
+    opacity 420ms var(--ease-out) var(--d, 0ms),
+    transform 420ms var(--ease-out) var(--d, 0ms);
+}
+.about-profile__note.is-in { opacity: 1; transform: none; }
+
+.about-profile__note h3 {
+  margin: 0 0 0.75rem;
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--c-accent);
+}
+.about-profile__note p {
+  margin: 0;
+  max-width: 44ch;
+  font-size: 0.9375rem;
+  line-height: 1.66;
+  color: var(--ink-2);
+}
+
+/* ----------------------------------------------------------------- tablet */
+@media (max-width: 1023px) {
+  .about-profile__top { grid-template-columns: minmax(0, 0.62fr) minmax(0, 1fr); }
+  .about-profile__plate { position: static; }
+  .about-profile__notes { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+/* ----------------------------------------------------------------- mobile */
+/* Recomposed, not squeezed: the name leads, then the portrait, then the
+   biography. A portrait above a name on a phone is a magazine cover, not an
+   About page, and it pushes the one thing a visitor came for off the screen. */
+@media (max-width: 767px) {
+  .about-profile__top {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+  .about-profile__col { display: contents; }
+  .about-profile__name { order: 1; }
+  .about-profile__role { order: 2; }
+  .about-profile__plate {
+    order: 3;
+    max-height: none;
+    width: 100%;
+    margin: 1.5rem 0 0;
+  }
+  .about-profile__bio { order: 4; margin-top: 1.5rem; }
+  .about-profile__act { order: 5; }
+  .about-profile__notes {
+    grid-template-columns: minmax(0, 1fr);
+    margin-top: 2.5rem;
+    gap: 1.75rem;
+  }
+  .about .about-profile__act .about-act__btn {
+    flex: 1 1 100%;
+    min-height: 3rem;
+  }
+}
+
+/* ---------------------------------------------------------------- reduced */
+@media (prefers-reduced-motion: reduce) {
+  .about-profile__plate,
+  .about-profile__col,
+  .about-profile__note {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+}
+
+/* On mobile `.about-profile__col` becomes `display: contents` so the portrait
+   can sit between the role line and the biography. A contents box cannot carry
+   opacity, so the entrance moves down onto the four children it releases. */
+@media (max-width: 767px) {
+  .about-profile__name,
+  .about-profile__role,
+  .about-profile__bio,
+  .about-profile__act {
+    opacity: 0;
+    transform: translate3d(0, 14px, 0);
+    transition:
+      opacity 460ms var(--ease-out) 90ms,
+      transform 460ms var(--ease-out) 90ms;
+  }
+  .about-profile.is-in .about-profile__name,
+  .about-profile.is-in .about-profile__role,
+  .about-profile.is-in .about-profile__bio,
+  .about-profile.is-in .about-profile__act {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .about-profile__name,
+  .about-profile__role,
+  .about-profile__bio,
+  .about-profile__act {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+}
+
+/* ==========================================================================
+   PAGE 07  -  STORY
+   ========================================================================== */
+.about-story__inner {
+  max-width: 74rem;
+  margin: 0 auto;
+  padding: var(--pad) var(--pad) calc(var(--hint) + 2rem);
+}
+
+/* ----------------------------------------------------------------- header */
+.about-story__head {
+  padding-top: clamp(0.5rem, 4vh, 3rem);
+  opacity: 0;
+  transform: translate3d(0, 20px, 0);
+  transition:
+    opacity 520ms var(--ease-out),
+    transform 520ms var(--ease-out);
+}
+.about-story.is-in .about-story__head { opacity: 1; transform: none; }
+
+.about-story__name {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: clamp(2rem, 4.4vw, 3.5rem);
+  line-height: 0.96;
+  letter-spacing: -0.038em;
+  color: var(--ink);
+}
+.about-story__role {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.5rem 1rem;
+  margin: 0.875rem 0 0;
+  font-size: 0.9375rem;
+  color: var(--ink);
+}
+.about-story__where {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-4);
+}
+.about-story__lede {
+  margin: 1.5rem 0 0;
+  max-width: 66ch;
+  font-size: clamp(1rem, 1.15vw, 1.0625rem);
+  line-height: 1.68;
+  color: var(--ink);
+  text-wrap: pretty;
+}
+
+/* --------------------------------------------------------------- chapters */
+.about-story__chapters { margin-top: clamp(3rem, 8vh, 5.5rem); }
+
+.about-story__ch {
+  display: grid;
+  grid-template-columns: 7rem minmax(0, 1fr);
+  align-items: start;
+  padding: 2.75rem 0;
+  border-top: 1px solid var(--line);
+  opacity: 0;
+  transform: translate3d(0, 16px, 0);
+  transition:
+    opacity 460ms var(--ease-out) var(--d, 0ms),
+    transform 460ms var(--ease-out) var(--d, 0ms);
+}
+.about-story__ch.is-in { opacity: 1; transform: none; }
+
+/* The year sticks inside its own chapter and releases at the boundary, so the
+   reader always knows which year they are inside without a floating chrome. */
+.about-story__yr {
+  position: sticky;
+  top: var(--pad);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: 0.75rem;
+  letter-spacing: 0.16em;
+  color: var(--ink-4);
+  /* Optical alignment to the chapter title cap height. */
+  padding-top: 0.45em;
+}
+.about-story__yr::after {
+  content: "";
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--c-accent);
+  opacity: 0.75;
+}
+
+.about-story__t {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: clamp(1.375rem, 2.1vw, 1.875rem);
+  line-height: 1.14;
+  letter-spacing: -0.024em;
+  color: var(--ink);
+  text-wrap: balance;
+}
+.about-story__p {
+  margin: 0.875rem 0 0;
+  max-width: 68ch;
+  font-size: clamp(1rem, 1.1vw, 1.0625rem);
+  line-height: 1.7;
+  color: var(--ink-2);
+  text-wrap: pretty;
+}
+
+/* ----------------------------------------------------------------- footer */
+.about-story__foot {
+  margin-top: 3rem;
+  padding-top: 2.75rem;
+  border-top: 1px solid var(--line-2);
+}
+.about-story__foot > * {
+  opacity: 0;
+  transform: translate3d(0, 14px, 0);
+  transition:
+    opacity 460ms var(--ease-out) var(--d, 0ms),
+    transform 460ms var(--ease-out) var(--d, 0ms);
+}
+.about-story__foot > .is-in { opacity: 1; transform: none; }
+
+.about-story__footTitle {
+  margin: 0 0 1.75rem;
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: clamp(1.125rem, 1.6vw, 1.375rem);
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+
+.about-story__notes {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(1.5rem, 3vw, 3rem);
+  margin: 0 0 2.25rem;
+}
+.about-story__notes dt {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--c-accent);
+}
+.about-story__notes dd {
+  margin: 0.75rem 0 0;
+  max-width: 44ch;
+  font-size: 0.9375rem;
+  line-height: 1.66;
+  color: var(--ink-2);
+}
+
+/* ----------------------------------------------------------------- tablet */
+@media (max-width: 1023px) {
+  .about-story__ch { grid-template-columns: 5rem minmax(0, 1fr); }
+  .about-story__notes { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+/* ----------------------------------------------------------------- mobile */
+/* The gutter is dropped rather than narrowed. A 3rem year column on a 390px
+   screen costs the paragraph a fifth of its measure to hold four digits, so
+   the year moves above the title and the prose takes the full width. */
+@media (max-width: 767px) {
+  .about-story__ch {
+    display: block;
+    padding: 2rem 0;
+  }
+  .about-story__yr {
+    position: static;
+    padding-top: 0;
+    margin-bottom: 0.625rem;
+    font-size: 0.6875rem;
+    letter-spacing: 0.18em;
+  }
+  .about-story__chapters { margin-top: 2.5rem; }
+  .about-story__notes {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1.5rem;
+  }
+  .about .about-story__act .about-act__btn {
+    flex: 1 1 100%;
+    min-height: 3rem;
+  }
+}
+
+/* ---------------------------------------------------------------- reduced */
+@media (prefers-reduced-motion: reduce) {
+  .about-story__head,
+  .about-story__ch,
+  .about-story__foot > * {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+}
+
+/* ==========================================================================
+   PAGE 08  -  CARD
+   ========================================================================== */
+.about-card__scroll { display: block; }
+
+.about-card__inner {
+  display: grid;
+  place-items: center;
+  min-height: 100%;
+  padding: var(--pad) var(--pad) calc(var(--hint) + 1.5rem);
+}
+
+.about-card__plate {
+  width: 100%;
+  max-width: 68rem;
+  border: 1px solid var(--line-2);
+  border-radius: var(--r);
+  background: var(--void-2);
+  padding: clamp(1.5rem, 3.4vw, 3rem);
+  opacity: 0;
+  transform: translate3d(0, 14px, 0);
+  transition:
+    opacity 520ms var(--ease-out),
+    transform 520ms var(--ease-out);
+}
+.about-card.is-in .about-card__plate { opacity: 1; transform: none; }
+
+/* ------------------------------------------------------------------- head */
+.about-card__head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: baseline;
+  column-gap: 1.5rem;
+  padding-bottom: 1.75rem;
+  border-bottom: 1px solid var(--line);
+}
+.about-card__name {
+  grid-column: 1;
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: clamp(2rem, 4vw, 3.25rem);
+  line-height: 0.98;
+  letter-spacing: -0.038em;
+  color: var(--ink);
+}
+.about-card__role {
+  grid-column: 1;
+  margin: 0.75rem 0 0;
+  font-size: 1.0625rem;
+  color: var(--ink);
+}
+.about-card__where {
+  grid-column: 1;
+  margin: 0.5rem 0 0;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-4);
+}
+.about-card__status {
+  grid-column: 2;
+  grid-row: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--c-accent);
+  white-space: nowrap;
+}
+.about-card__status i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--c-accent);
+}
+
+/* ------------------------------------------------------------------- grid */
+.about-card__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+  column-gap: clamp(2rem, 4vw, 4rem);
+  padding: 2rem 0;
+}
+
+.about-card__rows { margin: 0; }
+.about-card__row {
+  display: grid;
+  grid-template-columns: 13.5rem minmax(0, 1fr);
+  align-items: baseline;
+  column-gap: 1rem;
+  padding: 0.875rem 0;
+  border-bottom: 1px solid var(--line);
+  transition: background-color 140ms var(--ease-out);
+}
+.about-card__row:first-child { padding-top: 0; }
+.about-card__row:last-child { border-bottom: 0; }
+
+.about-card__row dt {
+  display: flex;
+  align-items: baseline;
+  gap: 0.625rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-4);
+}
+.about-card__i { color: var(--c-accent); opacity: 0.55; }
+.about-card__row dd {
+  margin: 0;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  color: var(--ink);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .about-card__row:hover { background-color: rgba(236, 236, 239, 0.02); }
+}
+
+/* ------------------------------------------------------------------- side */
+.about-card__side {
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
+}
+.about-card__bio h3 {
+  margin: 0 0 0.75rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--c-accent);
+}
+.about-card__bio p {
+  margin: 0;
+  max-width: 46ch;
+  font-size: 0.9375rem;
+  line-height: 1.66;
+  color: var(--ink-2);
+  text-wrap: pretty;
+}
+
+/* ------------------------------------------------------------------- foot */
+.about-card__foot {
+  padding-top: 1.75rem;
+  border-top: 1px solid var(--line);
+}
+
+/* ----------------------------------------------------------------- tablet */
+@media (max-width: 1023px) {
+  .about-card__grid {
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: 2rem;
+  }
+  .about-card__row { grid-template-columns: 11rem minmax(0, 1fr); }
+  .about-card__bio p { max-width: 60ch; }
+}
+
+/* ----------------------------------------------------------------- mobile */
+/* The frame is what goes first. A 390px screen cannot pay 2rem of padding and
+   two side borders and still hold a label column, so the plate becomes a
+   full-bleed panel with rules top and bottom, and every row stacks. */
+@media (max-width: 767px) {
+  .about-card__inner {
+    display: block;
+    padding-left: 0;
+    padding-right: 0;
+  }
+  .about-card__plate {
+    max-width: none;
+    border-left: 0;
+    border-right: 0;
+    border-radius: 0;
+    padding: 1.5rem var(--pad) 2rem;
+  }
+  .about-card__head {
+    display: block;
+    padding-bottom: 1.25rem;
+  }
+  .about-card__status { margin-top: 1rem; }
+  .about-card__grid { padding: 1.5rem 0; }
+  .about-card__row {
+    display: block;
+    padding: 0.875rem 0;
+  }
+  .about-card__i { display: none; }
+  .about-card__row dd { margin-top: 0.375rem; }
+  .about .about-card__act .about-act__btn {
+    flex: 1 1 100%;
+    min-height: 3rem;
+  }
+}
+
+/* ---------------------------------------------------------------- reduced */
+@media (prefers-reduced-motion: reduce) {
+  .about-card__plate {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+}
+
+/* ==========================================================================
+   PAGE 09  -  PROCESS
+   ========================================================================== */
+.about-process__inner {
+  max-width: 68rem;
+  margin: 0 auto;
+  padding: var(--pad) var(--pad) calc(var(--hint) + 2rem);
+}
+
+.about-process__head {
+  padding-top: clamp(0.5rem, 4vh, 3rem);
+  opacity: 0;
+  transform: translate3d(0, 20px, 0);
+  transition:
+    opacity 520ms var(--ease-out),
+    transform 520ms var(--ease-out);
+}
+.about-process.is-in .about-process__head { opacity: 1; transform: none; }
+
+.about-process__name {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: clamp(2rem, 4.4vw, 3.5rem);
+  line-height: 0.96;
+  letter-spacing: -0.038em;
+  color: var(--ink);
+}
+.about-process__role {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.5rem 1rem;
+  margin: 0.875rem 0 0;
+  font-size: 0.9375rem;
+  color: var(--ink);
+}
+.about-process__where {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-4);
+}
+.about-process__lede {
+  margin: 1.5rem 0 0;
+  max-width: 66ch;
+  font-size: clamp(1rem, 1.15vw, 1.0625rem);
+  line-height: 1.68;
+  color: var(--ink);
+  text-wrap: pretty;
+}
+.about-process__sub {
+  margin: clamp(2.5rem, 7vh, 4.5rem) 0 0;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid var(--line);
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: clamp(1.375rem, 2.4vw, 1.875rem);
+  line-height: 1.14;
+  letter-spacing: -0.026em;
+  color: var(--ink);
+}
+
+/* ------------------------------------------------------------------ steps */
+.about-process__steps {
+  position: relative;
+  list-style: none;
+  margin: 2.5rem 0 0;
+  padding: 0;
+}
+/* One spine for six steps, not a border on each row. It stops short of the
+   last numeral so the sequence reads as having an end. */
+.about-process__steps::before {
+  content: "";
+  position: absolute;
+  left: 2.25rem;
+  top: 0.5rem;
+  bottom: 4.5rem;
+  width: 1px;
+  background: var(--line);
+}
+
+.about-process__step {
+  position: relative;
+  display: grid;
+  grid-template-columns: 4.5rem minmax(0, 1fr);
+  align-items: start;
+  margin-bottom: 2.5rem;
+  opacity: 0;
+  transform: translate3d(0, 16px, 0);
+  transition:
+    opacity 440ms var(--ease-out) var(--d, 0ms),
+    transform 440ms var(--ease-out) var(--d, 0ms);
+}
+.about-process__step.is-in { opacity: 1; transform: none; }
+.about-process__step:last-child { margin-bottom: 0; }
+
+/* The numeral sits on the spine and paints the page ground behind itself, so
+   the rule appears to pass behind the number rather than through it. */
+.about-process__n {
+  position: relative;
+  z-index: 1;
+  display: inline-block;
+  padding: 0.35em 0;
+  background: var(--void);
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: 0.8125rem;
+  letter-spacing: 0.12em;
+  color: var(--c-accent);
+  opacity: 0.55;
+  transition: opacity 140ms var(--ease-out);
+}
+@media (hover: hover) and (pointer: fine) {
+  .about-process__step:hover .about-process__n { opacity: 1; }
+}
+
+.about-process__t {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: clamp(1.1875rem, 1.7vw, 1.5rem);
+  line-height: 1.18;
+  letter-spacing: -0.022em;
+  color: var(--ink);
+  text-wrap: balance;
+}
+.about-process__p {
+  margin: 0.75rem 0 0;
+  max-width: 66ch;
+  font-size: 1rem;
+  line-height: 1.68;
+  color: var(--ink-2);
+  text-wrap: pretty;
+}
+
+/* ----------------------------------------------------------------- footer */
+.about-process__foot {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(1.5rem, 3vw, 3rem);
+  margin-top: 3rem;
+  padding-top: 2.5rem;
+  border-top: 1px solid var(--line-2);
+}
+.about-process__foot > * {
+  opacity: 0;
+  transform: translate3d(0, 14px, 0);
+  transition:
+    opacity 440ms var(--ease-out) var(--d, 0ms),
+    transform 440ms var(--ease-out) var(--d, 0ms);
+}
+.about-process__foot > .is-in { opacity: 1; transform: none; }
+
+.about-process__note h3 {
+  margin: 0 0 0.75rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--c-accent);
+}
+.about-process__note p {
+  margin: 0;
+  max-width: 48ch;
+  font-size: 0.9375rem;
+  line-height: 1.66;
+  color: var(--ink-2);
+}
+.about-process__act { grid-column: 1 / -1; margin-top: 0.75rem; }
+
+/* ----------------------------------------------------------------- tablet */
+@media (max-width: 1023px) {
+  .about-process__step { grid-template-columns: 3.25rem minmax(0, 1fr); }
+  .about-process__steps::before { left: 1.625rem; }
+}
+
+/* ----------------------------------------------------------------- mobile */
+/* The gutter and the spine both go. A numeral column on a 390px screen is
+   3rem of measure spent on two digits, so the numeral becomes an inline
+   prefix and a rule between steps does the sequencing instead. */
+@media (max-width: 767px) {
+  .about-process__steps::before { display: none; }
+  .about-process__step {
+    display: block;
+    margin-bottom: 0;
+    padding: 1.75rem 0;
+    border-top: 1px solid var(--line);
+  }
+  .about-process__step:first-child { border-top: 0; padding-top: 0; }
+  .about-process__n {
+    display: block;
+    padding: 0 0 0.5rem;
+    background: none;
+    font-size: 0.6875rem;
+    letter-spacing: 0.18em;
+    opacity: 0.8;
+  }
+  .about-process__foot {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1.75rem;
+  }
+  .about .about-process__act .about-act__btn {
+    flex: 1 1 100%;
+    min-height: 3rem;
+  }
+}
+
+/* ---------------------------------------------------------------- reduced */
+@media (prefers-reduced-motion: reduce) {
+  .about-process__head,
+  .about-process__step,
+  .about-process__foot > * {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+}
+
+/* ==========================================================================
+   PAGE 10  -  CONVERSATION
+   ========================================================================== */
+.about-talk__inner {
+  max-width: 62rem;
+  margin: 0 auto;
+  padding: var(--pad) var(--pad) calc(var(--hint) + 2rem);
+}
+
+.about-talk__head {
+  padding-top: clamp(0.5rem, 4vh, 3rem);
+  opacity: 0;
+  transform: translate3d(0, 20px, 0);
+  transition:
+    opacity 520ms var(--ease-out),
+    transform 520ms var(--ease-out);
+}
+.about-talk.is-in .about-talk__head { opacity: 1; transform: none; }
+
+.about-talk__name {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: clamp(2rem, 4.4vw, 3.375rem);
+  line-height: 0.96;
+  letter-spacing: -0.038em;
+  color: var(--ink);
+}
+.about-talk__role {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.5rem 1rem;
+  margin: 0.875rem 0 0;
+  font-size: 0.9375rem;
+  color: var(--ink);
+}
+.about-talk__where {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-4);
+}
+.about-talk__lede {
+  margin: 1.5rem 0 0;
+  max-width: 66ch;
+  font-size: clamp(1rem, 1.15vw, 1.0625rem);
+  line-height: 1.68;
+  color: var(--ink);
+  text-wrap: pretty;
+}
+
+/* --------------------------------------------------------------- question */
+.about-talk__qa { margin-top: clamp(2.5rem, 7vh, 4.5rem); }
+
+.about-talk__pair {
+  position: relative;
+  padding: 2.5rem 0 2.5rem 1.75rem;
+  border-top: 1px solid var(--line);
+  opacity: 0;
+  transform: translate3d(0, 16px, 0);
+  transition:
+    opacity 440ms var(--ease-out) var(--d, 0ms),
+    transform 440ms var(--ease-out) var(--d, 0ms);
+}
+.about-talk__pair.is-in { opacity: 1; transform: none; }
+
+/* A 5px dot in the margin marks where each question starts. It is the only
+   ornament on the page and it is doing navigation, not decoration. */
+.about-talk__pair::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 2.9rem;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--c-accent);
+  opacity: 0.55;
+  transition: opacity 140ms var(--ease-out);
+}
+@media (hover: hover) and (pointer: fine) {
+  .about-talk__pair:hover::before { opacity: 1; }
+}
+
+.about-talk__q {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: clamp(1.1875rem, 2.2vw, 1.75rem);
+  line-height: 1.16;
+  letter-spacing: -0.026em;
+  color: var(--c-accent);
+  text-wrap: balance;
+}
+.about-talk__a {
+  margin: 0.875rem 0 0;
+  max-width: 70ch;
+  font-size: clamp(1rem, 1.15vw, 1.0625rem);
+  line-height: 1.72;
+  color: var(--ink-2);
+  text-wrap: pretty;
+}
+
+/* ----------------------------------------------------------------- footer */
+.about-talk__foot {
+  margin-top: 1rem;
+  padding-top: 2.5rem;
+  border-top: 1px solid var(--line-2);
+}
+.about-talk__foot > * {
+  opacity: 0;
+  transform: translate3d(0, 14px, 0);
+  transition:
+    opacity 440ms var(--ease-out) var(--d, 0ms),
+    transform 440ms var(--ease-out) var(--d, 0ms);
+}
+.about-talk__foot > .is-in { opacity: 1; transform: none; }
+
+.about-talk__close {
+  margin: 0 0 1.75rem;
+  max-width: 62ch;
+  font-size: 1rem;
+  line-height: 1.68;
+  color: var(--ink-2);
+}
+
+/* ----------------------------------------------------------------- mobile */
+/* The margin rule and the dots go: on a 390px screen they cost 1.75rem of
+   measure to say what the rule between pairs already says. */
+@media (max-width: 767px) {
+  .about-talk__pair { padding: 1.75rem 0; }
+  .about-talk__pair::before { display: none; }
+  .about-talk__qa { margin-top: 2.25rem; }
+  .about .about-talk__act .about-act__btn {
+    flex: 1 1 100%;
+    min-height: 3rem;
+  }
+}
+
+/* ---------------------------------------------------------------- reduced */
+@media (prefers-reduced-motion: reduce) {
+  .about-talk__head,
+  .about-talk__pair,
+  .about-talk__foot > * {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+}

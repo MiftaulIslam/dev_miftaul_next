@@ -4,6 +4,7 @@ import { useEffect, useId, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Settings, X } from "lucide-react";
 
+import { useDockVisible } from "@/lib/navShell";
 import { useReducedMotion } from "@/lib/useReducedMotion";
 import { cn } from "@/lib/utils";
 import { SETTINGS_SECTIONS } from "./sections";
@@ -21,6 +22,7 @@ import { SETTINGS_SECTIONS } from "./sections";
 export default function SettingsPanel() {
   const [open, setOpen] = useState(false);
   const reduced = useReducedMotion();
+  const { visible: dockVisible, isMobile } = useDockVisible();
   const containerRef = useRef<HTMLDivElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
@@ -56,7 +58,12 @@ export default function SettingsPanel() {
   return (
     <div
       ref={containerRef}
-      className="fixed bottom-5 right-5 z-[60] flex flex-col items-end gap-3 sm:bottom-8 sm:right-8"
+      className={cn(
+        "fixed right-5 z-[60] flex flex-col items-end gap-3 transition-[bottom] duration-300 sm:right-8",
+        // The dock spans almost the full width on a small screen, so the dial
+        // steps up over it rather than sitting on top of the last item.
+        dockVisible && isMobile ? "bottom-[6.5rem]" : "bottom-5 sm:bottom-8"
+      )}
     >
       <AnimatePresence>
         {open && (

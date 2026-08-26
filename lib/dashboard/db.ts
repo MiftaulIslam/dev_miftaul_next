@@ -2,6 +2,7 @@ import "server-only";
 
 import { getSql } from "@/lib/db";
 import { fallbackProfile } from "@/lib/dashboard/fallback-profile";
+import { coerceSiteVersion, DEFAULT_SITE_VERSION, type SiteVersion } from "@/lib/siteVersion";
 import type {
   BlogRecord,
   DashboardOverview,
@@ -13,6 +14,10 @@ import type {
   SocialLink,
   StackCategory,
   StackTool,
+  V2ProjectCaseBlock,
+  V2ProjectRecord,
+  V2SkillItem,
+  V2SkillSection,
 } from "@/lib/dashboard/types";
 
 type Row = Record<string, unknown>;
@@ -77,6 +82,7 @@ function mapSettings(row: Row): PortfolioSettings {
     happyClients: parseNumber(row.happy_clients, fallbackProfile.happyClients),
     currentlyFocusedOn: parseJsonArray<string>(row.currently_focused_on),
     detailedSummary: parseString(row.detailed_summary, fallbackProfile.detailedSummary),
+    siteVersion: coerceSiteVersion(row.site_version),
     updatedAt: toIsoDate(row.updated_at),
   };
 }
@@ -184,6 +190,24 @@ export async function getPublicPortfolioSettings() {
   return settings ?? fallbackProfile;
 }
 
+/**
+ * Narrow read for the public config endpoint.
+ *
+ * Total by contract: a missing row, an unset column, or any database failure
+ * resolves to the default version instead of throwing, so an outage degrades
+ * the site to v1 rather than breaking every visitor page.
+ */
+export async function getSiteVersion(): Promise<SiteVersion> {
+  try {
+    const sql = getSql();
+    const rows = await sql`SELECT site_version FROM portfolio_settings WHERE id = 1 LIMIT 1`;
+    const row = rows[0] as Row | undefined;
+    return row ? coerceSiteVersion(row.site_version) : DEFAULT_SITE_VERSION;
+  } catch {
+    return DEFAULT_SITE_VERSION;
+  }
+}
+
 export async function upsertPortfolioSettings(input: PortfolioSettingsInput) {
   const sql = getSql();
   const rows = await sql`
@@ -205,6 +229,7 @@ export async function upsertPortfolioSettings(input: PortfolioSettingsInput) {
       happy_clients,
       currently_focused_on,
       detailed_summary,
+      site_version,
       updated_at
     )
     VALUES (
@@ -225,6 +250,7 @@ export async function upsertPortfolioSettings(input: PortfolioSettingsInput) {
       ${input.happyClients},
       ${JSON.stringify(input.currentlyFocusedOn)}::jsonb,
       ${input.detailedSummary},
+      ${coerceSiteVersion(input.siteVersion)},
       NOW()
     )
     ON CONFLICT (id)
@@ -245,6 +271,7 @@ export async function upsertPortfolioSettings(input: PortfolioSettingsInput) {
       happy_clients = EXCLUDED.happy_clients,
       currently_focused_on = EXCLUDED.currently_focused_on,
       detailed_summary = EXCLUDED.detailed_summary,
+      site_version = EXCLUDED.site_version,
       updated_at = NOW()
     RETURNING *
   `;
@@ -286,6 +313,212 @@ export async function listStackCategories() {
     accent: parseString(row.accent, "#3b82f6"),
     tools: parseJsonArray<StackTool>(row.tools),
   })) as StackCategory[];
+}
+
+/* ── v2 skills ───────────────────────────────────────────────────────────────
+   The reel's own tables. Separate from stack_categories/stack_tools because the
+   v2 model carries authored copy per section and per skill, which the v1 chip
+   list does not have and does not want. */
+
+function mapV2Section(row: Row): V2SkillSection {
+  return {
+    id: parseNumber(row.id),
+    key: parseString(row.key),
+    title: parseString(row.title),
+    subtitle: parseString(row.subtitle),
+    description: parseString(row.description),
+    layer: parseString(row.layer),
+    accent: parseString(row.accent, "#60a5fa"),
+    sortOrder: parseNumber(row.sort_order),
+    skills: parseJsonArray<V2SkillItem>(row.skills).map((skill) => ({
+      id: parseNumber(skill?.id),
+      sectionId: parseNumber(skill?.sectionId),
+      name: parseString(skill?.name),
+      title: parseString(skill?.title),
+      icon: parseString(skill?.icon),
+      note: parseString(skill?.note),
+      // 0.55 matches the seed default: mid weight, no visual emphasis either way.
+      weight: parseNumber(skill?.weight, 0.55),
+      sortOrder: parseNumber(skill?.sortOrder),
+    })),
+  };
+}
+
+export async function listV2SkillSections(): Promise<V2SkillSection[]> {
+  const sql = getSql();
+  const rows = await sql`
+    SELECT
+      s.id,
+      s.key,
+      s.title,
+      s.subtitle,
+      s.description,
+      s.layer,
+      s.accent,
+      s.sort_order,
+      COALESCE(
+        jsonb_agg(
+          jsonb_build_object(
+            'id', i.id,
+            'sectionId', i.section_id,
+            'name', i.name,
+            'title', i.title,
+            'icon', i.icon,
+            'note', i.note,
+            'weight', i.weight,
+            'sortOrder', i.sort_order
+          )
+          ORDER BY i.sort_order, i.id
+        ) FILTER (WHERE i.id IS NOT NULL),
+        '[]'::jsonb
+      ) AS skills
+    FROM v2_skill_sections s
+    LEFT JOIN v2_skill_items i ON i.section_id = s.id
+    GROUP BY s.id
+    ORDER BY s.sort_order, s.id
+  `;
+
+  return (rows as Row[]).map(mapV2Section);
+}
+
+/** Never throws: the reel falls back to its static copy rather than showing an error. */
+export async function listV2SkillSectionsSafe(): Promise<V2SkillSection[]> {
+  try {
+    return await listV2SkillSections();
+  } catch {
+    return [];
+  }
+}
+
+async function getV2Section(id: number): Promise<V2SkillSection | null> {
+  const sections = await listV2SkillSections();
+  return sections.find((section) => section.id === id) ?? null;
+}
+
+export async function createV2SkillSection(input: {
+  key?: string;
+  title: string;
+  subtitle?: string;
+  description?: string;
+  layer?: string;
+  accent?: string;
+  sortOrder?: number;
+}) {
+  const sql = getSql();
+  const key = input.key?.trim() || slugify(input.title);
+  const rows = await sql`
+    INSERT INTO v2_skill_sections (key, title, subtitle, description, layer, accent, sort_order, updated_at)
+    VALUES (
+      ${key},
+      ${input.title},
+      ${input.subtitle ?? ""},
+      ${input.description ?? ""},
+      ${input.layer ?? ""},
+      ${input.accent ?? "#60a5fa"},
+      ${input.sortOrder ?? 0},
+      NOW()
+    )
+    RETURNING id
+  `;
+  return getV2Section(parseNumber((rows as Row[])[0]?.id));
+}
+
+export async function updateV2SkillSection(
+  id: number,
+  input: {
+    key?: string;
+    title: string;
+    subtitle?: string;
+    description?: string;
+    layer?: string;
+    accent?: string;
+    sortOrder?: number;
+  },
+) {
+  const sql = getSql();
+  const key = input.key?.trim() || slugify(input.title);
+  const rows = await sql`
+    UPDATE v2_skill_sections
+    SET
+      key = ${key},
+      title = ${input.title},
+      subtitle = ${input.subtitle ?? ""},
+      description = ${input.description ?? ""},
+      layer = ${input.layer ?? ""},
+      accent = ${input.accent ?? "#60a5fa"},
+      sort_order = ${input.sortOrder ?? 0},
+      updated_at = NOW()
+    WHERE id = ${id}
+    RETURNING id
+  `;
+  if (!(rows as Row[]).length) return null;
+  return getV2Section(id);
+}
+
+export async function deleteV2SkillSection(id: number) {
+  const sql = getSql();
+  // The items go with it via ON DELETE CASCADE.
+  await sql`DELETE FROM v2_skill_sections WHERE id = ${id}`;
+}
+
+export async function createV2SkillItem(input: {
+  sectionId: number;
+  name: string;
+  title?: string;
+  icon?: string;
+  note?: string;
+  weight?: number;
+  sortOrder?: number;
+}) {
+  const sql = getSql();
+  const rows = await sql`
+    INSERT INTO v2_skill_items (section_id, name, title, icon, note, weight, sort_order, updated_at)
+    VALUES (
+      ${input.sectionId},
+      ${input.name},
+      ${input.title ?? ""},
+      ${input.icon ?? ""},
+      ${input.note ?? ""},
+      ${input.weight ?? 0.55},
+      ${input.sortOrder ?? 0},
+      NOW()
+    )
+    RETURNING id
+  `;
+  return { id: parseNumber((rows as Row[])[0]?.id) };
+}
+
+export async function updateV2SkillItem(
+  id: number,
+  input: {
+    name: string;
+    title?: string;
+    icon?: string;
+    note?: string;
+    weight?: number;
+    sortOrder?: number;
+  },
+) {
+  const sql = getSql();
+  const rows = await sql`
+    UPDATE v2_skill_items
+    SET
+      name = ${input.name},
+      title = ${input.title ?? ""},
+      icon = ${input.icon ?? ""},
+      note = ${input.note ?? ""},
+      weight = ${input.weight ?? 0.55},
+      sort_order = ${input.sortOrder ?? 0},
+      updated_at = NOW()
+    WHERE id = ${id}
+    RETURNING id
+  `;
+  return (rows as Row[]).length ? { id } : null;
+}
+
+export async function deleteV2SkillItem(id: number) {
+  const sql = getSql();
+  await sql`DELETE FROM v2_skill_items WHERE id = ${id}`;
 }
 
 export async function createStackCategory(input: { label: string; accent: string; key?: string }) {
@@ -633,6 +866,7 @@ export async function getDashboardOverview(): Promise<DashboardOverview> {
   const rows = await sql`
     SELECT
       (SELECT COUNT(*)::int FROM projects) AS projects,
+      (SELECT COUNT(*)::int FROM v2_projects) AS v2_projects,
       (SELECT COUNT(*)::int FROM reviews) AS reviews,
       (SELECT COUNT(*)::int FROM experiences) AS experiences,
       (SELECT COUNT(*)::int FROM stack_categories) AS skills,
@@ -645,6 +879,8 @@ export async function getDashboardOverview(): Promise<DashboardOverview> {
           SELECT updated_at FROM portfolio_settings
           UNION ALL
           SELECT updated_at FROM projects
+          UNION ALL
+          SELECT updated_at FROM v2_projects
           UNION ALL
           SELECT updated_at FROM experiences
           UNION ALL
@@ -664,6 +900,7 @@ export async function getDashboardOverview(): Promise<DashboardOverview> {
   const row = rows[0] as Row;
   return {
     projects: parseNumber(row.projects),
+    v2Projects: parseNumber(row.v2_projects),
     reviews: parseNumber(row.reviews),
     experiences: parseNumber(row.experiences),
     skills: parseNumber(row.skills),
@@ -672,4 +909,261 @@ export async function getDashboardOverview(): Promise<DashboardOverview> {
     messages: parseNumber(row.messages),
     lastUpdated: row.last_updated ? toIsoDate(row.last_updated) : null,
   };
+}
+
+/* ── v2 projects ──────────────────────────────────────────────────────────── */
+
+function mapV2ProjectCase(row: Row): V2ProjectCaseBlock {
+  return {
+    id: parseNumber(row.id),
+    heading: parseString(row.heading),
+    body: parseJsonArray<string>(row.body),
+    sortOrder: parseNumber(row.sort_order),
+  };
+}
+
+function mapV2Project(row: Row): V2ProjectRecord {
+  return {
+    id: parseNumber(row.id),
+    slug: parseString(row.slug),
+    name: parseString(row.name),
+    year: parseString(row.year),
+    discipline: parseString(row.discipline),
+    role: parseString(row.role),
+    problem: parseString(row.problem),
+    outcome: parseString(row.outcome),
+    tech: parseJsonArray<string>(row.tech),
+    accent: parseString(row.accent, "#3b82f6"),
+    plateSrc: parseString(row.plate_src),
+    plateCaption: parseString(row.plate_caption),
+    plateFocus: parseString(row.plate_focus),
+    linkLive: parseString(row.link_live),
+    linkSource: parseString(row.link_source),
+    sortOrder: parseNumber(row.sort_order),
+    // Ordered in SQL, and sorted again here. The ORDER BY lives inside a
+    // jsonb_agg over a LEFT JOIN, which is a long way from the value anyone
+    // reads; re-sorting makes the guarantee local to this function.
+    cases: parseJsonArray<Row>(row.cases)
+      .map(mapV2ProjectCase)
+      .sort((a, b) => a.sortOrder - b.sortOrder || a.id - b.id),
+  };
+}
+
+export type V2ProjectInput = Omit<V2ProjectRecord, "id" | "sortOrder" | "cases"> & {
+  sortOrder?: number;
+  /** Replaces the whole case body. Blocks carry no id — see `writeV2Cases`. */
+  cases: { heading: string; body: string[] }[];
+};
+
+export async function listV2Projects(): Promise<V2ProjectRecord[]> {
+  const sql = getSql();
+  const rows = await sql`
+    SELECT
+      p.*,
+      COALESCE(
+        jsonb_agg(
+          jsonb_build_object(
+            'id', c.id,
+            'heading', c.heading,
+            'body', c.body,
+            'sort_order', c.sort_order
+          )
+          ORDER BY c.sort_order, c.id
+        ) FILTER (WHERE c.id IS NOT NULL),
+        '[]'::jsonb
+      ) AS cases
+    FROM v2_projects p
+    LEFT JOIN v2_project_cases c ON c.project_id = p.id
+    GROUP BY p.id
+    ORDER BY p.sort_order ASC, p.id ASC
+  `;
+  return (rows as Row[]).map(mapV2Project);
+}
+
+/**
+ * Same list, but never throws.
+ *
+ * The public reel and the /work pages call this: a database blip should cost
+ * the reader the live copy and nothing more, so the caller can fall back to the
+ * static list rather than serving a 500.
+ */
+export async function listV2ProjectsSafe(): Promise<V2ProjectRecord[]> {
+  try {
+    return await listV2Projects();
+  } catch {
+    return [];
+  }
+}
+
+export async function getV2Project(id: number): Promise<V2ProjectRecord | null> {
+  const sql = getSql();
+  const rows = await sql`
+    SELECT
+      p.*,
+      COALESCE(
+        jsonb_agg(
+          jsonb_build_object(
+            'id', c.id,
+            'heading', c.heading,
+            'body', c.body,
+            'sort_order', c.sort_order
+          )
+          ORDER BY c.sort_order, c.id
+        ) FILTER (WHERE c.id IS NOT NULL),
+        '[]'::jsonb
+      ) AS cases
+    FROM v2_projects p
+    LEFT JOIN v2_project_cases c ON c.project_id = p.id
+    WHERE p.id = ${id}
+    GROUP BY p.id
+  `;
+  const row = (rows as Row[])[0];
+  return row ? mapV2Project(row) : null;
+}
+
+/**
+ * Replaces a project's case body.
+ *
+ * Delete-then-insert rather than a per-block diff. A block is a heading and some
+ * paragraphs — it has no natural key, and the dashboard lets you reorder, insert
+ * and delete blocks freely, so matching old rows onto new ones would mean
+ * inventing a client-side id or guessing. Rewriting a handful of rows costs
+ * nothing and cannot drift.
+ */
+async function writeV2Cases(projectId: number, blocks: V2ProjectInput["cases"]) {
+  const sql = getSql();
+  await sql`DELETE FROM v2_project_cases WHERE project_id = ${projectId}`;
+
+  for (const [index, block] of (blocks ?? []).entries()) {
+    await sql`
+      INSERT INTO v2_project_cases (project_id, heading, body, sort_order, updated_at)
+      VALUES (
+        ${projectId},
+        ${block.heading},
+        ${JSON.stringify(block.body ?? [])}::jsonb,
+        ${index},
+        NOW()
+      )
+    `;
+  }
+}
+
+/**
+ * Finds a slug that is free.
+ *
+ * The slug is a public URL, so a collision must not 500 the save — but it must
+ * not silently overwrite another project either. Suffixing is the honest middle:
+ * the save succeeds, and the dashboard shows the slug it actually got.
+ */
+async function uniqueV2Slug(desired: string, excludeId?: number) {
+  const sql = getSql();
+  const base = slugify(desired) || "project";
+  let candidate = base;
+  const exclude = excludeId ?? 0;
+
+  for (let attempt = 2; attempt < 100; attempt += 1) {
+    const rows = await sql`
+      SELECT id FROM v2_projects
+      WHERE slug = ${candidate} AND id <> ${exclude}
+      LIMIT 1
+    `;
+    if (!(rows as Row[]).length) return candidate;
+    candidate = `${base}-${attempt}`;
+  }
+
+  return `${base}-${Date.now()}`;
+}
+
+export async function createV2Project(input: V2ProjectInput): Promise<V2ProjectRecord> {
+  const sql = getSql();
+  const nextOrderRows =
+    await sql`SELECT COALESCE(MAX(sort_order), 0) + 1 AS next_order FROM v2_projects`;
+  const sortOrder = input.sortOrder ?? parseNumber(nextOrderRows[0]?.next_order, 1);
+  const slug = await uniqueV2Slug(input.slug || input.name);
+
+  const rows = await sql`
+    INSERT INTO v2_projects (
+      slug, name, year, discipline, role, problem, outcome, tech, accent,
+      plate_src, plate_caption, plate_focus, link_live, link_source, sort_order, updated_at
+    )
+    VALUES (
+      ${slug},
+      ${input.name},
+      ${input.year},
+      ${input.discipline},
+      ${input.role},
+      ${input.problem},
+      ${input.outcome},
+      ${JSON.stringify(input.tech)}::jsonb,
+      ${input.accent},
+      ${input.plateSrc},
+      ${input.plateCaption},
+      ${input.plateFocus},
+      ${input.linkLive},
+      ${input.linkSource},
+      ${sortOrder},
+      NOW()
+    )
+    RETURNING id
+  `;
+
+  const id = parseNumber(rows[0]?.id);
+  await writeV2Cases(id, input.cases);
+  return (await getV2Project(id)) as V2ProjectRecord;
+}
+
+export async function updateV2Project(
+  id: number,
+  input: V2ProjectInput,
+): Promise<V2ProjectRecord | null> {
+  const sql = getSql();
+  // Note the missing `|| input.name` that `createV2Project` has. The slug is a
+  // public URL: renaming "VRFY" to "Vrfy Store" must not silently move
+  // /work/vrfy and break every link anyone has shared. It changes only when the
+  // slug field itself is edited, and the dashboard says so under the field.
+  // An empty slug means "leave it alone" rather than "slugify the name", so a
+  // caller that omits the field cannot rename the URL by accident.
+  const existing = await sql`SELECT slug, sort_order FROM v2_projects WHERE id = ${id}`;
+  const current = (existing as Row[])[0];
+  const currentSlug = parseString(current?.slug);
+  if (!currentSlug) return null;
+  const slug = input.slug ? await uniqueV2Slug(input.slug, id) : currentSlug;
+
+  // Same rule for position. `?? 0` would send a project the caller never meant
+  // to move straight to the front of the reel — the kind of edit nobody notices
+  // until the homepage is already wrong.
+  const sortOrder = input.sortOrder ?? parseNumber(current?.sort_order);
+
+  const rows = await sql`
+    UPDATE v2_projects
+    SET
+      slug = ${slug},
+      name = ${input.name},
+      year = ${input.year},
+      discipline = ${input.discipline},
+      role = ${input.role},
+      problem = ${input.problem},
+      outcome = ${input.outcome},
+      tech = ${JSON.stringify(input.tech)}::jsonb,
+      accent = ${input.accent},
+      plate_src = ${input.plateSrc},
+      plate_caption = ${input.plateCaption},
+      plate_focus = ${input.plateFocus},
+      link_live = ${input.linkLive},
+      link_source = ${input.linkSource},
+      sort_order = ${sortOrder},
+      updated_at = NOW()
+    WHERE id = ${id}
+    RETURNING id
+  `;
+
+  if (!(rows as Row[]).length) return null;
+  await writeV2Cases(id, input.cases);
+  return getV2Project(id);
+}
+
+export async function deleteV2Project(id: number) {
+  const sql = getSql();
+  // The case rows go with it: the foreign key is ON DELETE CASCADE.
+  await sql`DELETE FROM v2_projects WHERE id = ${id}`;
 }

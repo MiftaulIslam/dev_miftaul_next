@@ -4,6 +4,7 @@ import "./globals.css";
 import LenisProvider from "@/components/LenisProvider";
 import Navbar from "@/components/navbar/Navbar";
 import SettingsPanel from "@/components/settings/SettingsPanel";
+import SiteDock from "@/components/navbar/SiteDock";
 import CursorLayer from "@/components/cursor/CursorLayer";
 import { THEME_BOOTSTRAP_SCRIPT } from "@/lib/theme";
 
@@ -59,6 +60,7 @@ export default function RootLayout({
       <body className="min-h-full bg-background text-foreground overflow-x-hidden intro-active">
         <Navbar />
         <LenisProvider>{children}</LenisProvider>
+        <SiteDock />
         <SettingsPanel />
         <CursorLayer />
       </body>

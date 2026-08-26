@@ -1,0 +1,2425 @@
+/* ============================================================================
+   AREA STYLES: CONTACT
+   ----------------------------------------------------------------------------
+   Every selector below starts from `.contact-c` (the area root, present on all
+   ten concepts) or from a concept root `.contact-<name>`. Nothing here styles a
+   bare element or a shell class.
+
+   CONTRAST BUDGET
+   ---------------
+   Measured, not assumed. Ratios computed against the actual surfaces these
+   tokens sit on, using the WCAG 2.x relative-luminance formula:
+
+     --cf-ink    #f1f1f4  on panel #101015  ->  16.9 : 1
+     --cf-ink    #f1f1f4  on field #131319  ->  16.6 : 1
+     --cf-ink-2  #a9abb6  on panel #101015  ->   8.3 : 1   (helper text)
+     --cf-ink-2  #a9abb6  on field #131319  ->   8.1 : 1   (placeholder)
+     --cf-ink-3  #8a8c96  on panel #101015  ->   5.7 : 1   (mono metadata)
+     --cf-err    #ff8f7a  on panel #101015  ->   8.6 : 1
+     --cf-err    #ff8f7a  on field #131319  ->   8.4 : 1
+     --cf-ok     #6fe3b0  on panel #101015  ->  12.0 : 1
+     --void      #08080a  on every concept accent used here -> 7.1 : 1 or better
+
+   --cf-ink-3 is the darkest ink in the file and it still clears 4.5:1, so there
+   is no ink token here that is unsafe for text. Hairlines use rgba() and are
+   never used for type.
+
+   SHAPE
+   -----
+   One radius for the whole app: 2px. The only round things are dots.
+   ========================================================================== */
+
+.contact-c {
+  --cf-panel:    #101015;
+  --cf-panel-2:  #16161c;
+  --cf-field:    #131319;
+  --cf-field-hi: #191922;
+
+  --cf-ink:      #f1f1f4;
+  --cf-ink-2:    #a9abb6;
+  --cf-ink-3:    #8a8c96;
+
+  --cf-line:     rgba(236, 236, 239, 0.13);
+  --cf-line-2:   rgba(236, 236, 239, 0.26);
+  --cf-line-3:   rgba(236, 236, 239, 0.42);
+
+  --cf-err:      #ff8f7a;
+  --cf-ok:       #6fe3b0;
+
+  --cf-gap:      1.25rem;
+  color: var(--cf-ink);
+}
+
+/* Page concepts mount into `.stage__page`, which is already absolute and
+   inset 0. They own the whole stage, so they own their own scrolling too. */
+.contact-c.is-page {
+  position: absolute;
+  inset: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+}
+
+/* Section concepts are ordinary flow content inside the shell's page frame.
+   They must never introduce a scroll container of their own. */
+.contact-c.is-section {
+  position: relative;
+  overflow: visible;
+}
+
+.contact-c .contact-ico {
+  width: 1rem;
+  height: 1rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* ==========================================================================
+   THE SHARED FORM
+   --------------------------------------------------------------------------
+   Six concepts render this. It is deliberately unremarkable: the expression in
+   this area lives in the compositions around the form, never in the form's own
+   correctness.
+   ========================================================================== */
+
+.contact-c .contact-fm {
+  display: block;
+  min-width: 0;
+}
+
+.contact-c .contact-fm__body {
+  display: grid;
+  gap: var(--cf-gap);
+}
+
+.contact-c .contact-fm--stack.is-tight { --cf-gap: 1rem; }
+
+/* The UA rule for [hidden] is `display: none` at zero specificity, so any
+   class selector that sets `display` silently un-hides it. Both hideable
+   regions therefore restate it, scoped to this area. */
+.contact-c .contact-fm__summary[hidden],
+.contact-c .contact-fm__fail[hidden] { display: none; }
+
+/* ------------------------------------------------------------ error summary */
+.contact-c .contact-fm__summary {
+  margin-bottom: 1.5rem;
+  padding: 1rem 1.125rem;
+  border: 1px solid rgba(255, 143, 122, 0.44);
+  border-radius: 2px;
+  background: rgba(255, 143, 122, 0.07);
+}
+.contact-c .contact-fm__summary:focus-visible {
+  outline: 2px solid var(--cf-err);
+  outline-offset: 2px;
+}
+.contact-c .contact-fm__summarytitle {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--cf-ink);
+  letter-spacing: -0.005em;
+}
+.contact-c .contact-fm__summarylist {
+  margin-top: 0.625rem;
+  display: grid;
+  gap: 0.375rem;
+}
+.contact-c .contact-fm__summarylist a {
+  font-size: 0.8125rem;
+  color: var(--cf-err);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+@media (hover: hover) and (pointer: fine) {
+  .contact-c .contact-fm__summarylist a:hover { color: var(--cf-ink); }
+}
+
+/* ------------------------------------------------------------------- field */
+.contact-c .contact-fd {
+  display: grid;
+  gap: 0.4375rem;
+  min-width: 0;
+}
+
+.contact-c .contact-fd__label {
+  font-family: var(--font-display);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  line-height: 1.3;
+  letter-spacing: 0.005em;
+  color: var(--cf-ink);
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+.contact-c .contact-fd__opt {
+  font-family: var(--font-mono);
+  font-size: 0.5625rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--cf-ink-3);
+}
+
+.contact-c .contact-fd__input {
+  display: block;
+  width: 100%;
+  min-height: 48px;             /* above the 44px floor, with room to spare */
+  padding: 0.8125rem 0.9375rem;
+  border: 1px solid var(--cf-line);
+  border-radius: 2px;
+  background: var(--cf-field);
+  color: var(--cf-ink);
+  font-family: var(--font-display);
+  font-size: 1rem;              /* 16px, so iOS never zooms on focus */
+  line-height: 1.45;
+  transition:
+    border-color 140ms var(--ease-out),
+    background-color 140ms var(--ease-out);
+}
+.contact-c textarea.contact-fd__input {
+  min-height: 7rem;
+  resize: vertical;
+}
+.contact-c .contact-fd__input::placeholder {
+  color: var(--cf-ink-2);
+  opacity: 1;                   /* Firefox dims placeholders by default */
+}
+.contact-c .contact-fd__input:focus {
+  outline: 2px solid var(--c-accent);
+  outline-offset: 2px;
+  border-color: var(--cf-line-2);
+  background: var(--cf-field-hi);
+}
+.contact-c .contact-fd.is-invalid .contact-fd__input {
+  border-color: rgba(255, 143, 122, 0.62);
+}
+.contact-c .contact-fd.is-invalid .contact-fd__input:focus {
+  outline-color: var(--cf-err);
+}
+
+.contact-c .contact-fd__help {
+  font-size: 0.75rem;
+  line-height: 1.45;
+  color: var(--cf-ink-2);
+  max-width: 52ch;
+}
+
+.contact-c .contact-fd__err {
+  font-size: 0.75rem;
+  line-height: 1.45;
+  font-weight: 500;
+  color: var(--cf-err);
+  max-width: 52ch;
+}
+.contact-c .contact-fd__err:empty { display: none; }
+
+/* --------------------------------------------------------- choice (radios) */
+.contact-c .contact-fd__set {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+.contact-c .contact-fd__choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.4375rem;
+}
+.contact-c .contact-fd__choice {
+  position: relative;
+  display: inline-flex;
+}
+.contact-c .contact-fd__choice input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  margin: 0;
+  cursor: pointer;
+}
+.contact-c .contact-fd__choice span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 0.875rem;
+  border: 1px solid var(--cf-line);
+  border-radius: 2px;
+  background: var(--cf-field);
+  color: var(--cf-ink-2);
+  font-size: 0.8125rem;
+  line-height: 1.2;
+  transition:
+    border-color 140ms var(--ease-out),
+    color 140ms var(--ease-out),
+    background-color 140ms var(--ease-out);
+}
+.contact-c .contact-fd__choice input:checked + span {
+  border-color: var(--c-accent);
+  color: var(--cf-ink);
+  background: var(--cf-field-hi);
+}
+.contact-c .contact-fd__choice input:focus-visible + span {
+  outline: 2px solid var(--c-accent);
+  outline-offset: 2px;
+}
+@media (hover: hover) and (pointer: fine) {
+  .contact-c .contact-fd__choice input:not(:checked):hover + span {
+    border-color: var(--cf-line-2);
+    color: var(--cf-ink);
+  }
+}
+
+/* ------------------------------------------------------------------ footer */
+.contact-c .contact-fm__foot {
+  margin-top: 1.75rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem 1.25rem;
+}
+
+.contact-c .contact-fm__submit {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  padding: 0 1.5rem;
+  border: 1px solid var(--c-accent);
+  border-radius: 2px;
+  background: var(--c-accent);
+  color: var(--void);
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  white-space: nowrap;          /* a CTA that wraps at desktop is broken */
+  overflow: hidden;
+  transition:
+    background-color 140ms var(--ease-out),
+    color 140ms var(--ease-out),
+    box-shadow 140ms var(--ease-out),
+    transform 100ms var(--ease-out);
+}
+@media (hover: hover) and (pointer: fine) {
+  .contact-c .contact-fm__submit:hover {
+    box-shadow: inset 0 0 0 1px rgba(8, 8, 10, 0.34);
+  }
+}
+.contact-c .contact-fm__submit:active { transform: translateY(1px); }
+.contact-c .contact-fm__submit:focus-visible {
+  outline: 2px solid var(--cf-ink);
+  outline-offset: 2px;
+}
+
+/* Sending: the fill drains out so the label stays high contrast on the panel,
+   and the accent returns as a 2px determinate bar along the bottom edge.
+   Filling the whole button behind the label would drop the label to 1.7:1. */
+.contact-c .contact-fm[data-state="sending"] .contact-fm__submit {
+  background: transparent;
+  color: var(--cf-ink);
+  border-color: var(--cf-line-2);
+  cursor: progress;
+}
+.contact-c .contact-fm__bar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  background: var(--c-accent);
+  transform: scaleX(0);
+  transform-origin: left center;
+  pointer-events: none;
+}
+
+.contact-c .contact-fm__aside {
+  display: grid;
+  gap: 0.25rem;
+  min-width: 0;
+}
+.contact-c .contact-fm__note {
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.1em;
+  line-height: 1.5;
+  color: var(--cf-ink-3);
+}
+.contact-c .contact-fm__probe {
+  justify-self: start;
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.1em;
+  color: var(--cf-ink-2);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  transition: color 140ms var(--ease-out);
+}
+@media (hover: hover) and (pointer: fine) {
+  .contact-c .contact-fm__probe:hover { color: var(--cf-ink); }
+}
+.contact-c .contact-fm__probe.is-armed { color: var(--cf-err); }
+.contact-c .contact-fm__probe:focus-visible {
+  outline: 2px solid var(--c-accent);
+  outline-offset: 2px;
+}
+
+.contact-c .contact-fm__status {
+  margin-top: 0.75rem;
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--cf-ink-2);
+}
+.contact-c .contact-fm__status:empty { display: none; }
+
+/* ------------------------------------------------------------------ failure */
+.contact-c .contact-fm__fail {
+  margin-top: 1.25rem;
+  display: flex;
+  gap: 0.875rem;
+  padding: 1rem 1.125rem;
+  border: 1px solid rgba(255, 143, 122, 0.44);
+  border-radius: 2px;
+  background: rgba(255, 143, 122, 0.07);
+}
+.contact-c .contact-fm__failmark { color: var(--cf-err); flex: none; margin-top: 0.125rem; }
+.contact-c .contact-fm__failtitle {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--cf-ink);
+}
+.contact-c .contact-fm__failbody {
+  margin-top: 0.25rem;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--cf-ink-2);
+}
+.contact-c .contact-fm__failbody a {
+  color: var(--cf-ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.contact-c .contact-fm__retry {
+  margin-top: 0.875rem;
+  min-height: 44px;
+  padding: 0 1.125rem;
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--cf-line-2);
+  border-radius: 2px;
+  color: var(--cf-ink);
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  transition: border-color 140ms var(--ease-out), background-color 140ms var(--ease-out);
+}
+@media (hover: hover) and (pointer: fine) {
+  .contact-c .contact-fm__retry:hover { border-color: var(--cf-line-3); background: var(--cf-field-hi); }
+}
+.contact-c .contact-fm__retry:focus-visible { outline: 2px solid var(--c-accent); outline-offset: 2px; }
+
+/* ==========================================================================
+   THE SHARED CONFIRMATION
+   ========================================================================== */
+
+.contact-c .contact-sent {
+  display: grid;
+  justify-items: start;
+  gap: 0.875rem;
+  align-content: center;
+}
+.contact-c .contact-sent__mark {
+  display: grid;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border: 1px solid var(--c-accent);
+  border-radius: 2px;
+  color: var(--c-accent);
+}
+.contact-c .contact-sent__mark .contact-ico { width: 1.25rem; height: 1.25rem; }
+.contact-c .contact-sent__title {
+  font-size: clamp(1.375rem, 2.4vw, 1.875rem);
+  font-weight: 500;
+  letter-spacing: -0.035em;
+  line-height: 1.08;
+  max-width: 20ch;
+}
+.contact-c .contact-sent__body {
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  color: var(--cf-ink-2);
+  max-width: 44ch;
+}
+.contact-c .contact-sent__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 2rem;
+  margin-top: 0.25rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--cf-line);
+  width: 100%;
+}
+.contact-c .contact-sent__meta dt {
+  font-family: var(--font-mono);
+  font-size: 0.5625rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--cf-ink-3);
+}
+.contact-c .contact-sent__meta dd {
+  margin: 0.25rem 0 0;
+  font-size: 0.875rem;
+  color: var(--cf-ink);
+}
+.contact-c .contact-sent__again {
+  margin-top: 0.5rem;
+  min-height: 44px;
+  padding: 0 1.125rem;
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--cf-line-2);
+  border-radius: 2px;
+  color: var(--cf-ink);
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  transition: border-color 140ms var(--ease-out), background-color 140ms var(--ease-out);
+}
+@media (hover: hover) and (pointer: fine) {
+  .contact-c .contact-sent__again:hover { border-color: var(--cf-line-3); background: var(--cf-field-hi); }
+}
+.contact-c .contact-sent__again:focus-visible { outline: 2px solid var(--c-accent); outline-offset: 2px; }
+
+/* ==========================================================================
+   CONCEPT 01  -  DISPATCH  (page)
+   ========================================================================== */
+
+.contact-dispatch { background: var(--void); }
+
+.contact-dispatch__lane {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.contact-dispatch__wrap {
+  position: relative;
+  z-index: 1;
+  min-height: 100%;
+  display: grid;
+  grid-template-columns: 7fr 5fr;
+  gap: 0 6vw;
+  align-content: center;
+  padding: clamp(1.5rem, 5vh, 3.5rem) var(--gutter) clamp(6rem, 18vh, 9rem);
+}
+
+.contact-dispatch__head { align-self: center; max-width: 34ch; }
+
+.contact-dispatch__title {
+  font-family: var(--font-display);
+  font-size: clamp(2.25rem, 4.6vw, 4.25rem);
+  font-weight: 500;
+  letter-spacing: -0.045em;
+  line-height: 0.94;
+  text-wrap: balance;
+}
+.contact-dispatch__lede {
+  margin-top: 1.25rem;
+  font-size: clamp(0.9375rem, 1.05vw, 1.0625rem);
+  line-height: 1.62;
+  color: var(--cf-ink-2);
+  max-width: 46ch;
+}
+
+.contact-dispatch__facts {
+  margin-top: clamp(1.5rem, 3.5vh, 2.25rem);
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, auto));
+  justify-content: start;
+  gap: 0 2.5rem;
+  padding-top: 1.125rem;
+  border-top: 1px solid var(--cf-line);
+}
+.contact-dispatch__facts dt,
+.contact-c .contact-facts dt {
+  font-family: var(--font-mono);
+  font-size: 0.5625rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--cf-ink-3);
+}
+.contact-dispatch__facts dd {
+  margin: 0.375rem 0 0;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  color: var(--cf-ink);
+  white-space: nowrap;
+}
+.contact-dispatch__facts .t-num { color: var(--cf-ink-2); }
+
+/* --- the panel, holding the form and the confirmation in one cell --------- */
+.contact-dispatch__panel {
+  position: relative;
+  display: grid;
+  align-self: center;
+  padding: clamp(1.5rem, 2.6vw, 2.25rem);
+  border: 1px solid var(--cf-line);
+  border-radius: 2px;
+  background: var(--cf-panel);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
+  transition: opacity 260ms var(--ease-out);
+}
+.contact-dispatch__panel > * { grid-area: 1 / 1; }
+
+/* During the send the panel steps back: it is telling you the form is not
+   yours to edit right now, before you try. */
+.contact-dispatch[data-stage="sending"] .contact-dispatch__panel { opacity: 0.62; }
+
+.contact-dispatch .contact-fm {
+  opacity: 1;
+  transform: none;
+  visibility: visible;
+  transition:
+    opacity 320ms var(--ease-out),
+    transform 320ms var(--ease-out),
+    visibility 0s linear 0s;
+}
+.contact-dispatch__sent {
+  opacity: 0;
+  transform: translate3d(0, 16px, 0);
+  visibility: hidden;
+  pointer-events: none;
+  transition:
+    opacity 420ms var(--ease-out) 120ms,
+    transform 420ms var(--ease-out) 120ms,
+    visibility 0s linear 120ms;
+}
+.contact-dispatch[data-stage="sent"] .contact-fm {
+  opacity: 0;
+  transform: translate3d(0, -14px, 0);
+  visibility: hidden;
+  pointer-events: none;
+  transition:
+    opacity 320ms var(--ease-out),
+    transform 320ms var(--ease-out),
+    visibility 0s linear 320ms;
+}
+.contact-dispatch[data-stage="sent"] .contact-dispatch__sent {
+  opacity: 1;
+  transform: none;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+/* --- the two endpoint markers -------------------------------------------- */
+.contact-dispatch__mark {
+  position: absolute;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-rows: auto auto;
+  column-gap: 0.5rem;
+  align-items: center;
+  pointer-events: none;
+}
+.contact-dispatch__mark i {
+  grid-row: 1 / 3;
+  width: 7px;
+  height: 7px;
+  border: 1px solid var(--c-accent);
+  background: transparent;
+  transition: background-color 220ms var(--ease-out);
+}
+.contact-dispatch__mark b {
+  font-family: var(--font-mono);
+  font-size: 0.5625rem;
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--cf-ink);
+}
+.contact-dispatch__mark span {
+  font-family: var(--font-mono);
+  font-size: 0.5625rem;
+  letter-spacing: 0.08em;
+  color: var(--cf-ink-3);
+}
+.contact-dispatch__mark--a { left: calc(6% - 3px); top: 88.5%; transform: translateY(-50%); }
+.contact-dispatch__mark--b {
+  right: calc(6% - 3px);
+  top: 88.5%;
+  transform: translateY(-50%);
+  grid-template-columns: 1fr auto;
+  text-align: right;
+}
+.contact-dispatch__mark--b i { grid-column: 2; grid-row: 1 / 3; }
+.contact-dispatch__mark--b b,
+.contact-dispatch__mark--b span { grid-column: 1; }
+.contact-dispatch[data-stage="sent"] .contact-dispatch__mark--b i { background: var(--c-accent); }
+
+/* --- mobile: a different composition, not a smaller one ------------------- */
+/* The lane and its markers are removed below 768px. A 3px transmission band
+   sits directly under the submit control instead, so the send is visible in
+   the same glance as the button that starts it. */
+.contact-dispatch__ministrip {
+  display: none;
+  position: relative;
+  height: 3px;
+  margin-top: 1.125rem;
+  background: var(--cf-line);
+  overflow: hidden;
+}
+.contact-dispatch__ministrip i {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 22%;
+  background: var(--c-accent);
+  transform: translate3d(-110%, 0, 0);
+}
+/* 22% of the track, so a flush-right landing is 354% of its own width. */
+.contact-dispatch[data-stage="sending"] .contact-dispatch__ministrip i {
+  transform: translate3d(354%, 0, 0);
+  transition: transform 1500ms cubic-bezier(0.77, 0, 0.175, 1);
+}
+.contact-dispatch[data-stage="sent"] .contact-dispatch__ministrip i {
+  transform: translate3d(354%, 0, 0);
+}
+
+@media (max-width: 767px) {
+  .contact-dispatch__ministrip { display: block; }
+  .contact-dispatch__lane,
+  .contact-dispatch__mark { display: none; }
+
+  .contact-dispatch__wrap {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 2.5rem 0;
+    align-content: start;
+    padding: clamp(1.5rem, 4vh, 2.5rem) var(--gutter) 4rem;
+  }
+  .contact-dispatch__head { max-width: none; }
+  .contact-dispatch__facts { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .contact-dispatch__panel {
+    padding: 1.25rem 1.125rem 1.5rem;
+    box-shadow: none;
+  }
+}
+
+@media (max-width: 1099px) and (min-width: 768px) {
+  .contact-dispatch__wrap { grid-template-columns: 6fr 6fr; gap: 0 3.5vw; }
+  .contact-dispatch__head { max-width: 30ch; }
+}
+
+/* --- reduced motion ------------------------------------------------------- */
+/* Fewer and gentler, never less informed: the panel still turns over, the
+   submit control still disables and the live region still announces. Only the
+   travel is removed. */
+@media (prefers-reduced-motion: reduce) {
+  .contact-c .contact-fm__bar { display: none !important; }
+  .contact-dispatch .contact-fm,
+  .contact-dispatch__sent {
+    transform: none !important;
+    transition-duration: 120ms !important;
+  }
+  .contact-dispatch__panel { transition-duration: 120ms !important; }
+}
+
+/* ==========================================================================
+   CONCEPT 02  -  STATEMENT  (page)
+   ========================================================================== */
+
+.contact-statement {
+  --sm-curtain: min(34vh, 20rem);
+  background: var(--void);
+}
+
+.contact-statement__inner {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  padding: clamp(2.5rem, 11vh, 7rem) var(--gutter) clamp(2rem, 6vh, 4rem);
+  transform: translate3d(0, 0, 0);
+  transition: transform 620ms var(--ease-drawer);
+}
+.contact-statement[data-contact-open="true"] .contact-statement__inner {
+  transform: translate3d(0, calc(-1 * var(--sm-curtain)), 0);
+}
+
+.contact-statement__line {
+  font-family: var(--font-display);
+  font-size: clamp(2.75rem, 11.5vw, 10rem);
+  font-weight: 500;
+  letter-spacing: -0.05em;
+  line-height: 0.84;
+  color: var(--cf-ink);
+}
+/* Masked line boxes: the entry is a rise out of the leading, not a fade.
+   108% rather than 100% so descenders clear the mask edge. */
+/* The mask has to clear the descenders of "y" and "g" or the line box crops
+   them into a hairline. Padding opens the box, the negative margin gives the
+   space back to the leading so the two lines keep their 0.84 line-height. */
+.contact-statement__box {
+  display: block;
+  overflow: hidden;
+  padding-bottom: 0.2em;
+  margin-bottom: -0.16em;
+}
+.contact-statement__box > span {
+  display: block;
+  transform: translate3d(0, 108%, 0);
+  transition: transform 900ms var(--ease-out);
+}
+.contact-statement__box:nth-child(2) > span { transition-delay: 90ms; }
+.contact-statement[data-entered="true"] .contact-statement__box > span {
+  transform: translate3d(0, 0, 0);
+}
+
+.contact-statement__sub {
+  margin-top: 2rem;
+  font-size: clamp(0.9375rem, 1.1vw, 1.0625rem);
+  line-height: 1.6;
+  color: var(--cf-ink-2);
+  max-width: 52ch;
+}
+
+.contact-statement__actions {
+  margin-top: clamp(2rem, 5vh, 3.5rem);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem 2.5rem;
+}
+
+.contact-statement__cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.625rem;
+  min-height: 48px;
+  padding: 0 0.125rem;
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: var(--cf-ink);
+  border-bottom: 1px solid var(--c-accent);
+  transition:
+    border-bottom-width 140ms var(--ease-out),
+    opacity 220ms var(--ease-out),
+    visibility 0s linear 0s;
+}
+.contact-statement__cta .contact-ico {
+  color: var(--c-accent);
+  transition: transform 140ms var(--ease-out);
+}
+@media (hover: hover) and (pointer: fine) {
+  .contact-statement__cta:hover { border-bottom-width: 2px; }
+  .contact-statement__cta:hover .contact-ico { transform: translateX(3px); }
+}
+.contact-statement__cta:focus-visible { outline: 2px solid var(--c-accent); outline-offset: 4px; }
+/* Once it has opened the form it has done its job. Leaving it on screen
+   invites a second press that does nothing. */
+.contact-statement[data-contact-open="true"] .contact-statement__cta {
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 220ms var(--ease-out),
+    visibility 0s linear 220ms;
+}
+
+.contact-statement__addr {
+  display: inline-flex;
+  align-items: center;
+  min-height: 48px;
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  color: var(--cf-ink);
+  text-decoration: underline;
+  text-decoration-color: var(--c-accent);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 4px;
+  transition: text-underline-offset 140ms var(--ease-out);
+}
+@media (hover: hover) and (pointer: fine) {
+  .contact-statement__addr:hover { text-underline-offset: 6px; }
+}
+.contact-statement__addr:focus-visible { outline: 2px solid var(--c-accent); outline-offset: 4px; }
+
+.contact-statement__form {
+  margin-top: clamp(3rem, 9vh, 6rem);
+  display: grid;
+  max-width: 34rem;
+}
+.contact-statement__form > * { grid-area: 1 / 1; }
+
+.contact-statement .contact-fd {
+  opacity: 0;
+  transform: translate3d(0, 18px, 0);
+  transition:
+    opacity 420ms var(--ease-out),
+    transform 420ms var(--ease-out);
+}
+.contact-statement[data-contact-open="true"] .contact-fd {
+  opacity: 1;
+  transform: none;
+  transition-delay: calc(140ms + var(--i, 0) * 60ms);
+}
+.contact-statement .contact-fm__foot,
+.contact-statement .contact-fm__status {
+  opacity: 0;
+  transition: opacity 420ms var(--ease-out);
+}
+.contact-statement[data-contact-open="true"] .contact-fm__foot,
+.contact-statement[data-contact-open="true"] .contact-fm__status { opacity: 1; transition-delay: 320ms; }
+
+.contact-statement .contact-fm {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 320ms var(--ease-out), visibility 0s linear 0s;
+}
+.contact-statement__sent {
+  opacity: 0;
+  visibility: hidden;
+  transform: translate3d(0, 16px, 0);
+  pointer-events: none;
+  transition:
+    opacity 420ms var(--ease-out) 120ms,
+    transform 420ms var(--ease-out) 120ms,
+    visibility 0s linear 120ms;
+}
+.contact-statement[data-stage="sent"] .contact-fm {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 320ms var(--ease-out), visibility 0s linear 320ms;
+}
+.contact-statement[data-stage="sent"] .contact-statement__sent {
+  opacity: 1;
+  transform: none;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+@media (max-width: 1099px) and (min-width: 768px) {
+  .contact-statement { --sm-curtain: 30vh; }
+  .contact-statement__line { font-size: clamp(2.5rem, 9vw, 6rem); }
+}
+
+/* Mobile removes the reveal entirely. Hiding a form behind a gesture on a
+   phone is hostile, and the visitor has already scrolled a long way. */
+@media (max-width: 767px) {
+  .contact-statement { --sm-curtain: 0px; }
+  .contact-statement__inner {
+    justify-content: flex-start;
+    transform: none !important;
+    padding-bottom: 4rem;
+  }
+  .contact-statement__line { font-size: clamp(2.25rem, 12vw, 3.5rem); line-height: 0.92; }
+  .contact-statement__cta { display: none; }
+  .contact-statement__addr { width: 100%; }
+  .contact-statement__form { margin-top: 2.5rem; max-width: none; }
+  .contact-statement .contact-fd { opacity: 1; transform: none; }
+  .contact-statement .contact-fm__foot,
+  .contact-statement .contact-fm__status { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .contact-statement { --sm-curtain: 0px; }
+  .contact-statement__inner { transform: none !important; }
+  .contact-statement__box > span { transform: none !important; transition: none !important; }
+  .contact-statement__cta { display: none; }
+  .contact-statement .contact-fd { opacity: 1 !important; transform: none !important; }
+  .contact-statement .contact-fm__foot,
+  .contact-statement .contact-fm__status { opacity: 1 !important; }
+}
+
+/* ==========================================================================
+   CONCEPT 03  -  CONSOLE  (page)
+   ========================================================================== */
+
+.contact-console { background: var(--void); }
+
+.contact-console__wrap {
+  min-height: 100%;
+  display: grid;
+  grid-template-columns: 5fr 7fr;
+  gap: 0 5vw;
+  align-content: center;
+  padding: clamp(1.5rem, 5vh, 3.5rem) var(--gutter);
+}
+
+.contact-console__rig { align-self: center; min-width: 0; }
+
+.contact-console__title {
+  font-family: var(--font-display);
+  font-size: clamp(1.875rem, 3.2vw, 2.75rem);
+  font-weight: 500;
+  letter-spacing: -0.04em;
+  line-height: 1;
+}
+.contact-console__lede {
+  margin-top: 1rem;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  color: var(--cf-ink-2);
+  max-width: 42ch;
+}
+
+.contact-console__live {
+  margin-top: clamp(1.75rem, 4vh, 2.75rem);
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--cf-line);
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1.5rem;
+}
+.contact-console__cell { display: grid; align-content: start; gap: 0.375rem; min-width: 0; }
+.contact-console__k {
+  font-family: var(--font-mono);
+  font-size: 0.5625rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--cf-ink-3);
+}
+.contact-console__v {
+  font-size: 0.9375rem;
+  line-height: 1.35;
+  color: var(--cf-ink);
+}
+.contact-console__note {
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.06em;
+  color: var(--cf-ink-3);
+}
+.contact-console__clock {
+  font-family: var(--font-mono);
+  font-size: clamp(1.5rem, 2.6vw, 2.25rem);
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  color: var(--cf-ink);
+  font-variant-numeric: tabular-nums;
+}
+.contact-console__state {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.08em;
+  color: var(--cf-ink-2);
+}
+/* The one status dot in this area. It encodes a real, recomputed boolean:
+   inside or outside the stated working hours. */
+.contact-console__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--cf-ink-3);
+  flex: none;
+  transition: background-color 220ms var(--ease-out);
+}
+.contact-console__state[data-live="true"] .contact-console__dot { background: var(--c-accent); }
+
+.contact-console__meter { margin: clamp(1.75rem, 4vh, 2.5rem) 0 0; }
+.contact-console__metercap {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.25rem 1rem;
+  margin-bottom: 0.75rem;
+}
+.contact-console__metercap > span:first-child {
+  font-family: var(--font-mono);
+  font-size: 0.5625rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--cf-ink-3);
+}
+.contact-console__model {
+  font-size: 0.75rem;
+  color: var(--cf-ink-2);
+}
+.contact-console__canvas {
+  width: 100%;
+  height: 88px;
+  display: block;
+}
+
+.contact-console__panel {
+  position: relative;
+  display: grid;
+  align-self: center;
+  padding: clamp(1.5rem, 2.6vw, 2.25rem);
+  border: 1px solid var(--cf-line);
+  border-radius: 2px;
+  background: var(--cf-panel);
+}
+.contact-console__panel > * { grid-area: 1 / 1; }
+
+.contact-console .contact-fm {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 320ms var(--ease-out), visibility 0s linear 0s;
+}
+.contact-console__sent {
+  opacity: 0;
+  visibility: hidden;
+  transform: translate3d(0, 16px, 0);
+  pointer-events: none;
+  transition:
+    opacity 420ms var(--ease-out) 120ms,
+    transform 420ms var(--ease-out) 120ms,
+    visibility 0s linear 120ms;
+}
+.contact-console[data-stage="sent"] .contact-fm {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 320ms var(--ease-out), visibility 0s linear 320ms;
+}
+.contact-console[data-stage="sent"] .contact-console__sent {
+  opacity: 1;
+  transform: none;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+@media (max-width: 1099px) and (min-width: 768px) {
+  .contact-console__wrap { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 0 3vw; }
+  .contact-console__live { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .contact-console__canvas { height: 76px; }
+}
+
+@media (max-width: 767px) {
+  .contact-console__wrap {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 2rem 0;
+    align-content: start;
+    padding: clamp(1.5rem, 4vh, 2.5rem) var(--gutter) 4rem;
+  }
+  /* The instrument becomes a strip above the form rather than a squeezed
+     column: clock and state share a row, booking takes the next. */
+  .contact-console__live {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.25rem 1rem;
+  }
+  .contact-console__cell:last-child { grid-column: 1 / -1; }
+  .contact-console__canvas { height: 44px; }
+  .contact-console__lede { max-width: none; }
+  .contact-console__panel { padding: 1.25rem 1.125rem 1.5rem; }
+  .contact-console .contact-fd__choices { display: grid; grid-template-columns: minmax(0, 1fr); }
+  .contact-console .contact-fd__choice span { min-height: 48px; width: 100%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .contact-console .contact-fm,
+  .contact-console__sent { transform: none !important; transition-duration: 120ms !important; }
+}
+
+/* ==========================================================================
+   CONCEPT 04  -  CONVERSATION  (page)
+   --------------------------------------------------------------------------
+   The sentence layout. Every blank is a three-row inline grid: visible label,
+   control, reserved error row. The sentence is context; it is never the label.
+   ========================================================================== */
+
+.contact-conversation { background: var(--void-2); }
+
+.contact-conversation__wrap {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: clamp(2rem, 5vh, 3.25rem);
+  max-width: 62rem;
+  margin: 0 auto;
+  padding: clamp(2rem, 7vh, 4.5rem) var(--gutter);
+}
+
+.contact-conversation__title {
+  font-family: var(--font-display);
+  font-size: clamp(1.75rem, 3vw, 2.5rem);
+  font-weight: 500;
+  letter-spacing: -0.04em;
+  line-height: 1;
+}
+.contact-conversation__lede {
+  margin-top: 0.875rem;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  color: var(--cf-ink-2);
+  max-width: 56ch;
+}
+
+.contact-conversation__panel { display: grid; }
+.contact-conversation__panel > * { grid-area: 1 / 1; }
+
+.contact-conversation__sentence {
+  font-family: var(--font-display);
+  font-size: clamp(1.375rem, 2.6vw, 2.125rem);
+  font-weight: 400;
+  /* Structural, not decorative: this leading is the room the slot labels and
+     the reserved error rows live in. */
+  line-height: 2.6;
+  letter-spacing: -0.015em;
+  color: var(--cf-ink);
+  transition: color 220ms var(--ease-out);
+}
+.contact-conversation__sentence[data-focus="true"] { color: #7e808c; }
+.contact-conversation__frag,
+.contact-conversation__punct { display: inline; }
+
+/* ------------------------------------------------------------- the blanks */
+/* The slot is an inline-block whose ONLY in-flow child is the control, so the
+   control sits on the sentence's own baseline. The label and the error are
+   absolutely positioned into the leading above and below it. An inline-grid
+   would take its baseline from its first row, which drops the input below the
+   line of text it belongs to. */
+.contact-c .contact-fd--slot {
+  display: inline-block;
+  vertical-align: baseline;
+  position: relative;
+  margin: 0 0.12em;
+}
+.contact-c .contact-fd--slot .contact-fd__label {
+  position: absolute;
+  left: 0;
+  bottom: calc(100% - 0.28em);
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  line-height: 1;
+  white-space: nowrap;
+  color: var(--cf-ink-2);
+}
+.contact-c .contact-fd--slot .contact-fd__input {
+  display: block;
+  min-height: 0;
+  width: auto;
+  min-width: var(--slotw, 12ch);
+  max-width: min(30ch, 62vw);
+  padding: 0 0.1em 0.12em;
+  border: 0;
+  border-bottom: 1px solid var(--cf-line-2);
+  border-radius: 0;
+  background: transparent;
+  color: var(--cf-ink);
+  font-family: inherit;
+  font-size: inherit;
+  line-height: 1.2;
+  field-sizing: content;
+  transition: border-bottom-color 180ms var(--ease-out), border-bottom-width 180ms var(--ease-out);
+}
+.contact-c .contact-fd--slot .contact-fd__input::placeholder { color: var(--cf-ink-2); }
+.contact-c .contact-fd--slot .contact-fd__input:focus {
+  outline: 2px solid var(--c-accent);
+  outline-offset: 3px;
+  border-bottom-color: var(--c-accent);
+  background: transparent;
+}
+.contact-conversation__sentence[data-focus="true"] .contact-fd--slot:focus-within .contact-fd__input {
+  color: var(--cf-ink);
+}
+.contact-c .contact-fd--slot.is-filled .contact-fd__input {
+  border-bottom-color: rgba(167, 139, 250, 0.45);
+}
+@media (hover: hover) and (pointer: fine) {
+  .contact-c .contact-fd--slot .contact-fd__input:hover { border-bottom-color: var(--cf-line-3); }
+}
+/* Helper text is present for assistive technology but the sentence carries the
+   context visually, so it is hidden without being removed. */
+.contact-c .contact-fd--slot .contact-fd__help {
+  position: absolute;
+  width: 1px; height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+/* The error lives in the leading below the control, absolutely positioned, so
+   an appearing error never reflows the sentence around it. */
+.contact-c .contact-fd--slot .contact-fd__err {
+  position: absolute;
+  left: 0;
+  top: calc(100% + 0.15em);
+  display: block;
+  font-family: var(--font-display);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  line-height: 1.15;
+  letter-spacing: 0;
+  white-space: normal;
+  width: max(100%, 24ch);
+  max-width: 32ch;
+  opacity: 0;
+  transition: opacity 160ms var(--ease-out);
+}
+.contact-c .contact-fd--slot .contact-fd__err:empty { display: block; }
+.contact-c .contact-fd--slot.is-invalid .contact-fd__err { opacity: 1; }
+.contact-c .contact-fd--slot.is-invalid .contact-fd__input { border-bottom-color: var(--cf-err); }
+
+/* The timing group inside the sentence: four small chips under one label. The
+   chip row is taller than a line box, so its label needs more clearance than a
+   text blank does or the two collide. */
+.contact-c .contact-fd--slot.contact-fd--choice { vertical-align: -0.45em; }
+.contact-c .contact-fd--slot .contact-fd__set { display: block; }
+.contact-c .contact-fd--slot .contact-fd__set .contact-fd__label {
+  position: absolute;
+  left: 0;
+  bottom: calc(100% + 0.35em);
+}
+.contact-c .contact-fd--slot .contact-fd__choices {
+  margin-top: 0;
+  gap: 0.25rem;
+  flex-wrap: nowrap;
+}
+.contact-c .contact-fd--slot .contact-fd__choice span {
+  min-height: 36px;
+  padding: 0 0.5rem;
+  font-family: var(--font-display);
+  font-size: 0.8125rem;
+}
+
+.contact-conversation .contact-fm__foot { margin-top: 3rem; }
+
+.contact-conversation .contact-fm {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 320ms var(--ease-out), visibility 0s linear 0s;
+}
+.contact-conversation__sent {
+  opacity: 0;
+  visibility: hidden;
+  transform: translate3d(0, 16px, 0);
+  pointer-events: none;
+  transition:
+    opacity 420ms var(--ease-out) 120ms,
+    transform 420ms var(--ease-out) 120ms,
+    visibility 0s linear 120ms;
+}
+.contact-conversation[data-stage="sent"] .contact-fm {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 320ms var(--ease-out), visibility 0s linear 320ms;
+}
+.contact-conversation[data-stage="sent"] .contact-conversation__sent {
+  opacity: 1;
+  transform: none;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+/* Mobile abandons the sentence. Four inline blanks at 390px produce a ragged
+   column with one word per line; the same fields become a stacked form and the
+   sentence fragments become helper text under each label. */
+@media (max-width: 767px) {
+  .contact-conversation__wrap { justify-content: flex-start; padding-bottom: 4rem; }
+  .contact-conversation__sentence {
+    /* The sentence fragments stay in the DOM as context but stop being a
+       paragraph: the slots become a stacked form and the text between them
+       reads as the connective tissue above each field. */
+    font-size: 0.9375rem;
+    line-height: 1.7;
+    letter-spacing: 0;
+    color: var(--cf-ink-2) !important;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.5rem;
+  }
+  .contact-conversation__frag { display: block; }
+  /* Punctuation belonging to a slot has nothing to attach to once the
+     sentence is a stacked form, so it is removed rather than orphaned. */
+  .contact-conversation__punct { display: none; }
+  .contact-c .contact-fd--slot {
+    display: grid;
+    grid-template-rows: auto auto auto auto;
+    position: static;
+    margin: 0 0 1rem;
+    width: 100%;
+  }
+  .contact-c .contact-fd--slot .contact-fd__label {
+    position: static;
+    order: 1;
+    font-family: var(--font-display);
+    font-size: 0.8125rem;
+    letter-spacing: 0.005em;
+    text-transform: none;
+    color: var(--cf-ink);
+    margin-bottom: 0.4375rem;
+  }
+  .contact-c .contact-fd--slot .contact-fd__input {
+    order: 2;
+    width: 100%;
+    max-width: none;
+    min-width: 0;
+    min-height: 48px;
+    padding: 0.8125rem 0.9375rem;
+    border: 1px solid var(--cf-line);
+    border-bottom: 1px solid var(--cf-line);
+    border-radius: 2px;
+    background: var(--cf-field);
+    font-family: var(--font-display);
+    font-size: 1rem;
+    field-sizing: fixed;
+  }
+  .contact-c .contact-fd--slot .contact-fd__input:focus { border-color: var(--cf-line-2); }
+  .contact-c .contact-fd--slot .contact-fd__help {
+    position: static;
+    order: 3;
+    width: auto; height: auto;
+    clip-path: none;
+    white-space: normal;
+    margin-top: 0.4rem;
+    font-size: 0.75rem;
+  }
+  .contact-c .contact-fd--slot .contact-fd__err {
+    position: static;
+    order: 4;
+    width: auto;
+    max-width: none;
+    margin-top: 0.35rem;
+    font-size: 0.75rem;
+  }
+  .contact-c .contact-fd--slot .contact-fd__err:empty { display: none; }
+  .contact-c .contact-fd--slot .contact-fd__set { display: contents; }
+  .contact-c .contact-fd--slot .contact-fd__set .contact-fd__label { position: static; }
+  .contact-c .contact-fd--slot .contact-fd__choices {
+    order: 2;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.5rem;
+  }
+  .contact-c .contact-fd--slot .contact-fd__choice span { min-height: 48px; width: 100%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .contact-conversation__sentence { color: var(--cf-ink) !important; transition: none !important; }
+  .contact-conversation .contact-fm,
+  .contact-conversation__sent { transform: none !important; transition-duration: 120ms !important; }
+}
+
+/* ==========================================================================
+   CONCEPT 05  -  LETTER  (page)
+   ========================================================================== */
+
+.contact-letter {
+  --lt-fold: 0.34;
+  --lt-depart: 40%;
+  background: var(--void);
+}
+
+.contact-letter__wrap {
+  min-height: 100%;
+  display: grid;
+  grid-template-columns: 5fr 7fr;
+  gap: 0 5vw;
+  align-content: center;
+  padding: clamp(1.5rem, 5vh, 3.5rem) var(--gutter);
+}
+
+.contact-letter__head {
+  align-self: center;
+  max-width: 34ch;
+  transition: opacity 260ms var(--ease-out);
+}
+/* During the fold the argument is finished and the action is what matters. */
+.contact-letter[data-stage="sending"] .contact-letter__head { opacity: 0.4; }
+
+.contact-letter__title {
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 3.6vw, 3.25rem);
+  font-weight: 500;
+  letter-spacing: -0.04em;
+  line-height: 0.98;
+}
+.contact-letter__lede {
+  margin-top: 1.125rem;
+  font-size: 0.9375rem;
+  line-height: 1.62;
+  color: var(--cf-ink-2);
+  max-width: 44ch;
+}
+.contact-letter__facts {
+  margin-top: clamp(1.5rem, 3.5vh, 2.25rem);
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, auto));
+  justify-content: start;
+  gap: 0 2.5rem;
+  padding-top: 1.125rem;
+  border-top: 1px solid var(--cf-line);
+}
+.contact-letter__facts dt {
+  font-family: var(--font-mono);
+  font-size: 0.5625rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--cf-ink-3);
+}
+.contact-letter__facts dd {
+  margin: 0.375rem 0 0;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  color: var(--cf-ink);
+  white-space: nowrap;
+}
+.contact-letter__facts .t-num { color: var(--cf-ink-2); }
+
+.contact-letter__stack {
+  display: grid;
+  align-self: center;
+  justify-items: stretch;
+}
+.contact-letter__stack > * { grid-area: 1 / 1; }
+
+/* -------------------------------------------------------------- the sheet */
+.contact-letter__sheet {
+  position: relative;
+  max-width: 38rem;
+  width: 100%;
+  padding: clamp(1.5rem, 2.6vw, 2.5rem);
+  border: 1px solid rgba(217, 166, 121, 0.26);
+  border-radius: 2px;
+  /* A warm near-black two steps off the page ground. That difference is the
+     whole material argument and it is worth two steps, not twenty. */
+  background: #14120f;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 24px 60px rgba(0, 0, 0, 0.55);
+  transform-origin: center center;
+  transform: scaleY(1) translate3d(0, 0, 0);
+  opacity: 1;
+  transition:
+    transform 700ms var(--ease-in-out),
+    opacity 420ms var(--ease-out);
+}
+.contact-letter__grain {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.03;
+  border-radius: 2px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23g)'/%3E%3C/svg%3E");
+}
+.contact-letter__body {
+  position: relative;
+  z-index: 1;
+  transition: opacity 180ms var(--ease-out);
+}
+.contact-letter__salut {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(217, 166, 121, 0.18);
+  font-size: 1.125rem;
+  letter-spacing: 0.01em;
+  color: var(--cf-ink);
+}
+.contact-letter__date {
+  font-size: 0.625rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--cf-ink-3);
+  white-space: nowrap;
+}
+
+.contact-letter__creases {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 220ms var(--ease-out) 120ms;
+}
+.contact-letter__creases i {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: rgba(217, 166, 121, 0.5);
+}
+.contact-letter__creases i:first-child { top: 33.3%; }
+.contact-letter__creases i:last-child { top: 66.6%; }
+
+.contact-letter__seal {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  margin: -1.375rem 0 0 -1.375rem;
+  border-radius: 50%;
+  background: var(--c-accent);
+  color: var(--void);
+  opacity: 0;
+  /* Never scale(0): nothing in the physical world appears from nothing. */
+  transform: scale(0.6);
+  pointer-events: none;
+  transition:
+    opacity 260ms var(--ease-out),
+    transform 260ms var(--ease-out);
+}
+.contact-letter__seal .contact-ico { width: 1.25rem; height: 1.25rem; }
+
+/* --- the fold, the seal, the departure ----------------------------------- */
+.contact-letter[data-stage="sending"] .contact-letter__sheet {
+  transform: scaleY(var(--lt-fold)) translate3d(0, 0, 0);
+  will-change: transform;
+}
+.contact-letter[data-stage="sending"] .contact-letter__body { opacity: 0; }
+.contact-letter[data-stage="sending"] .contact-letter__creases { opacity: 1; }
+.contact-letter[data-stage="sending"] .contact-letter__seal {
+  opacity: 1;
+  transform: scale(1);
+  transition-delay: 700ms;
+}
+
+.contact-letter[data-stage="sent"] .contact-letter__sheet {
+  transform: scaleY(var(--lt-fold)) translate3d(0, var(--lt-depart), 0);
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    transform 420ms var(--ease-out) 60ms,
+    opacity 420ms var(--ease-out) 60ms;
+}
+.contact-letter[data-stage="sent"] .contact-letter__body { opacity: 0; }
+.contact-letter[data-stage="sent"] .contact-letter__creases { opacity: 1; }
+.contact-letter[data-stage="sent"] .contact-letter__seal { opacity: 1; transform: scale(1); }
+
+/* Undoing is always faster than doing: 490ms is 70% of the fold. */
+.contact-letter[data-stage="failed"] .contact-letter__sheet {
+  transform: none;
+  transition: transform 490ms var(--ease-in-out);
+}
+.contact-letter[data-stage="failed"] .contact-letter__creases { opacity: 0; transition-delay: 0s; }
+
+.contact-letter__sent {
+  align-self: center;
+  opacity: 0;
+  visibility: hidden;
+  transform: translate3d(0, 18px, 0);
+  pointer-events: none;
+  transition:
+    opacity 420ms var(--ease-out) 140ms,
+    transform 420ms var(--ease-out) 140ms,
+    visibility 0s linear 140ms;
+}
+.contact-letter[data-stage="sent"] .contact-letter__sent {
+  opacity: 1;
+  transform: none;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+@media (max-width: 1099px) and (min-width: 768px) {
+  .contact-letter__wrap { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 0 3vw; }
+  .contact-letter__sheet { padding: 2rem; }
+}
+
+@media (max-width: 767px) {
+  /* The sheet becomes the whole composition. A 60px shadow on a 390px screen
+     is a smudge, and a large travel reads as a glitch rather than a gesture. */
+  .contact-letter { --lt-fold: 0.5; --lt-depart: 24%; }
+  .contact-letter__wrap {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 2rem 0;
+    align-content: start;
+    padding: clamp(1.5rem, 4vh, 2.5rem) var(--gutter) 4rem;
+  }
+  .contact-letter__head { max-width: none; }
+  .contact-letter__lede { max-width: none; }
+  .contact-letter__facts { grid-template-columns: repeat(2, minmax(0, auto)); gap: 1rem 2rem; }
+  .contact-letter__sheet {
+    max-width: none;
+    padding: 1.25rem 1.125rem 1.5rem;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* No fold, no press, no departure. The sheet cross-fades to a sealed state
+     so the visitor still learns that it was sealed and sent. */
+  .contact-letter__sheet,
+  .contact-letter__body,
+  .contact-letter__creases,
+  .contact-letter__seal,
+  .contact-letter__sent {
+    transform: none !important;
+    transition-duration: 160ms !important;
+    transition-delay: 0s !important;
+  }
+  .contact-letter[data-stage="sending"] .contact-letter__sheet,
+  .contact-letter[data-stage="sent"] .contact-letter__sheet { transform: none !important; }
+}
+
+/* ==========================================================================
+   THE SHARED SEE MORE CONTROL
+   --------------------------------------------------------------------------
+   Every section concept ends with one. The shell owns its look; this sets the
+   one thing it does not, a 44px target floor, scoped to this area's own hook.
+   ========================================================================== */
+.contact-c .contact-more {
+  min-height: 44px;
+  justify-content: center;
+}
+
+/* ==========================================================================
+   SECTION 01  -  RELAY
+   ========================================================================== */
+
+.contact-relay__wrap {
+  display: grid;
+  grid-template-columns: 6fr 5fr;
+  gap: 0 5vw;
+  align-items: start;
+  padding: clamp(4rem, 12vh, 7rem) var(--gutter);
+  max-width: var(--maxw);
+  margin: 0 auto;
+}
+.contact-relay__wrap::before {
+  content: "";
+  grid-column: 1;
+  grid-row: 1;
+  justify-self: end;
+  align-self: stretch;
+  width: 1px;
+  margin-right: calc(-2.5vw - 0.5px);
+  background: var(--cf-line);
+}
+
+.contact-relay__side { grid-column: 1; grid-row: 1; min-width: 0; }
+.contact-relay__panel { grid-column: 2; grid-row: 1; min-width: 0; }
+
+.contact-relay__title {
+  font-family: var(--font-display);
+  font-size: clamp(1.5rem, 2.6vw, 2rem);
+  font-weight: 500;
+  letter-spacing: -0.035em;
+  line-height: 1.02;
+}
+
+.contact-relay__addr {
+  display: inline-block;
+  margin-top: 1rem;
+  font-family: var(--font-mono);
+  font-size: clamp(1.5rem, 3vw, 2.25rem);
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  color: var(--cf-ink);
+  text-decoration: underline;
+  text-decoration-color: var(--c-accent);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 4px;
+  transition: text-underline-offset 140ms var(--ease-out);
+}
+@media (hover: hover) and (pointer: fine) {
+  .contact-relay__addr:hover { text-underline-offset: 7px; }
+}
+.contact-relay__addr:focus-visible { outline: 2px solid var(--c-accent); outline-offset: 4px; }
+
+.contact-relay__facts {
+  margin-top: 2rem;
+  display: grid;
+  gap: 1.25rem;
+}
+.contact-relay__facts dt {
+  font-family: var(--font-mono);
+  font-size: 0.5625rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--cf-ink-3);
+}
+.contact-relay__facts dd {
+  margin: 0.375rem 0 0;
+  font-size: 0.875rem;
+  line-height: 1.4;
+  color: var(--cf-ink);
+}
+.contact-relay__facts .t-num { color: var(--cf-ink-2); }
+
+.contact-relay__handles {
+  margin-top: 2rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--cf-line);
+  display: grid;
+  gap: 0.625rem;
+  max-width: 22rem;
+}
+.contact-relay__handles li {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1.5rem;
+}
+.contact-relay__handles span {
+  font-size: 0.8125rem;
+  color: var(--cf-ink-2);
+}
+.contact-relay__handles b {
+  font-size: 0.8125rem;
+  font-weight: 400;
+  color: var(--cf-ink-2);
+  transition: color 140ms var(--ease-out);
+}
+@media (hover: hover) and (pointer: fine) {
+  .contact-relay__handles li:hover b { color: var(--cf-ink); }
+}
+
+.contact-relay__more { margin-top: 2.5rem; }
+
+.contact-relay__panel {
+  position: relative;
+  display: grid;
+  padding: clamp(1.5rem, 2.4vw, 2rem);
+  border: 1px solid var(--cf-line);
+  border-radius: 2px;
+  background: var(--cf-panel);
+}
+.contact-relay__panel > * { grid-area: 1 / 1; }
+
+.contact-relay .contact-fm {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 320ms var(--ease-out), visibility 0s linear 0s;
+}
+.contact-relay__sent {
+  opacity: 0;
+  visibility: hidden;
+  transform: translate3d(0, 16px, 0);
+  pointer-events: none;
+  transition:
+    opacity 420ms var(--ease-out) 120ms,
+    transform 420ms var(--ease-out) 120ms,
+    visibility 0s linear 120ms;
+}
+.contact-relay[data-stage="sent"] .contact-fm {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 320ms var(--ease-out), visibility 0s linear 320ms;
+}
+.contact-relay[data-stage="sent"] .contact-relay__sent {
+  opacity: 1;
+  transform: none;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+/* Entry: the two columns settle in once, then the observer disconnects. */
+.contact-relay__side,
+.contact-relay__panel {
+  opacity: 0;
+  transform: translate3d(0, 14px, 0);
+  transition:
+    opacity 520ms var(--ease-out),
+    transform 520ms var(--ease-out);
+}
+.contact-relay__panel { transition-delay: 70ms; }
+.contact-relay[data-entered="true"] .contact-relay__side,
+.contact-relay[data-entered="true"] .contact-relay__panel {
+  opacity: 1;
+  transform: none;
+}
+
+@media (max-width: 1099px) and (min-width: 768px) {
+  .contact-relay__wrap { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 0 3vw; }
+  .contact-relay__wrap::before { display: none; }
+}
+
+/* Mobile leads with the address: on a phone the fastest path is the mail
+   client, so it comes first and the form follows. */
+@media (max-width: 767px) {
+  .contact-relay__wrap {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 2.5rem 0;
+    padding: 4rem var(--gutter);
+  }
+  .contact-relay__wrap::before { display: none; }
+  .contact-relay__side,
+  .contact-relay__panel { grid-column: 1; grid-row: auto; }
+  .contact-relay__addr {
+    display: flex;
+    align-items: center;
+    min-height: 48px;
+    font-size: clamp(1.375rem, 7vw, 1.75rem);
+  }
+  .contact-relay__facts { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.25rem 1rem; }
+  .contact-relay__handles { max-width: none; }
+  .contact-relay__panel { padding: 1.25rem 1.125rem 1.5rem; }
+  .contact-relay__more { margin-top: 2rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .contact-relay__side,
+  .contact-relay__panel { opacity: 1 !important; transform: none !important; }
+  .contact-relay__sent { transform: none !important; }
+}
+
+/* ==========================================================================
+   SECTION 02  -  INVITATION
+   ========================================================================== */
+
+.contact-invitation__wrap {
+  max-width: 68rem;
+  padding: clamp(4rem, 14vh, 8rem) var(--gutter) clamp(3rem, 10vh, 6rem);
+}
+
+.contact-invitation__line {
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 7vw, 5.5rem);
+  font-weight: 500;
+  letter-spacing: -0.045em;
+  line-height: 0.92;
+  color: var(--cf-ink);
+}
+.contact-invitation__box {
+  display: block;
+  overflow: hidden;
+  padding-bottom: 0.18em;
+  margin-bottom: -0.14em;
+}
+.contact-invitation__box > span {
+  display: block;
+  transform: translate3d(0, 108%, 0);
+  transition: transform 900ms var(--ease-out);
+}
+.contact-invitation__box:nth-child(2) > span { transition-delay: 90ms; }
+.contact-invitation__box:nth-child(3) > span { transition-delay: 180ms; }
+.contact-invitation[data-entered="true"] .contact-invitation__box > span {
+  transform: translate3d(0, 0, 0);
+}
+
+.contact-invitation__actions {
+  margin-top: clamp(2.5rem, 6vh, 4rem);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1.25rem 2rem;
+  opacity: 0;
+  transform: translate3d(0, 12px, 0);
+  transition:
+    opacity 520ms var(--ease-out) 260ms,
+    transform 520ms var(--ease-out) 260ms;
+}
+.contact-invitation[data-entered="true"] .contact-invitation__actions {
+  opacity: 1;
+  transform: none;
+}
+
+.contact-invitation__cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 48px;
+  padding: 0 1.5rem;
+  border-radius: 2px;
+  background: var(--c-accent);
+  color: var(--void);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.contact-invitation__cta span,
+.contact-invitation__cta .contact-ico { transition: transform 140ms var(--ease-out); }
+@media (hover: hover) and (pointer: fine) {
+  .contact-invitation__cta:hover span,
+  .contact-invitation__cta:hover .contact-ico { transform: translateX(3px); }
+}
+.contact-invitation__cta:focus-visible { outline: 2px solid var(--cf-ink); outline-offset: 3px; }
+
+.contact-invitation__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.1em;
+  color: var(--cf-ink-2);
+}
+/* Hairline separators rather than middle dots, so nothing punctuational is
+   read out as noise by a screen reader. */
+/* A vertical hairline, not a horizontal one: a short horizontal rule between
+   two phrases reads as a dash, and there are no dashes in this file. */
+.contact-invitation__meta i {
+  display: inline-block;
+  width: 1px;
+  height: 11px;
+  background: var(--cf-line-2);
+}
+
+.contact-invitation__more {
+  margin-top: 3rem;
+}
+
+@media (max-width: 767px) {
+  .contact-invitation__wrap { padding: 4rem var(--gutter) 3rem; }
+  .contact-invitation__line { font-size: clamp(1.75rem, 9vw, 2.5rem); line-height: 1; }
+  .contact-invitation__box > span { transition-duration: 760ms; }
+  .contact-invitation__box:nth-child(2) > span { transition-delay: 60ms; }
+  .contact-invitation__box:nth-child(3) > span { transition-delay: 120ms; }
+  .contact-invitation__actions { align-items: stretch; flex-direction: column; }
+  .contact-invitation__cta { min-height: 52px; justify-content: center; }
+  .contact-invitation__meta { flex-direction: column; align-items: flex-start; gap: 0.375rem; }
+  .contact-invitation__meta i { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .contact-invitation__box > span { transform: none !important; transition: none !important; }
+  .contact-invitation__actions { opacity: 1 !important; transform: none !important; }
+}
+
+/* ==========================================================================
+   SECTION 03  -  WINDOW
+   ========================================================================== */
+
+.contact-window__stage {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.contact-window__wrap {
+  width: 100%;
+  max-width: var(--maxw);
+  margin: 0 auto;
+  padding: clamp(3rem, 10vh, 6rem) var(--gutter);
+}
+
+.contact-window__title {
+  font-family: var(--font-display);
+  font-size: clamp(1.5rem, 2.8vw, 2.25rem);
+  font-weight: 500;
+  letter-spacing: -0.035em;
+  line-height: 1.02;
+}
+
+.contact-window__strip {
+  margin-top: clamp(2rem, 5vh, 3rem);
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 2rem;
+}
+.contact-window__rule {
+  grid-column: 1 / -1;
+  height: 1px;
+  background: var(--cf-line);
+  margin-bottom: 0.5rem;
+}
+.contact-window__rule i {
+  display: block;
+  height: 100%;
+  background: var(--c-accent);
+  transform: scaleX(var(--p, 0));
+  transform-origin: left center;
+}
+
+.contact-window__cell { display: grid; gap: 0.5rem; min-width: 0; }
+.contact-window__k {
+  font-family: var(--font-mono);
+  font-size: 0.5625rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--cf-ink-3);
+  transition: color 220ms var(--ease-out);
+}
+.contact-window__cell.is-settled .contact-window__k { color: var(--c-accent); }
+
+.contact-window__v {
+  font-family: var(--font-mono);
+  font-size: clamp(0.9375rem, 1.5vw, 1.25rem);
+  font-weight: 500;
+  line-height: 1.35;
+  /* Tabular figures are not optional: without them the resolving value
+     visibly reflows as digits swap in and the effect reads as a bug. */
+  font-variant-numeric: tabular-nums;
+  color: var(--cf-ink);
+  opacity: 0.42;
+  transition: opacity 220ms var(--ease-out);
+  overflow-wrap: anywhere;
+}
+.contact-window__cell.is-settled .contact-window__v { opacity: 1; }
+
+.contact-window__actions {
+  margin-top: clamp(2rem, 5vh, 3rem);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem 1.75rem;
+}
+
+.contact-window__cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 48px;
+  padding: 0 1.5rem;
+  border-radius: 2px;
+  background: var(--c-accent);
+  color: var(--void);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.contact-window__cta span,
+.contact-window__cta .contact-ico { transition: transform 140ms var(--ease-out); }
+@media (hover: hover) and (pointer: fine) {
+  .contact-window__cta:hover span,
+  .contact-window__cta:hover .contact-ico { transform: translateX(3px); }
+}
+.contact-window__cta:focus-visible { outline: 2px solid var(--cf-ink); outline-offset: 3px; }
+
+@media (max-width: 1099px) and (min-width: 768px) {
+  .contact-window__strip { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.75rem 2rem; }
+}
+
+/* On a phone the strip is four rows with a vertical rule down the left edge,
+   not four squeezed columns. */
+@media (max-width: 767px) {
+  .contact-window__strip {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1.25rem;
+    padding-left: 1rem;
+    position: relative;
+  }
+  .contact-window__rule {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    height: auto;
+    margin: 0;
+  }
+  .contact-window__rule i {
+    width: 100%;
+    height: 100%;
+    transform-origin: top center;
+    transform: scaleY(var(--p, 0));
+  }
+  .contact-window__cell {
+    grid-template-columns: auto 1fr;
+    align-items: baseline;
+    gap: 0 1rem;
+  }
+  .contact-window__v { text-align: right; font-size: 0.9375rem; }
+  .contact-window__actions { flex-direction: column; align-items: stretch; }
+  .contact-window__cta { justify-content: center; min-height: 52px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .contact-window__rule i { --p: 1 !important; }
+  .contact-window__v { opacity: 1 !important; }
+  .contact-window__k { color: var(--c-accent) !important; }
+}
+
+/* ==========================================================================
+   SECTION 04  -  MAGNET
+   ========================================================================== */
+
+.contact-magnet__wrap {
+  max-width: 72rem;
+  padding: clamp(4rem, 12vh, 7rem) var(--gutter);
+}
+
+.contact-magnet__title {
+  font-family: var(--font-display);
+  font-size: clamp(1.5rem, 2.8vw, 2.25rem);
+  font-weight: 500;
+  letter-spacing: -0.035em;
+  line-height: 1.02;
+}
+.contact-magnet__lede {
+  margin-top: 0.875rem;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  color: var(--cf-ink-2);
+  max-width: 48ch;
+}
+
+.contact-magnet__field {
+  position: relative;
+  margin-top: clamp(2rem, 5vh, 3rem);
+  height: 22rem;
+  display: grid;
+  place-items: center;
+}
+.contact-magnet__canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.contact-magnet__cta {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 48px;
+  padding: 0 1.5rem;
+  border-radius: 2px;
+  background: var(--c-accent);
+  color: var(--void);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  /* No transition on transform: the pull is written every frame from a damped
+     value, and a transition on top of that would fight the damping. */
+  will-change: transform;
+}
+.contact-magnet__cta:focus-visible { outline: 2px solid var(--cf-ink); outline-offset: 4px; }
+
+.contact-magnet__meta {
+  margin-top: 1.75rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.1em;
+  color: var(--cf-ink-2);
+}
+.contact-magnet__meta i {
+  display: inline-block;
+  width: 1px;
+  height: 11px;
+  background: var(--cf-line-2);
+}
+
+.contact-magnet__more { margin-top: 2.5rem; }
+
+.contact-magnet__head,
+.contact-magnet__field,
+.contact-magnet__meta {
+  opacity: 0;
+  transform: translate3d(0, 12px, 0);
+  transition:
+    opacity 520ms var(--ease-out),
+    transform 520ms var(--ease-out);
+}
+.contact-magnet__field { transition-delay: 80ms; }
+.contact-magnet__meta { transition-delay: 160ms; }
+.contact-magnet[data-entered="true"] .contact-magnet__head,
+.contact-magnet[data-entered="true"] .contact-magnet__field,
+.contact-magnet[data-entered="true"] .contact-magnet__meta {
+  opacity: 1;
+  transform: none;
+}
+
+@media (max-width: 1099px) and (min-width: 768px) {
+  .contact-magnet__field { height: 18rem; }
+}
+
+/* No cursor to attract on a phone, so the magnetism is removed rather than
+   scaled: a shorter field, fewer strokes, and the action under it. */
+@media (max-width: 767px) {
+  .contact-magnet__wrap { padding: 4rem var(--gutter); }
+  .contact-magnet__field {
+    height: 12rem;
+    align-items: end;
+    margin-bottom: 1.25rem;
+  }
+  .contact-magnet__cta {
+    position: static;
+    width: 100%;
+    min-height: 52px;
+    justify-content: center;
+  }
+  .contact-magnet__meta { flex-direction: column; align-items: flex-start; gap: 0.375rem; }
+  .contact-magnet__meta i { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .contact-magnet__head,
+  .contact-magnet__field,
+  .contact-magnet__meta { opacity: 1 !important; transform: none !important; }
+  .contact-magnet__cta { will-change: auto; }
+}
+
+/* ==========================================================================
+   SECTION 05  -  SIGNATURE
+   ========================================================================== */
+
+.contact-signature__wrap {
+  max-width: 58rem;
+  padding: clamp(4rem, 12vh, 7rem) var(--gutter) clamp(3rem, 8vh, 5rem);
+}
+
+.contact-signature__rule {
+  height: 1px;
+  background: var(--cf-line);
+}
+.contact-signature__rule i {
+  display: block;
+  height: 100%;
+  background: var(--c-accent);
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 900ms var(--ease-out);
+}
+.contact-signature[data-entered="true"] .contact-signature__rule i { transform: scaleX(1); }
+
+.contact-signature__line {
+  margin-top: 2.5rem;
+  font-family: var(--font-display);
+  font-size: clamp(1.25rem, 2.2vw, 1.75rem);
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  line-height: 1.3;
+  color: var(--cf-ink-2);
+  max-width: 32ch;
+}
+
+.contact-signature__addr {
+  display: inline-block;
+  margin-top: 1.5rem;
+  font-family: var(--font-mono);
+  font-size: clamp(1.75rem, 4vw, 3rem);
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  line-height: 1.1;
+  color: var(--cf-ink);
+  text-decoration: underline;
+  text-decoration-color: var(--c-accent);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 5px;
+  transition: text-underline-offset 140ms var(--ease-out);
+}
+@media (hover: hover) and (pointer: fine) {
+  .contact-signature__addr:hover { text-underline-offset: 8px; }
+}
+.contact-signature__addr:focus-visible { outline: 2px solid var(--c-accent); outline-offset: 5px; }
+
+.contact-signature__facts {
+  margin-top: clamp(2.5rem, 6vh, 3.5rem);
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, auto));
+  justify-content: start;
+  gap: 0 2.5rem;
+}
+.contact-signature__facts dt {
+  font-family: var(--font-mono);
+  font-size: 0.5625rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--cf-ink-3);
+}
+.contact-signature__facts dd {
+  margin: 0.375rem 0 0;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  color: var(--cf-ink);
+  white-space: nowrap;
+}
+.contact-signature__facts .t-num { color: var(--cf-ink-2); }
+
+.contact-signature__more { margin-top: 2.5rem; }
+
+/* One authored moment across four elements, not four separate effects. */
+.contact-signature__line,
+.contact-signature__addr,
+.contact-signature__facts > div {
+  opacity: 0;
+  transform: translate3d(0, 10px, 0);
+  transition:
+    opacity 700ms var(--ease-out),
+    transform 700ms var(--ease-out);
+}
+.contact-signature__line { transition-delay: 120ms; }
+.contact-signature__addr { transition-delay: 240ms; }
+.contact-signature__facts > div {
+  transition-duration: 520ms;
+  transition-delay: calc(420ms + var(--i, 0) * 60ms);
+}
+.contact-signature[data-entered="true"] .contact-signature__line,
+.contact-signature[data-entered="true"] .contact-signature__addr,
+.contact-signature[data-entered="true"] .contact-signature__facts > div {
+  opacity: 1;
+  transform: none;
+}
+
+/* On a phone the address comes first: it is what the reader came for, and the
+   sentence is what they read afterwards. */
+@media (max-width: 767px) {
+  .contact-signature__wrap { display: flex; flex-direction: column; padding: 4rem var(--gutter) 3rem; }
+  .contact-signature__rule { order: 1; }
+  .contact-signature__addr {
+    order: 2;
+    display: flex;
+    align-items: center;
+    min-height: 52px;
+    margin-top: 2rem;
+    font-size: clamp(1.375rem, 7vw, 1.875rem);
+    transition-delay: 120ms;
+  }
+  .contact-signature__line {
+    order: 3;
+    margin-top: 1.25rem;
+    font-size: 1.0625rem;
+    max-width: none;
+    transition-delay: 240ms;
+  }
+  .contact-signature__facts {
+    order: 4;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1rem 0;
+    margin-top: 2.5rem;
+  }
+  .contact-signature__facts > div {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1.5rem;
+    transition-delay: calc(360ms + var(--i, 0) * 40ms);
+  }
+  .contact-signature__facts dd { margin-top: 0; }
+  .contact-signature__more { order: 5; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .contact-signature__rule i { transform: scaleX(1) !important; transition: none !important; }
+  .contact-signature__line,
+  .contact-signature__addr,
+  .contact-signature__facts > div {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+}

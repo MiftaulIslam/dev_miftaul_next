@@ -1,0 +1,2585 @@
+/* ============================================================================
+   AREA: NAVIGATION  -  styles for js/gallery/nav.js
+   ----------------------------------------------------------------------------
+   SCOPING
+   Every selector in this file starts from `.nav-c`, the class the area's own
+   `makeHost()` puts on each concept root. Shared sub-components (the faux page,
+   the icon system, the sticky chrome layer) live under `.nav-c`; per-concept
+   parts are prefixed with their concept (`.nav-atrium__…`). Nothing here styles
+   a bare element or a shell class.
+
+   THE MOTION BUDGET
+   Navigation is chrome. It is looked at hundreds of times a session, so the
+   frequency gate is applied literally in this stylesheet:
+
+     hovering a link          140ms colour, nothing moves
+     pressing a control       100ms scale(0.98)
+     an indicator retargeting no transition at all (it moves on every keypress)
+     opening a mega menu      520ms drawer curve plus a 34ms staggered resolve
+
+   Anything in the first three groups that grew a transform would be an
+   irritation by the fiftieth view. Anything in the last group that did not
+   would be a missed opportunity, because it happens once.
+
+   CONTRAST FLOOR
+   The shell's ink ramp is measured against `--void` and every step clears AA:
+   `--ink-2` #9a9aa6 (7.2:1), `--ink-3` #85858f (5.5:1), `--ink-4` #7a7a86
+   (4.7:1). `--nav-dim` points at `--ink-3` and is what every readable label in
+   this file uses. `--ink-4` is reserved for resting marks that carry no text.
+   No grey is ever hardcoded here; the ramp is the only source.
+   ========================================================================== */
+
+/* ============================================================ 1. ROOT */
+
+.nav-c {
+  --nav-bar-h: 64px;
+  --nav-dim: var(--ink-3);            /* the smallest ink that still clears AA */
+  --nav-plate: rgba(22, 22, 28, 0.94);
+  position: relative;
+  color: var(--ink);
+  font-family: var(--font-display);
+}
+
+/* Page mode: the concept root is itself the scroll container, so it fills the
+   stage and owns its own overflow. Section mode leaves it as ordinary flow
+   content inside the shell's scroller. */
+.nav-c.nav-scroll {
+  position: absolute;
+  inset: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior-y: contain;
+  background: var(--void);
+}
+
+/* Per-concept signature hue, applied to the whole root so focus rings, active
+   marks and accents all agree. The shell's vermillion never appears inside a
+   concept stage, which is why this is set rather than inherited. */
+.nav-c:has(.nav-atrium__bar)  { --c-accent: #B37CFF; }
+.nav-c:has(.nav-palette__bar) { --c-accent: #5AB4FF; }
+.nav-c:has(.nav-compass__bar) { --c-accent: #2FD59A; }
+.nav-c:has(.nav-index__bar)   { --c-accent: #E8E2D6; --nav-bar-h: 60px; }
+
+/* The zero-height sticky layer every piece of chrome is positioned inside. It
+   takes part in no layout, so a bar or an overlay costs nothing to place. */
+.nav-c .nav-layer {
+  position: sticky;
+  top: 0;
+  height: 0;
+  z-index: 8;
+}
+
+/* Focus must be visible on every control and must never be the shell's accent
+   inside a concept stage. */
+.nav-c a:focus-visible,
+.nav-c button:focus-visible,
+.nav-c input:focus-visible {
+  outline: 2px solid var(--c-accent);
+  outline-offset: 3px;
+  border-radius: var(--r);
+}
+
+/* ============================================================ 2. ICONS */
+
+/* One grid, one stroke weight, everywhere. */
+.nav-c .nav-ico {
+  width: 1.125rem;
+  height: 1.125rem;
+  flex: none;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* ============================================================ 3. FAUX PAGE */
+
+/* Deliberately quiet. Headings sit at --ink-2 rather than --ink so the chrome
+   is always the brightest thing on screen, which is the only way chrome can be
+   judged fairly against the page it sits on. */
+
+.nav-c .nav-page {
+  padding-bottom: clamp(3rem, 10vh, 7rem);
+}
+
+.nav-c .nav-page__sec {
+  display: grid;
+  align-content: center;
+  min-height: 76vh;
+  padding: clamp(3.5rem, 11vh, 7rem) var(--gutter);
+  border-top: 1px solid var(--line);
+}
+
+.nav-c .nav-page__sec:first-child {
+  border-top: 0;
+  padding-top: calc(var(--nav-bar-h) + clamp(3rem, 12vh, 7rem));
+}
+
+.nav-c .nav-page__h {
+  max-width: 20ch;
+  font-size: clamp(1.375rem, 2.6vw, 2rem);
+  font-weight: 400;
+  letter-spacing: -0.03em;
+  line-height: 1.12;
+  color: var(--ink-2);
+  text-wrap: balance;
+}
+
+.nav-c .nav-page__p {
+  max-width: 56ch;
+  margin-top: 0.875rem;
+  font-size: 0.9375rem;
+  line-height: 1.62;
+  color: var(--nav-dim);
+}
+
+.nav-c .nav-page__rows {
+  max-width: 46rem;
+  margin-top: 1.75rem;
+}
+
+.nav-c .nav-page__rows li {
+  display: grid;
+  grid-template-columns: minmax(0, 11rem) minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: 1rem;
+  padding: 0.625rem 0;
+  border-top: 1px solid var(--line);
+  font-size: 0.8125rem;
+}
+
+.nav-c .nav-page__rn { color: var(--ink-2); }
+.nav-c .nav-page__rr { color: var(--nav-dim); }
+.nav-c .nav-page__ry {
+  font-size: 0.625rem;
+  letter-spacing: 0.14em;
+  color: var(--nav-dim);
+}
+
+.nav-c .nav-page__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+  margin-top: 1.5rem;
+}
+.nav-c .nav-page__tags span {
+  padding: 0.25rem 0.5rem;
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  font-family: var(--font-mono);
+  font-size: 0.5625rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--nav-dim);
+}
+
+.nav-c .nav-page__more {
+  padding: 0 var(--gutter) clamp(2rem, 6vh, 4rem);
+}
+
+/* ============================================================ 4. SHARED BAR */
+
+/* All four page concepts sit on the same bar geometry: one line, 64px, never
+   more. The differences between them are in what the bar carries, not in how
+   tall it is. */
+
+.nav-c .nav-atrium__bar,
+.nav-c .nav-palette__bar,
+.nav-c .nav-compass__bar,
+.nav-c .nav-index__bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: clamp(0.75rem, 3vw, 2.5rem);
+  height: var(--nav-bar-h);
+  padding: 0 var(--gutter);
+  background: transparent;
+  border-bottom: 1px solid transparent;
+  /* Named properties only. `transition: all` on chrome means every future
+     property change animates whether or not anyone intended it to. */
+  transition:
+    background-color var(--d-ui) var(--ease-out),
+    border-color var(--d-ui) var(--ease-out);
+}
+
+/* The scroll edge: one hairline and a ground, earned only once content is
+   actually underneath the bar. No blur, because there is nothing to see
+   through and a full-width filter pass on every scroll frame is not free. */
+.nav-c .nav-atrium__bar.is-edged,
+.nav-c .nav-palette__bar.is-edged,
+.nav-c .nav-compass__bar.is-edged,
+.nav-c .nav-index__bar.is-edged {
+  background: var(--void-2);
+  border-bottom-color: var(--line);
+}
+
+.nav-c .nav-atrium__mark,
+.nav-c .nav-palette__mark,
+.nav-c .nav-compass__mark,
+.nav-c .nav-index__mark {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 44px;
+  padding-right: 0.25rem;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.nav-c .nav-atrium__mark b,
+.nav-c .nav-palette__mark b,
+.nav-c .nav-compass__mark b,
+.nav-c .nav-index__mark b { font-weight: 600; color: var(--ink); }
+.nav-c .nav-atrium__mark span,
+.nav-c .nav-palette__mark span,
+.nav-c .nav-compass__mark span,
+.nav-c .nav-index__mark span { color: var(--nav-dim); }
+
+.nav-c .nav-atrium__inline ul,
+.nav-c .nav-palette__inline ul,
+.nav-c .nav-compass__inline ul {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;               /* 8px between adjacent targets, the floor */
+}
+
+.nav-c .nav-atrium__inline a,
+.nav-c .nav-palette__inline a,
+.nav-c .nav-compass__inline a {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 0.75rem;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--nav-dim);
+  transition: color var(--d-fast) ease;
+}
+
+/* The current section is marked once, with one signal. */
+.nav-c .nav-atrium__inline a[aria-current="page"],
+.nav-c .nav-palette__inline a[aria-current="page"],
+.nav-c .nav-compass__inline a[aria-current="page"] { color: var(--ink); }
+
+.nav-c .nav-atrium__inline a[aria-current="page"]::after,
+.nav-c .nav-palette__inline a[aria-current="page"]::after,
+.nav-c .nav-compass__inline a[aria-current="page"]::after {
+  content: "";
+  position: absolute;
+  left: 0.75rem;
+  right: 0.75rem;
+  bottom: 12px;
+  height: 1px;
+  background: var(--c-accent);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .nav-c .nav-atrium__inline a:hover,
+  .nav-c .nav-palette__inline a:hover,
+  .nav-c .nav-compass__inline a:hover { color: var(--ink); }
+
+  .nav-c .nav-atrium__mark:hover span,
+  .nav-c .nav-palette__mark:hover span,
+  .nav-c .nav-compass__mark:hover span,
+  .nav-c .nav-index__mark:hover span { color: var(--ink-2); }
+}
+
+/* Shared trigger geometry. Press feedback is the only motion these get. */
+.nav-c .nav-atrium__trigger,
+.nav-c .nav-palette__trigger,
+.nav-c .nav-compass__trigger,
+.nav-c .nav-index__trigger {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.625rem;
+  min-height: 44px;
+  padding: 0 0.875rem;
+  border: 1px solid var(--line-2);
+  border-radius: var(--r);
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink);
+  white-space: nowrap;
+  transition:
+    border-color var(--d-fast) ease,
+    color var(--d-fast) ease,
+    transform 100ms var(--ease-out);
+}
+.nav-c .nav-atrium__trigger:active,
+.nav-c .nav-palette__trigger:active,
+.nav-c .nav-compass__trigger:active,
+.nav-c .nav-index__trigger:active { transform: scale(0.98); }
+
+@media (hover: hover) and (pointer: fine) {
+  .nav-c .nav-atrium__trigger:hover,
+  .nav-c .nav-palette__trigger:hover,
+  .nav-c .nav-compass__trigger:hover,
+  .nav-c .nav-index__trigger:hover { border-color: var(--line-3); }
+}
+
+/* ============================================================ 5. ATRIUM */
+
+.nav-c .nav-atrium__panel {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 2;
+  height: var(--nav-vh, 100dvh);
+  overflow: hidden;
+  visibility: hidden;
+  /* visibility, not display or hidden: it removes the panel from the tab order
+     and the accessibility tree while still allowing the plate to transition
+     out. The delay holds it visible for exactly the length of the exit. */
+  transition: visibility 0s linear 380ms;
+}
+.nav-c .nav-atrium__panel.is-on {
+  visibility: visible;
+  transition: visibility 0s;
+}
+
+.nav-c .nav-atrium__plate {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: min(88%, 46rem);
+  background: var(--surface);
+  border-bottom: 1px solid var(--line-2);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.55);
+  transform: translate3d(0, -100%, 0);
+  transition: transform 380ms var(--ease-in-out);   /* exit */
+}
+.nav-c .nav-atrium__panel.is-on .nav-atrium__plate {
+  transform: none;
+  transition: transform 520ms var(--ease-drawer);   /* enter */
+}
+
+.nav-c .nav-atrium__inner {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(1.5rem, 3vh, 2.5rem);
+  height: 100%;
+  padding:
+    calc(var(--nav-bar-h) + clamp(1.25rem, 3vh, 2.25rem))
+    var(--gutter)
+    clamp(1.75rem, 5vh, 3rem);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+/* Staggered resolve. The closed state carries the translate and resets it
+   instantly AFTER the fade has finished (transform 0s with a 120ms delay), so
+   the exit is a pure opacity change with no movement, and the entrance still
+   has somewhere to come from. */
+.nav-c .nav-atrium__top,
+.nav-c .nav-atrium__dest li,
+.nav-c .nav-atrium__block {
+  opacity: 0;
+  transform: translate3d(0, 14px, 0);
+  transition:
+    opacity 120ms var(--ease-out),
+    transform 0s linear 120ms;
+}
+.nav-c .nav-atrium__panel.is-on .nav-atrium__top,
+.nav-c .nav-atrium__panel.is-on .nav-atrium__dest li,
+.nav-c .nav-atrium__panel.is-on .nav-atrium__block {
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity 380ms var(--ease-out) calc(var(--i, 0) * 34ms + 180ms),
+    transform 380ms var(--ease-out) calc(var(--i, 0) * 34ms + 180ms);
+}
+
+.nav-c .nav-atrium__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex: none;
+}
+.nav-c .nav-atrium__head {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--nav-dim);
+}
+.nav-c .nav-atrium__close {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  color: var(--ink-2);
+  transition: border-color var(--d-fast) ease, color var(--d-fast) ease;
+}
+@media (hover: hover) and (pointer: fine) {
+  .nav-c .nav-atrium__close:hover { color: var(--ink); border-color: var(--line-3); }
+}
+
+.nav-c .nav-atrium__grid {
+  display: grid;
+  grid-template-columns: 7fr 5fr;
+  align-items: start;
+  gap: clamp(2rem, 5vw, 5rem);
+}
+
+.nav-c .nav-atrium__dest li { border-top: 1px solid var(--line); }
+.nav-c .nav-atrium__dest li:last-child { border-bottom: 1px solid var(--line); }
+
+.nav-c .nav-atrium__dest a {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: 1.5rem;
+  padding: 0.875rem 0;
+  min-height: 44px;
+}
+.nav-c .nav-atrium__dn {
+  font-size: clamp(1.5rem, 3.4vw, 2.75rem);
+  font-weight: 400;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+  color: var(--ink);
+}
+.nav-c .nav-atrium__dm {
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  text-align: right;
+  color: var(--nav-dim);
+  transition: color var(--d-ui) var(--ease-out);
+}
+
+/* The one moving mark on a destination: a rule wiping in from the left. The
+   destination itself never shifts, because a target that moves under the
+   pointer is a target you can miss. */
+.nav-c .nav-atrium__dest a::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 1px;
+  background: var(--c-accent);
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 220ms var(--ease-out);
+}
+.nav-c .nav-atrium__dest a:focus-visible::after { transform: scaleX(1); }
+.nav-c .nav-atrium__dest a[aria-current="page"] .nav-atrium__dm { color: var(--c-accent); }
+
+@media (hover: hover) and (pointer: fine) {
+  .nav-c .nav-atrium__dest a:hover::after { transform: scaleX(1); }
+  .nav-c .nav-atrium__dest a:hover .nav-atrium__dm { color: var(--ink-2); }
+}
+
+.nav-c .nav-atrium__side {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(1.5rem, 3vh, 2.25rem);
+}
+.nav-c .nav-atrium__block h3 {
+  margin-bottom: 0.25rem;
+  font-family: var(--font-mono);
+  font-size: 0.5625rem;
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--nav-dim);
+}
+.nav-c .nav-atrium__block ul li a {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  min-height: 44px;
+  padding: 0.625rem 0;
+  border-top: 1px solid var(--line);
+  font-size: 0.875rem;
+  color: var(--ink-2);
+  transition: color var(--d-fast) ease;
+}
+.nav-c .nav-atrium__block ul li a i {
+  font-style: normal;
+  font-size: 0.625rem;
+  letter-spacing: 0.14em;
+  color: var(--nav-dim);
+}
+@media (hover: hover) and (pointer: fine) {
+  .nav-c .nav-atrium__block ul li a:hover { color: var(--ink); }
+}
+
+.nav-c .nav-atrium__avail {
+  margin-bottom: 0.375rem;
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--c-accent);
+}
+.nav-c .nav-atrium__mailto {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 44px;
+  font-size: 0.9375rem;
+  color: var(--ink);
+}
+.nav-c .nav-atrium__mailto .nav-ico { color: var(--nav-dim); }
+
+/* The trigger mark states the current state rather than labelling the next
+   one. view-box origin, so the rotation is exact rather than dependent on a
+   zero-height bounding box. */
+.nav-c .nav-atrium__mk path {
+  transform-box: view-box;
+  transform-origin: 12px 12px;
+  transition: transform 220ms var(--ease-out);
+}
+.nav-c.is-open .nav-atrium__mk path:nth-child(1) { transform: rotate(45deg) translateY(3.5px); }
+.nav-c.is-open .nav-atrium__mk path:nth-child(2) { transform: rotate(-45deg) translateY(-3.5px); }
+
+/* While the panel is open the bar sits on top of the plate, so it must not
+   also paint its own ground or a band of a different colour appears. */
+.nav-c.is-open .nav-atrium__bar {
+  background: transparent;
+  border-bottom-color: transparent;
+}
+
+/* ============================================================ 6. PALETTE */
+
+.nav-c .nav-palette__trigger { color: var(--nav-dim); }
+.nav-c .nav-palette__trigger .nav-ico { color: var(--nav-dim); }
+.nav-c .nav-palette__kb {
+  display: inline-flex;
+  gap: 0.25rem;
+  margin-left: 0.25rem;
+}
+.nav-c .nav-palette__kb kbd,
+.nav-c .nav-palette__foot kbd {
+  min-width: 1.125rem;
+  padding: 0 0.25rem;
+  border: 1px solid var(--line-2);
+  border-radius: var(--r);
+  font: inherit;
+  font-family: var(--font-mono);
+  text-align: center;
+  color: var(--ink-2);
+}
+
+.nav-c .nav-palette__overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 6;
+  height: var(--nav-vh, 100dvh);
+  display: flex;
+  justify-content: center;
+  padding: 14vh clamp(1rem, 4vw, 2rem) 2rem;
+  background: rgba(8, 8, 10, 0.72);
+  opacity: 0;
+  visibility: hidden;
+  /* The frequency gate, applied literally: a surface opened fifty times a day
+     gets 90ms of opacity and nothing else. No scale, no translate, no blur. */
+  transition: opacity 70ms linear, visibility 0s linear 70ms;
+}
+.nav-c .nav-palette__overlay.is-on {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 90ms linear, visibility 0s;
+}
+
+.nav-c .nav-palette__box {
+  display: flex;
+  flex-direction: column;
+  width: min(38rem, 100%);
+  max-height: min(72vh, 34rem);
+  background: var(--surface-2);
+  border: 1px solid rgba(90, 180, 255, 0.28);
+  border-radius: var(--r);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6);
+  overflow: hidden;
+}
+
+.nav-c .nav-palette__field {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  flex: none;
+  height: 56px;
+  padding: 0 0.75rem 0 1rem;
+  border-bottom: 1px solid var(--line);
+  transition: border-color var(--d-fast) ease;
+}
+.nav-c .nav-palette__field:focus-within { border-bottom-color: var(--c-accent); }
+.nav-c .nav-palette__field > .nav-ico { color: var(--nav-dim); }
+
+.nav-c .nav-palette__input {
+  flex: 1;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-size: 1.0625rem;
+  letter-spacing: -0.01em;
+}
+/* The field itself carries the focus indicator (its bottom rule turns accent),
+   so the input does not need a second ring inside a 1px box. */
+.nav-c .nav-palette__input:focus,
+.nav-c .nav-palette__input:focus-visible { outline: none; }
+.nav-c .nav-palette__input::placeholder { color: var(--nav-dim); }
+
+.nav-c .nav-palette__x {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  flex: none;
+  border-radius: var(--r);
+  color: var(--nav-dim);
+  transition: color var(--d-fast) ease;
+}
+@media (hover: hover) and (pointer: fine) {
+  .nav-c .nav-palette__x:hover { color: var(--ink); }
+}
+
+.nav-c .nav-palette__results {
+  flex: 1;
+  min-height: 0;
+  padding: 0.375rem 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.nav-c .nav-palette__gh {
+  padding: 0.75rem 1rem 0.25rem;
+  font-family: var(--font-mono);
+  font-size: 0.5625rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--nav-dim);
+}
+
+.nav-c .nav-palette__row {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  min-height: 44px;
+  padding: 0 1rem;
+  cursor: pointer;
+  color: var(--ink-2);
+  /* No transition. This row changes on every arrow press, and a fade here is
+     indistinguishable from input lag. */
+}
+.nav-c .nav-palette__row.is-active {
+  background: rgba(90, 180, 255, 0.14);
+  color: var(--ink);
+}
+.nav-c .nav-palette__row .nav-ico {
+  width: 1rem;
+  height: 1rem;
+  color: var(--nav-dim);
+}
+.nav-c .nav-palette__row.is-active .nav-ico { color: var(--c-accent); }
+
+.nav-c .nav-palette__rl {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: 0.9375rem;
+}
+/* Matched characters are ink and weight, never hue. Coloured letters inside a
+   word read as a rendering fault. */
+.nav-c .nav-palette__rl b { font-weight: 500; color: var(--ink); }
+
+.nav-c .nav-palette__rh {
+  flex: none;
+  max-width: 42%;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-family: var(--font-mono);
+  font-size: 0.5625rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--nav-dim);
+}
+
+.nav-c .nav-palette__empty {
+  padding: 1.75rem 1rem;
+  font-size: 0.875rem;
+  line-height: 1.55;
+  color: var(--ink-2);
+}
+.nav-c .nav-palette__empty b { font-weight: 500; color: var(--ink); }
+
+.nav-c .nav-palette__foot {
+  display: flex;
+  gap: 1.25rem;
+  flex: none;
+  padding: 0.625rem 1rem;
+  border-top: 1px solid var(--line);
+  font-family: var(--font-mono);
+  font-size: 0.5625rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--nav-dim);
+}
+.nav-c .nav-palette__foot span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3125rem;
+}
+
+/* ============================================================ 7. COMPASS */
+
+/* The ring is a point: JS writes translate3d(cx, cy, 0) onto it, and every
+   child is placed relative to that origin. Nothing here may set a transform on
+   the ring itself. */
+.nav-c .nav-compass__ring {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 0;
+  z-index: 5;
+  visibility: hidden;
+  transition: visibility 0s linear 140ms;
+}
+.nav-c .nav-compass__ring.is-on {
+  visibility: visible;
+  transition: visibility 0s;
+}
+
+.nav-c .nav-compass__circle {
+  position: absolute;
+  left: 0;
+  top: 0;
+  /* The ring is a zero-width point, and the shell's reset gives every svg
+     `max-width: 100%`. Against a 0px containing block that collapses the
+     circle to nothing, which also breaks the -50% centring. */
+  width: auto;
+  height: auto;
+  max-width: none;
+  transform: translate(-50%, -50%);
+  overflow: visible;
+  pointer-events: none;
+}
+.nav-c .nav-compass__circle circle {
+  fill: none;
+  stroke: var(--c-accent);
+  stroke-opacity: 0.22;
+  stroke-width: 1;
+  /* The closed dashoffset comes from the presentation attribute, which any CSS
+     rule outranks. So the open state needs no !important, and the transition
+     still runs in both directions. */
+  transition: stroke-dashoffset 140ms var(--ease-out);
+}
+.nav-c .nav-compass__ring.is-on .nav-compass__circle circle {
+  stroke-dashoffset: 0;
+  transition: stroke-dashoffset 380ms var(--ease-out);
+}
+
+/* At rotate(0) the needle points due north, which is where item 0 sits. */
+.nav-c .nav-compass__needle {
+  position: absolute;
+  left: -0.5px;
+  top: -96px;
+  width: 1px;
+  height: 96px;
+  transform-origin: 50% 100%;
+  /* Brightest at the tip, so it reads as pointing at the armed sector rather
+     than as a line leaking out of the hub. */
+  background: linear-gradient(to top, rgba(236, 236, 239, 0), rgba(236, 236, 239, 0.34));
+  pointer-events: none;
+}
+.nav-c .nav-compass__hub {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 5px;
+  height: 5px;
+  margin: -2.5px 0 0 -2.5px;
+  border-radius: 50%;             /* a genuine dot, so a circle is allowed */
+  background: var(--ink-2);
+  pointer-events: none;
+}
+
+.nav-c .nav-compass__item {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 56px;
+  height: 56px;
+  opacity: 0;
+  transform: translate3d(-50%, -50%, 0) scale(0.72);
+  transition:
+    transform 140ms var(--ease-out),
+    opacity 140ms var(--ease-out);
+}
+/* The bloom: every item starts at the centre and travels out to its own angle,
+   so the ring reads as opening rather than as six things appearing. */
+.nav-c .nav-compass__ring.is-on .nav-compass__item {
+  opacity: 1;
+  transform: translate3d(calc(var(--x) - 50%), calc(var(--y) - 50%), 0) scale(1);
+  transition:
+    transform 320ms var(--ease-out) calc(var(--i) * 18ms),
+    opacity 320ms var(--ease-out) calc(var(--i) * 18ms);
+}
+
+.nav-c .nav-compass__plate {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  background: var(--nav-plate);
+  border: 1px solid var(--line-2);
+  border-radius: var(--r);
+  color: var(--ink-2);
+  transition:
+    border-color 120ms var(--ease-out),
+    color 120ms var(--ease-out),
+    background-color 120ms var(--ease-out);
+}
+.nav-c .nav-compass__plate .nav-ico { width: 1.25rem; height: 1.25rem; }
+
+.nav-c .nav-compass__label {
+  position: absolute;
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--nav-dim);
+  transition: color 120ms var(--ease-out);
+}
+.nav-c .nav-compass__item.is-c .nav-compass__label {
+  left: 50%;
+  top: calc(100% + 8px);
+  transform: translateX(-50%);
+}
+/* Children 1..3 of the ring are the svg, the needle and the hub, so the six
+   items start at 4. Item 0 sits due north and its label belongs above it. */
+.nav-c .nav-compass__item:nth-child(4) .nav-compass__label {
+  top: auto;
+  bottom: calc(100% + 8px);
+}
+.nav-c .nav-compass__item.is-r .nav-compass__label {
+  left: calc(100% + 10px);
+  top: 50%;
+  transform: translateY(-50%);
+}
+.nav-c .nav-compass__item.is-l .nav-compass__label {
+  right: calc(100% + 10px);
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.nav-c .nav-compass__item.is-armed .nav-compass__plate {
+  border-color: var(--c-accent);
+  background: rgba(47, 213, 154, 0.10);
+  color: var(--c-accent);
+}
+.nav-c .nav-compass__item.is-armed .nav-compass__label { color: var(--ink); }
+
+/* ============================================================ 8. INDEX */
+
+.nav-c .nav-index__ov {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 4;
+  height: var(--nav-vh, 100dvh);
+  display: flex;
+  flex-direction: column;
+  /* The page ground, not a sheet colour: this overlay reads as the page
+     replacing itself rather than as a panel laid on top of it. */
+  background: var(--void);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 200ms var(--ease-out), visibility 0s linear 320ms;
+}
+.nav-c .nav-index__ov.is-on {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 200ms var(--ease-out), visibility 0s;
+}
+
+.nav-c .nav-index__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex: none;
+  height: var(--nav-bar-h);
+  padding: 0 var(--gutter);
+}
+.nav-c .nav-index__head {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--nav-dim);
+}
+.nav-c .nav-index__close {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 0.75rem;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+  transition: color var(--d-fast) ease;
+}
+@media (hover: hover) and (pointer: fine) {
+  .nav-c .nav-index__close:hover { color: var(--ink); }
+}
+
+.nav-c .nav-index__list {
+  flex: 1;
+  min-height: 0;
+  padding: clamp(1rem, 10vh, 5rem) var(--gutter) clamp(2rem, 6vh, 4rem);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.nav-c .nav-index__list li {
+  position: relative;
+  border-top: 1px solid var(--line);
+}
+.nav-c .nav-index__list li:last-child { border-bottom: 1px solid var(--line); }
+
+/* The focus ring belongs on the row, not on the anchor: the anchor sits inside
+   an overflow:hidden mask, which would clip three sides of its outline and
+   leave a bare vertical line. A sticky or clipping surface of your own must
+   never be allowed to obscure focus. */
+.nav-c .nav-index__mask > a:focus-visible { outline: none; }
+.nav-c .nav-index__list li:has(a:focus-visible) {
+  outline: 2px solid var(--c-accent);
+  outline-offset: -2px;
+  border-radius: var(--r);
+}
+
+/* The mask is what makes the reveal a rise rather than a slide: the line is
+   clipped by its own row, so it appears out of the rule above it. */
+.nav-c .nav-index__mask {
+  display: block;
+  overflow: hidden;
+}
+.nav-c .nav-index__mask > a {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1.5rem;
+  padding: 0.75rem 0 0.25rem;
+  /* 105%, not 100%, so the descenders clear the mask edge before the line
+     starts to show. */
+  transform: translate3d(0, 105%, 0);
+  transition:
+    transform 320ms var(--ease-in-out) calc(var(--o) * 26ms),
+    color 220ms var(--ease-out);
+}
+.nav-c .nav-index__ov.is-on .nav-index__mask > a {
+  transform: none;
+  transition:
+    transform 560ms var(--ease-out) calc(var(--i) * 52ms + 120ms),
+    color 220ms var(--ease-out);
+}
+
+.nav-c .nav-index__ln {
+  font-size: clamp(2.25rem, 8vw, 6rem);
+  font-weight: 400;
+  letter-spacing: -0.045em;
+  line-height: 0.95;
+  color: var(--ink);
+  transition:
+    color 220ms var(--ease-out),
+    transform 260ms var(--ease-out);
+}
+/* The attend shift moves the destination, never the whole row: the count is
+   anchored to the gutter, and shifting the row would push it out of the mask. */
+.nav-c .nav-index__list li.is-on .nav-index__ln { transform: translate3d(18px, 0, 0); }
+.nav-c .nav-index__lc {
+  flex: none;
+  font-size: 0.6875rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--nav-dim);
+}
+.nav-c .nav-index__meta {
+  display: block;
+  padding-bottom: 0.75rem;
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--nav-dim);
+  /* The row is always this tall. Reserving the space costs one line of empty
+     and buys a list that never reflows as attention moves through it. */
+  opacity: 0;
+  transition: opacity 300ms var(--ease-out);
+}
+.nav-c .nav-index__list li.is-on .nav-index__meta { opacity: 1; }
+
+/* Attending one line steps the others back. --ink-2 rather than something
+   darker because a dimmed destination is still a destination and has to stay
+   above the contrast floor. */
+.nav-c .nav-index__list.is-attending li:not(.is-on) .nav-index__ln { color: var(--ink-2); }
+.nav-c .nav-index__list.is-attending li:not(.is-on) .nav-index__lc { color: var(--ink-4); }
+
+/* The current section is marked with one filled square, not a colour change
+   plus a weight change plus a dot. */
+.nav-c .nav-index__list a[aria-current="page"] .nav-index__ln::before {
+  content: "";
+  display: inline-block;
+  width: 0.16em;
+  height: 0.16em;
+  margin-right: 0.22em;
+  vertical-align: 0.16em;
+  background: var(--c-accent);
+}
+
+/* ============================================================ 9. MOBILE */
+
+/* Below 768px each concept becomes a different composition, not a narrower
+   one. The rule that drives all of it: there is no hover and no keyboard, so
+   anything that depended on either has to be replaced rather than shrunk. */
+
+@media (max-width: 768px) {
+  .nav-c { --nav-bar-h: 56px; }
+
+  .nav-c .nav-page__sec { min-height: 68vh; }
+  .nav-c .nav-page__rows li {
+    grid-template-columns: minmax(0, 1fr) auto;
+    row-gap: 0.25rem;
+  }
+  .nav-c .nav-page__rr { grid-column: 1 / -1; }
+
+  /* ATRIUM: the bar keeps only its identity and its one door. */
+  .nav-c .nav-atrium__inline,
+  .nav-c .nav-palette__inline,
+  .nav-c .nav-compass__inline { display: none; }
+
+  .nav-c .nav-atrium__trigger { min-height: 48px; padding: 0 0.75rem; }
+  .nav-c .nav-atrium__trigger > span { display: none; }
+  .nav-c .nav-atrium__plate { height: 100%; }
+  .nav-c .nav-atrium__grid { grid-template-columns: 1fr; gap: 2rem; }
+  .nav-c .nav-atrium__dn { font-size: 2rem; }
+  .nav-c .nav-atrium__dm { display: none; }
+  .nav-c .nav-atrium__dest a { grid-template-columns: 1fr; }
+
+  /* PALETTE: no shortcut to discover, so the trigger becomes a real button and
+     the surface becomes a sheet rather than a floating box. */
+  .nav-c .nav-palette__kb { display: none; }
+  .nav-c .nav-palette__trigger { min-height: 48px; }
+  .nav-c .nav-palette__overlay { padding: 0; }
+  .nav-c .nav-palette__box {
+    width: 100%;
+    max-height: 100%;
+    height: 100%;
+    border: 0;
+    border-radius: 0;
+  }
+  .nav-c .nav-palette__row { min-height: 52px; }
+  .nav-c .nav-palette__rh { display: none; }
+  .nav-c .nav-palette__foot { display: none; }
+
+  /* COMPASS: smaller ring, bigger plates, labels always outside it. */
+  .nav-c .nav-compass__item { width: 48px; height: 48px; }
+  .nav-c .nav-compass__plate .nav-ico { width: 1.125rem; height: 1.125rem; }
+  .nav-c .nav-compass__needle { top: -78px; height: 78px; }
+  .nav-c .nav-compass__trigger { min-height: 48px; }
+  .nav-c .nav-compass__trigger > span { display: none; }
+
+  /* INDEX: the meta moves under the line, because a right aligned column on a
+     375px screen collides with the descenders. Sibling dimming goes entirely,
+     since without hover it would only ever flicker on tap. */
+  .nav-c .nav-index__ln { font-size: clamp(1.875rem, 11vw, 3rem); }
+  .nav-c .nav-index__mask > a {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+  }
+  .nav-c .nav-index__list.is-attending li:not(.is-on) .nav-index__ln { color: var(--ink); }
+  .nav-c .nav-index__list li .nav-index__meta { opacity: 1; }
+  .nav-c .nav-index__list li.is-on .nav-index__ln { transform: none; }
+}
+
+/* ==================================================== 10. REDUCED MOTION */
+
+/* Fewer and gentler, never broken. Every destination stays reachable and the
+   composition stays deliberately arranged; what goes is the travel. */
+
+@media (prefers-reduced-motion: reduce) {
+
+  /* ATRIUM: the plate cross fades instead of dropping, and the staggered
+     resolve collapses into one opacity change with no delay. */
+  .nav-c .nav-atrium__plate,
+  .nav-c .nav-atrium__panel.is-on .nav-atrium__plate {
+    transform: none !important;
+    opacity: 0;
+    transition: opacity 140ms var(--ease-out) !important;
+  }
+  .nav-c .nav-atrium__panel.is-on .nav-atrium__plate { opacity: 1; }
+
+  .nav-c .nav-atrium__top,
+  .nav-c .nav-atrium__dest li,
+  .nav-c .nav-atrium__block,
+  .nav-c .nav-atrium__panel.is-on .nav-atrium__top,
+  .nav-c .nav-atrium__panel.is-on .nav-atrium__dest li,
+  .nav-c .nav-atrium__panel.is-on .nav-atrium__block {
+    transform: none !important;
+    transition: opacity 120ms var(--ease-out) !important;
+  }
+  .nav-c .nav-atrium__dest a::after { transition: none !important; }
+
+  /* COMPASS: the items are already where they belong and only fade in; the
+     needle jumps to the armed angle rather than sweeping to it. */
+  .nav-c .nav-compass__item {
+    transform: translate3d(calc(var(--x) - 50%), calc(var(--y) - 50%), 0) !important;
+    transition: opacity 120ms var(--ease-out) !important;
+  }
+  .nav-c .nav-compass__ring.is-on .nav-compass__item {
+    transform: translate3d(calc(var(--x) - 50%), calc(var(--y) - 50%), 0) !important;
+    transition: opacity 120ms var(--ease-out) !important;
+  }
+  .nav-c .nav-compass__circle circle,
+  .nav-c .nav-compass__ring.is-on .nav-compass__circle circle {
+    stroke-dashoffset: 0 !important;
+    transition: none !important;
+  }
+  .nav-c .nav-compass__needle { transition: none !important; }
+
+  /* INDEX: no rise, no stagger, no attend shift. The ink change stays, because
+     it is the thing that tells you where you are. */
+  .nav-c .nav-index__mask > a,
+  .nav-c .nav-index__ov.is-on .nav-index__mask > a {
+    transform: none !important;
+    transition: none !important;
+  }
+  .nav-c .nav-index__ln,
+  .nav-c .nav-index__list li.is-on .nav-index__ln {
+    transform: none !important;
+    transition: color 160ms var(--ease-out) !important;
+  }
+  .nav-c .nav-index__ov { transition: opacity 160ms var(--ease-out), visibility 0s linear 160ms !important; }
+  .nav-c .nav-index__ov.is-on { transition: opacity 160ms var(--ease-out), visibility 0s !important; }
+
+  /* Press feedback and the trigger mark stop moving everywhere. */
+  .nav-c .nav-atrium__trigger:active,
+  .nav-c .nav-palette__trigger:active,
+  .nav-c .nav-compass__trigger:active,
+  .nav-c .nav-index__trigger:active { transform: none !important; }
+  .nav-c .nav-atrium__mk path { transition: none !important; }
+}
+
+/* =============================================== 11. SHARED  (Shutter + sections)
+
+   The four original page concepts share one bar geometry. The concepts added
+   below share the same geometry and the same rule: one line, 64px, never more.
+   They are written as their own block rather than folded into the original
+   selector lists so that a mistake here cannot reach a concept that already
+   works.
+   ========================================================================== */
+
+.nav-c:has(.nav-shutter__bar)   { --c-accent: #E8B04B; --nav-lip: 96px; }
+.nav-c:has(.nav-dock)           { --c-accent: #2FD59A; }
+.nav-c:has(.nav-island)         { --c-accent: #5AB4FF; }
+.nav-c:has(.nav-tide__bar)      { --c-accent: #B37CFF; }
+.nav-c:has(.nav-spine)          { --c-accent: #E8B04B; }
+.nav-c:has(.nav-limelight__bar) { --c-accent: #E8E2D6; }
+
+.nav-c .nav-shutter__bar,
+.nav-c .nav-tide__bar,
+.nav-c .nav-limelight__bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: clamp(0.75rem, 3vw, 2.5rem);
+  height: var(--nav-bar-h);
+  padding: 0 var(--gutter);
+  background: transparent;
+  border-bottom: 1px solid transparent;
+  transition:
+    background-color var(--d-ui) var(--ease-out),
+    border-color var(--d-ui) var(--ease-out);
+}
+
+.nav-c .nav-shutter__bar.is-edged,
+.nav-c .nav-tide__bar.is-edged,
+.nav-c .nav-limelight__bar.is-edged {
+  background: var(--void-2);
+  border-bottom-color: var(--line);
+}
+
+.nav-c .nav-shutter__mark,
+.nav-c .nav-tide__mark,
+.nav-c .nav-limelight__mark,
+.nav-c .nav-island__mark,
+.nav-c .nav-dock__mark {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 44px;
+  padding-right: 0.25rem;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.nav-c .nav-shutter__mark b,
+.nav-c .nav-tide__mark b,
+.nav-c .nav-limelight__mark b,
+.nav-c .nav-island__mark b,
+.nav-c .nav-dock__mark b { font-weight: 600; color: var(--ink); }
+.nav-c .nav-shutter__mark span,
+.nav-c .nav-tide__mark span,
+.nav-c .nav-limelight__mark span,
+.nav-c .nav-island__mark span,
+.nav-c .nav-dock__mark span { color: var(--nav-dim); }
+
+.nav-c .nav-shutter__trigger,
+.nav-c .nav-tide__trigger,
+.nav-c .nav-limelight__trigger {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.625rem;
+  min-height: 44px;
+  padding: 0 0.875rem;
+  border: 1px solid var(--line-2);
+  border-radius: var(--r);
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink);
+  white-space: nowrap;
+  transition:
+    border-color var(--d-fast) ease,
+    color var(--d-fast) ease,
+    transform 100ms var(--ease-out);
+}
+.nav-c .nav-shutter__trigger:active,
+.nav-c .nav-tide__trigger:active,
+.nav-c .nav-limelight__trigger:active { transform: scale(0.98); }
+
+@media (hover: hover) and (pointer: fine) {
+  .nav-c .nav-shutter__trigger:hover,
+  .nav-c .nav-tide__trigger:hover,
+  .nav-c .nav-limelight__trigger:hover { border-color: var(--line-3); }
+
+  .nav-c .nav-shutter__mark:hover span,
+  .nav-c .nav-tide__mark:hover span,
+  .nav-c .nav-limelight__mark:hover span,
+  .nav-c .nav-island__mark:hover span,
+  .nav-c .nav-dock__mark:hover span { color: var(--ink-2); }
+}
+
+/* ============================================================ 12. SHUTTER */
+
+/* The second zero height sticky layer. It exists only so the navigation can
+   paint genuinely behind the page: the shared chrome layer sits at z-index 8,
+   and nothing inside it can ever be underneath a sibling of the root. */
+.nav-c .nav-shutter__deep {
+  position: sticky;
+  top: 0;
+  height: 0;
+  z-index: 0;
+}
+
+.nav-c .nav-shutter__back {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--nav-shut-vh, 100dvh);
+  background: var(--void-2);
+  visibility: hidden;
+  opacity: 0.55;
+  transform: translate3d(0, 22px, 0);
+  transition:
+    opacity 520ms var(--ease-drawer),
+    transform 520ms var(--ease-drawer),
+    visibility 0s linear 520ms;
+}
+
+/* Same curve as the leaf, opposite direction, one fortieth of the distance.
+   The two surfaces part; the backdrop is not a static picture being uncovered. */
+.nav-c.is-open .nav-shutter__back {
+  visibility: visible;
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity 520ms var(--ease-drawer),
+    transform 520ms var(--ease-drawer),
+    visibility 0s;
+}
+
+.nav-c .nav-shutter__inner {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  height: 100%;
+  padding-top: var(--nav-bar-h);
+  padding-bottom: var(--nav-lip, 96px);
+}
+
+.nav-c .nav-shutter__top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.25rem var(--gutter);
+}
+
+.nav-c .nav-shutter__head,
+.nav-c .nav-shutter__where {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 400;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--nav-dim);
+}
+.nav-c .nav-shutter__where b { font-weight: 500; color: var(--ink-2); }
+
+/* Six bays. The whole column is the target, which is why the label sits on the
+   floor rather than in the middle: a label in the middle of a 260px column
+   looks like the target and the column looks like decoration. */
+.nav-c .nav-shutter__bays,
+.nav-c .nav-shutter__bays ul { height: 100%; }
+
+.nav-c .nav-shutter__bays ul {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+}
+
+.nav-c .nav-shutter__bays li { min-width: 0; }
+.nav-c .nav-shutter__bays li + li { border-left: 1px solid var(--line); }
+
+.nav-c .nav-shutter__bays a {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  height: 100%;
+  padding: 1.25rem;
+  transition: background-color var(--d-fast) ease;
+}
+
+.nav-c .nav-shutter__bm {
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  line-height: 1.5;
+  color: var(--nav-dim);
+}
+
+.nav-c .nav-shutter__bn {
+  font-size: clamp(1.5rem, 2.6vw, 2.25rem);
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  line-height: 1.05;
+  color: var(--ink-2);
+  transition: color var(--d-fast) ease;
+}
+
+.nav-c .nav-shutter__bays a[aria-current="page"] .nav-shutter__bn { color: var(--ink); }
+.nav-c .nav-shutter__bays a[aria-current="page"]::after {
+  content: "";
+  position: absolute;
+  left: 1.25rem;
+  right: 1.25rem;
+  bottom: 0;
+  height: 2px;
+  background: var(--c-accent);
+}
+
+/* A bay runs edge to edge, so a ring drawn 3px outside it is a ring drawn off
+   the screen. Full bleed targets take their ring on the inside. */
+.nav-c .nav-shutter__bays a:focus-visible { outline-offset: -3px; }
+
+@media (hover: hover) and (pointer: fine) {
+  .nav-c .nav-shutter__bays a:hover { background-color: rgba(232, 176, 75, 0.05); }
+  .nav-c .nav-shutter__bays a:hover .nav-shutter__bn { color: var(--ink); }
+}
+
+.nav-c .nav-shutter__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.75rem var(--gutter);
+  border-top: 1px solid var(--line);
+}
+
+.nav-c .nav-shutter__mail {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 44px;
+  padding-right: 0.25rem;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.14em;
+  color: var(--ink-2);
+  transition: color var(--d-fast) ease;
+}
+@media (hover: hover) and (pointer: fine) {
+  .nav-c .nav-shutter__mail:hover { color: var(--ink); }
+}
+
+.nav-c .nav-shutter__avail {
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--nav-dim);
+}
+
+/* The page, as one leaf. One transform moves the whole document. */
+.nav-c .nav-shutter__leaf {
+  position: relative;
+  z-index: 1;
+  background: var(--void);
+  transition: transform 400ms var(--ease-in-out);
+}
+
+.nav-c.is-open .nav-shutter__leaf {
+  transform: translate3d(0, calc(var(--nav-shut-vh, 100dvh) - var(--nav-lip, 96px)), 0);
+  transition: transform 520ms var(--ease-drawer);
+  will-change: transform;
+}
+
+/* The close strip. It is transparent on purpose: the reader is looking at the
+   page they left, not at a panel that says Close. */
+.nav-c .nav-shutter__strip {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(var(--nav-shut-vh, 100dvh) - var(--nav-lip, 96px));
+  height: var(--nav-lip, 96px);
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+  padding: 0.875rem var(--gutter) 0;
+  background: transparent;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 100ms var(--ease-out), visibility 0s linear 100ms;
+}
+
+.nav-c.is-open .nav-shutter__strip {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 160ms var(--ease-out) 300ms, visibility 0s;
+}
+
+.nav-c .nav-shutter__seam {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--c-accent);
+}
+
+.nav-c .nav-shutter__striplab {
+  display: inline-flex;
+  align-items: center;
+  height: 28px;
+  padding: 0 0.625rem;
+  border: 1px solid var(--line-2);
+  border-radius: var(--r);
+  background: var(--void-2);
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+
+.nav-c .nav-shutter__chev {
+  transform-origin: center;
+  transition: transform var(--d-ui) var(--ease-out);
+}
+.nav-c.is-open .nav-shutter__chev { transform: rotate(180deg); }
+
+/* Tablet: three bays over two rows. The column rule becomes a grid rule. */
+@media (max-width: 1024px) and (min-width: 769px) {
+  .nav-c .nav-shutter__bays ul { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .nav-c .nav-shutter__bays li:nth-child(3n + 1) { border-left: 0; }
+  .nav-c .nav-shutter__bays li:nth-child(n + 4) { border-top: 1px solid var(--line); }
+  .nav-c .nav-shutter__bn { font-size: 1.5rem; }
+}
+
+/* Mobile: no bays. Six 56px rows, meta removed, a thumb sized strip. */
+@media (max-width: 768px) {
+  .nav-c:has(.nav-shutter__bar) { --nav-lip: 64px; }
+
+  .nav-c .nav-shutter__bays ul {
+    grid-template-columns: minmax(0, 1fr);
+    align-content: start;
+    height: auto;
+  }
+  .nav-c .nav-shutter__bays li + li { border-left: 0; border-top: 1px solid var(--line); }
+  .nav-c .nav-shutter__bays a {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 56px;
+    height: auto;
+    padding: 0 var(--gutter);
+  }
+  .nav-c .nav-shutter__bays a[aria-current="page"]::after { left: var(--gutter); right: var(--gutter); }
+  .nav-c .nav-shutter__bm { display: none; }
+  .nav-c .nav-shutter__bn { font-size: 1.25rem; }
+  .nav-c .nav-shutter__trigger > span { display: none; }
+  .nav-c .nav-shutter__trigger { min-height: 48px; padding: 0 0.75rem; }
+  .nav-c .nav-shutter__foot { flex-direction: column; align-items: flex-start; gap: 0.25rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* Nothing travels. The leaf cross fades out and the navigation cross fades
+     in, which is the same reveal without the vestibular cost. */
+  .nav-c .nav-shutter__leaf,
+  .nav-c.is-open .nav-shutter__leaf {
+    transform: none !important;
+    will-change: auto !important;
+    transition: opacity 140ms var(--ease-out), visibility 0s !important;
+  }
+  .nav-c.is-open .nav-shutter__leaf { opacity: 0; visibility: hidden; }
+
+  .nav-c .nav-shutter__back,
+  .nav-c.is-open .nav-shutter__back {
+    transform: none !important;
+    transition: opacity 140ms var(--ease-out), visibility 0s !important;
+  }
+
+  .nav-c .nav-shutter__strip,
+  .nav-c.is-open .nav-shutter__strip {
+    transition: opacity 140ms var(--ease-out), visibility 0s !important;
+  }
+  .nav-c .nav-shutter__chev { transition: none !important; }
+  .nav-c .nav-shutter__trigger:active { transform: none !important; }
+}
+
+/* ============================================================ 13. DOCK */
+
+/* The tray is a shelf, not a target. It never reacts to hover as a whole and it
+   never clips: magnified tiles rise above it by design, and a focus ring on the
+   first or last cell has to stay whole. */
+/* Its own layer, sticking to the bottom of the scrollport rather than hanging
+   off the top one, so it lets go exactly when the section does. */
+.nav-c .nav-dock__base {
+  position: sticky;
+  bottom: 0;
+  height: 0;
+  z-index: 8;
+}
+
+.nav-c .nav-dock {
+  position: absolute;
+  left: 50%;
+  bottom: 32px;
+  z-index: 2;
+  transform: translateX(-50%);
+}
+
+/* The 32px end padding is derived, not chosen. The row can grow by at most
+   24 * 2.553 = 61.3px, which the re-centring splits into 30.6px at each end, so
+   32px is the smallest tray that no icon can ever hang off. */
+.nav-c .nav-dock__row {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  padding: 10px 32px;
+  border: 1px solid var(--line-2);
+  border-radius: var(--r);
+  background: rgba(22, 22, 28, 0.92);
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.5);
+}
+
+.nav-c .nav-dock__cell {
+  flex: none;
+  width: 44px;
+}
+
+.nav-c .nav-dock__item {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+}
+
+/* will-change only while the dock is actually being driven. Twelve permanent
+   compositor layers for a control that is idle most of the session is a cost
+   with no matching benefit. */
+.nav-c .nav-dock.is-live .nav-dock__item,
+.nav-c .nav-dock.is-live .nav-dock__tile { will-change: transform; }
+
+.nav-c .nav-dock__tile {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--r);
+  background: var(--surface);
+  color: var(--ink-2);
+  transform-origin: 50% 100%;
+  transition: color var(--d-fast) ease, background-color var(--d-fast) ease;
+}
+
+.nav-c .nav-dock__item:active .nav-dock__tile { background: var(--surface-2); }
+
+.nav-c .nav-dock__dot {
+  position: absolute;
+  left: 50%;
+  bottom: -5px;
+  width: 3px;
+  height: 3px;
+  margin-left: -1.5px;
+  border-radius: 50%;
+  background: var(--c-accent);
+  opacity: 0;
+}
+.nav-c .nav-dock__item[aria-current="page"] .nav-dock__dot { opacity: 1; }
+.nav-c .nav-dock__item[aria-current="page"] .nav-dock__tile { color: var(--ink); }
+
+.nav-c .nav-dock__lab {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 10px);
+  padding: 0.25rem 0.5rem;
+  border: 1px solid var(--line-2);
+  border-radius: var(--r);
+  background: var(--surface-2);
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink);
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transform: translate3d(-50%, 0, 0);
+  transition: opacity 120ms var(--ease-out);
+}
+.nav-c .nav-dock__item.is-named .nav-dock__lab { opacity: 1; }
+
+/* The accessible name. The drawn label is decoration for the eye and is hidden
+   from the accessibility tree, so the two can never disagree. */
+.nav-c .nav-dock__sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .nav-c .nav-dock__item:hover .nav-dock__tile { color: var(--ink); }
+}
+
+/* Mobile: no pointer, so no magnification. A labelled tab bar instead, full
+   width, with the label permanently under the icon. */
+@media (max-width: 768px) {
+  .nav-c .nav-dock {
+    left: 0;
+    right: 0;
+    bottom: 0;
+    transform: none;
+  }
+  .nav-c .nav-dock__row {
+    gap: 0;
+    height: 64px;
+    padding: 0;
+    align-items: stretch;
+    border: 0;
+    border-top: 1px solid var(--line);
+    border-radius: 0;
+    background: var(--void-2);
+    box-shadow: none;
+  }
+  .nav-c .nav-dock__cell { flex: 1 1 0; width: auto; }
+  .nav-c .nav-dock__item {
+    flex-direction: column;
+    justify-content: center;
+    gap: 5px;
+    width: 100%;
+    height: 100%;
+  }
+  .nav-c .nav-dock__tile {
+    width: 28px;
+    height: 28px;
+    background: none;
+  }
+  .nav-c .nav-dock__lab {
+    position: static;
+    padding: 0;
+    border: 0;
+    background: none;
+    font-size: 0.5rem;
+    letter-spacing: 0.1em;
+    color: var(--nav-dim);
+    opacity: 1;
+    transform: none;
+  }
+  .nav-c .nav-dock__item[aria-current="page"] .nav-dock__lab { color: var(--ink); }
+  .nav-c .nav-dock__dot { top: 6px; bottom: auto; }
+  .nav-c .nav-dock__item:focus-visible { outline-offset: -3px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* Magnification still happens; it simply arrives instantly, which is what the
+     two damping constants are bypassed for in the frame pass. The shell forces
+     transition-duration: 120ms on every element under reduced motion, so the
+     per-frame surfaces have to opt out by property or the snap would be
+     smoothed back into an animation. */
+  .nav-c .nav-dock__item,
+  .nav-c .nav-dock__tile,
+  .nav-c .nav-dock__lab { transition: none !important; }
+}
+
+/* ============================================================ 14. ISLAND */
+
+/* Geometry per state lives here rather than in inline styles, so the whole
+   morph is readable in one place and the JS only ever decides which state it
+   is. Widths are round numbers chosen against the content, not against the
+   viewport: a slab that scales with the window changes its own proportions. */
+
+.nav-c .nav-island {
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  z-index: 2;
+  transform: translateX(-50%);
+}
+
+.nav-c .nav-island__scrim {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--nav-vh, 100dvh);
+  z-index: 1;
+  background: rgba(8, 8, 10, 0.55);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 220ms var(--ease-out), visibility 0s linear 220ms;
+}
+.nav-c.is-island-open .nav-island__scrim {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 300ms var(--ease-out), visibility 0s;
+}
+
+.nav-c .nav-island__pill {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  width: 200px;
+  height: 40px;
+  padding: 0 4px 0 12px;
+  border: 1px solid var(--line-2);
+  border-radius: var(--r);
+  background: rgba(16, 16, 21, 0.97);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.45);
+  /* Layout containment only. `paint` would clip exactly like overflow:hidden
+     and would cut the focus ring off the disclosure sitting 4px from the edge,
+     which is the whole reason this is not `contain: strict`. */
+  contain: layout;
+  transition:
+    width 260ms var(--ease-drawer),
+    height 260ms var(--ease-drawer);
+}
+
+.nav-c .nav-island.is-mark  .nav-island__pill { width: 200px; height: 40px; }
+.nav-c .nav-island.is-where .nav-island__pill { width: 312px; height: 40px; }
+.nav-c .nav-island.is-work  .nav-island__pill { width: 352px; height: 64px; }
+.nav-c .nav-island.is-close .nav-island__pill { width: 316px; height: 48px; }
+
+/* The rare state, and the only one that gets a real duration. */
+.nav-c .nav-island.is-open .nav-island__pill {
+  width: 456px;
+  height: 116px;
+  transition:
+    width 380ms var(--ease-drawer),
+    height 380ms var(--ease-drawer);
+}
+
+.nav-c .nav-island__stack {
+  position: relative;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.nav-c .nav-island__face {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  min-width: 0;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 90ms linear, visibility 0s linear 90ms;
+}
+.nav-c .nav-island__face.is-on {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 140ms var(--ease-out) 80ms, visibility 0s;
+}
+
+.nav-c .nav-island__face--tall {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  align-content: center;
+  gap: 0.125rem 0.625rem;
+}
+.nav-c .nav-island__face--tall .nav-island__note { grid-column: 1 / -1; }
+
+.nav-c .nav-island__cap {
+  flex: none;
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--nav-dim);
+  white-space: nowrap;
+}
+
+.nav-c .nav-island__subj {
+  min-width: 0;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.nav-c .nav-island__note {
+  min-width: 0;
+  font-size: 0.6875rem;
+  line-height: 1.3;
+  color: var(--nav-dim);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.nav-c .nav-island__pulse {
+  flex: none;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--c-accent);
+}
+
+.nav-c .nav-island__cta {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  height: 26px;
+  padding: 0 0.5rem;
+  border: 1px solid var(--line-2);
+  border-radius: var(--r);
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink);
+  white-space: nowrap;
+  transition: border-color var(--d-fast) ease;
+}
+
+/* The expansion. Six real links in a 3 by 2 grid. */
+.nav-c .nav-island__open {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  align-content: start;
+  gap: 0.5rem;
+  padding: 0.625rem 0 0.5rem;
+}
+
+.nav-c .nav-island__oh {
+  font-family: var(--font-mono);
+  font-size: 0.5625rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--nav-dim);
+}
+
+.nav-c .nav-island__open ul {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.nav-c .nav-island__open a {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 30px;
+  padding: 0 0.5rem;
+  border-radius: var(--r);
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+  white-space: nowrap;
+  opacity: 0;
+  transform: translate3d(0, 8px, 0);
+  transition:
+    background-color var(--d-fast) ease,
+    color var(--d-fast) ease;
+}
+
+.nav-c .nav-island.is-open .nav-island__open a {
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity 260ms var(--ease-out) calc(120ms + var(--i) * 26ms),
+    transform 260ms var(--ease-out) calc(120ms + var(--i) * 26ms),
+    background-color var(--d-fast) ease,
+    color var(--d-fast) ease;
+}
+
+.nav-c .nav-island__open a[aria-current="page"] { color: var(--ink); }
+.nav-c .nav-island__open a .nav-ico { width: 0.9375rem; height: 0.9375rem; }
+
+@media (hover: hover) and (pointer: fine) {
+  .nav-c .nav-island__open a:hover {
+    background-color: rgba(90, 180, 255, 0.05);
+    color: var(--ink);
+  }
+  .nav-c .nav-island__cta:hover,
+  .nav-c .nav-island__trig:hover { border-color: var(--line-3); }
+}
+
+/* Drawn at 32px because the slab is only 40px tall in most states, but hit at
+   44x44: the target is extended past the drawn box with a pseudo element, which
+   is the only way to honour the touch floor inside chrome this short. */
+.nav-c .nav-island__trig {
+  position: relative;
+  flex: none;
+  align-self: center;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--line-2);
+  border-radius: var(--r);
+  color: var(--ink-2);
+  transition: border-color var(--d-fast) ease, color var(--d-fast) ease;
+}
+.nav-c .nav-island__trig::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 44px;
+  height: 44px;
+  transform: translate(-50%, -50%);
+}
+.nav-c .nav-island__trig:active { transform: scale(0.94); }
+
+.nav-c .nav-island__chev {
+  transform-origin: center;
+  transition: transform var(--d-ui) var(--ease-out);
+}
+.nav-c .nav-island.is-open .nav-island__chev { transform: rotate(180deg); }
+
+/* A measurement, not an animation: no transition, ever. */
+.nav-c .nav-island__prog {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  background: var(--c-accent);
+  transform: scaleX(0);
+  transform-origin: left center;
+  opacity: 0;
+  transition: opacity var(--d-fast) var(--ease-out);
+}
+.nav-c .nav-island.is-where .nav-island__prog,
+.nav-c .nav-island.is-work .nav-island__prog,
+.nav-c .nav-island.is-close .nav-island__prog { opacity: 1; }
+
+.nav-c .nav-island__live {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.nav-c .nav-island__mark {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.nav-c .nav-island__mark b { font-weight: 600; color: var(--ink); }
+.nav-c .nav-island__mark span { color: var(--nav-dim); }
+
+@media (max-width: 1100px) {
+  .nav-c .nav-island.is-where .nav-island__pill { width: 276px; }
+  .nav-c .nav-island.is-work  .nav-island__pill { width: 310px; }
+  .nav-c .nav-island.is-close .nav-island__pill { width: 280px; }
+  .nav-c .nav-island.is-open  .nav-island__pill { width: 404px; }
+}
+
+/* Mobile: the slab stops morphing horizontally. A 40px width change on a 375px
+   screen is a change nobody can see, and the thumb is at the bottom. */
+@media (max-width: 768px) {
+  /* The sticky layer is zero height, so `bottom` would anchor to the top of
+     the viewport. Chrome that belongs at the bottom edge is positioned from
+     the recorded viewport height and pulled up by its own height, which also
+     means the expansion grows upward instead of off the screen. */
+  .nav-c .nav-island {
+    top: calc(var(--nav-vh, 100dvh) - 12px);
+    left: 12px;
+    right: 12px;
+    bottom: auto;
+    transform: translateY(-100%);
+  }
+  .nav-c .nav-island__pill,
+  .nav-c .nav-island.is-mark  .nav-island__pill,
+  .nav-c .nav-island.is-where .nav-island__pill,
+  .nav-c .nav-island.is-close .nav-island__pill { width: auto; height: 48px; }
+  .nav-c .nav-island.is-work  .nav-island__pill { width: auto; height: 60px; }
+  .nav-c .nav-island.is-open  .nav-island__pill { width: auto; height: 348px; }
+
+  .nav-c .nav-island__open ul { grid-template-columns: minmax(0, 1fr); gap: 0; }
+  .nav-c .nav-island__open a {
+    min-height: 52px;
+    padding: 0 0.75rem;
+    border-top: 1px solid var(--line);
+    border-radius: 0;
+    font-size: 0.6875rem;
+  }
+  .nav-c .nav-island__open a .nav-ico { width: 1.0625rem; height: 1.0625rem; }
+  .nav-c .nav-island__trig { width: 44px; height: 44px; }
+  .nav-c .nav-island__trig::after { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* The slab still changes shape and contents. It simply stops travelling
+     between them: geometry snaps and the faces swap without a crossfade. */
+  .nav-c .nav-island__pill,
+  .nav-c .nav-island.is-open .nav-island__pill { transition: none !important; }
+  .nav-c .nav-island__face,
+  .nav-c .nav-island__face.is-on { transition: none !important; }
+  .nav-c .nav-island__open a,
+  .nav-c .nav-island.is-open .nav-island__open a {
+    transform: none !important;
+    transition: none !important;
+  }
+  .nav-c .nav-island__chev { transition: none !important; }
+  .nav-c .nav-island__trig:active { transform: none !important; }
+  /* The progress rule is a measurement. It must never be smoothed. */
+  .nav-c .nav-island__prog { transition: none !important; }
+  .nav-c .nav-island__scrim,
+  .nav-c.is-island-open .nav-island__scrim {
+    transition: opacity 140ms var(--ease-out), visibility 0s !important;
+  }
+}
+
+/* ============================================================ 15. TIDE */
+
+/* The retract distance is the bar height minus the waterline, so what is left
+   on screen is the bar's own bottom edge rather than a second component
+   pretending to be one. */
+.nav-c:has(.nav-tide__bar) { --nav-tide-peek: 3px; }
+
+.nav-c .nav-tide__bar {
+  transform: translate3d(0, 0, 0);
+  transition:
+    transform 180ms var(--ease-out),
+    background-color var(--d-ui) var(--ease-out),
+    border-color var(--d-ui) var(--ease-out);
+}
+
+.nav-c .nav-tide__bar.is-hidden {
+  transform: translate3d(0, calc(-1 * (var(--nav-bar-h) - var(--nav-tide-peek))), 0);
+  /* Leaving is slower than arriving, and moves on an in-out curve because the
+     bar is travelling across the screen rather than entering or leaving it. */
+  transition:
+    transform 220ms var(--ease-in-out),
+    background-color var(--d-ui) var(--ease-out),
+    border-color var(--d-ui) var(--ease-out);
+}
+
+.nav-c .nav-tide__nav {
+  margin-left: auto;
+}
+
+.nav-c .nav-tide__nav ul {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.nav-c .nav-tide__nav a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 12px;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--nav-dim);
+  transition: color var(--d-fast) ease;
+}
+.nav-c .nav-tide__nav a[aria-current="page"] { color: var(--ink); }
+
+@media (hover: hover) and (pointer: fine) {
+  .nav-c .nav-tide__nav a:hover { color: var(--ink); }
+}
+
+/* The waterline. Track and fill, sitting on the bar's bottom edge. */
+.nav-c .nav-tide__line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  background: var(--line);
+}
+
+.nav-c .nav-tide__fill {
+  display: block;
+  height: 100%;
+  background: var(--c-accent);
+  transform: scaleX(0);
+  transform-origin: left center;
+  /* No transition, ever. A progress indicator that eases is wrong for the
+     length of the ease, every time the reader moves. */
+}
+
+/* Mobile: the bar moves to the thumb and retracts downward, the destinations
+   become a swipeable strip so all six stay reachable without a menu, and the
+   waterline moves to the top edge so the retracted strip sits at the bottom
+   of the screen. */
+@media (max-width: 768px) {
+  .nav-c:has(.nav-tide__bar) { --nav-bar-h: 60px; }
+
+  .nav-c .nav-tide__bar {
+    top: calc(var(--nav-vh, 100dvh) - var(--nav-bar-h));
+    bottom: auto;
+    gap: 0;
+    padding: 0;
+    border-bottom: 0;
+    border-top: 1px solid transparent;
+  }
+  .nav-c .nav-tide__bar.is-edged { border-top-color: var(--line); }
+
+  .nav-c .nav-tide__bar.is-hidden {
+    transform: translate3d(0, calc(var(--nav-bar-h) - var(--nav-tide-peek)), 0);
+  }
+
+  .nav-c .nav-tide__mark { display: none; }
+
+  .nav-c .nav-tide__nav {
+    margin-left: 0;
+    width: 100%;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x proximity;
+    scroll-padding: 0 12px;
+    scrollbar-width: none;
+  }
+  .nav-c .nav-tide__nav::-webkit-scrollbar { display: none; }
+
+  .nav-c .nav-tide__nav ul {
+    gap: 8px;
+    padding: 0 12px;
+    width: max-content;
+  }
+  .nav-c .nav-tide__nav a {
+    min-height: 48px;
+    scroll-snap-align: center;
+  }
+  /* The strip scrolls, so a ring drawn outside the chip would be clipped by it. */
+  .nav-c .nav-tide__nav a:focus-visible { outline-offset: -3px; }
+
+  .nav-c .nav-tide__line { top: 0; bottom: auto; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* The bar stops travelling entirely. It simply stays, which is the honest
+     reduced motion answer to hide-on-scroll: the frame pass pins it too, so
+     the class is never applied in the first place. */
+  .nav-c .nav-tide__bar,
+  .nav-c .nav-tide__bar.is-hidden {
+    transform: none !important;
+    transition:
+      background-color var(--d-ui) var(--ease-out),
+      border-color var(--d-ui) var(--ease-out) !important;
+  }
+  .nav-c .nav-tide__fill { transition: none !important; }
+}
+
+/* ============================================================ 16. SPINE */
+
+/* Right edge, vertically centred on the recorded viewport height. The layer is
+   zero height, so a percentage top would resolve against nothing. */
+.nav-c .nav-spine {
+  position: absolute;
+  top: calc(var(--nav-vh, 100dvh) * 0.5);
+  right: clamp(1rem, 2.4vw, 2rem);
+  z-index: 2;
+  transform: translateY(-50%);
+}
+
+.nav-c .nav-spine__thread {
+  position: absolute;
+  top: 22px;
+  bottom: 22px;
+  right: 0;
+  width: 1px;
+  background: var(--line);
+}
+
+.nav-c .nav-spine__fill {
+  display: block;
+  height: 100%;
+  background: var(--c-accent);
+  transform: scaleY(0);
+  transform-origin: top center;
+  /* No transition. The thread is a measurement of where the reader is. */
+}
+
+.nav-c .nav-spine__list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* The target is 44x44. The visible tick is a 2px rule inside it, because a 2px
+   tall link is a link nobody can hit. */
+.nav-c .nav-spine__tick {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  width: 44px;
+  height: 44px;
+}
+
+.nav-c .nav-spine__rule {
+  width: 40px;
+  height: 2px;
+  background: var(--ink-4);
+  transform: scaleX(0.5);
+  transform-origin: right center;
+  transition:
+    transform 200ms var(--ease-out),
+    background-color 160ms ease;
+}
+
+.nav-c .nav-spine__tick[aria-current="page"] .nav-spine__rule {
+  transform: scaleX(1);
+  background: var(--c-accent);
+}
+
+.nav-c .nav-spine__tick:active .nav-spine__rule { transform: scaleX(1); }
+
+.nav-c .nav-spine__lab {
+  position: absolute;
+  right: calc(100% + 12px);
+  top: 50%;
+  margin-top: -0.5em;
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  line-height: 1;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  text-align: right;
+  white-space: nowrap;
+  color: var(--ink-2);
+  opacity: 0;
+  transform: translate3d(6px, 0, 0);
+  transition:
+    opacity 160ms var(--ease-out),
+    transform 160ms var(--ease-out);
+}
+
+/* Focus gets exactly the same rule the pointer gets. */
+.nav-c .nav-spine__tick:focus-visible .nav-spine__lab {
+  opacity: 1;
+  transform: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .nav-c .nav-spine__tick:hover .nav-spine__lab { opacity: 1; transform: none; }
+  /* 32px: between resting and active, so hover never impersonates the current
+     section. */
+  .nav-c .nav-spine__tick:hover .nav-spine__rule {
+    transform: scaleX(0.8);
+    background: var(--ink-2);
+  }
+  .nav-c .nav-spine__tick[aria-current="page"]:hover .nav-spine__rule {
+    transform: scaleX(1);
+    background: var(--c-accent);
+  }
+}
+
+@media (max-width: 1100px) {
+  .nav-c .nav-spine__lab { font-size: 0.5625rem; }
+}
+
+/* Mobile: a rail on the right is out of thumb reach and steals width from a
+   375px measure. It becomes a strip along the bottom edge, with the labels
+   permanently visible and the thread rotated onto the top edge. */
+@media (max-width: 768px) {
+  .nav-c .nav-spine {
+    top: calc(var(--nav-vh, 100dvh) - 56px);
+    right: 0;
+    left: 0;
+    transform: none;
+    background: var(--void-2);
+    border-top: 1px solid var(--line);
+  }
+
+  .nav-c .nav-spine__thread {
+    top: 0;
+    bottom: auto;
+    left: 0;
+    right: 0;
+    width: auto;
+    height: 2px;
+  }
+  .nav-c .nav-spine__fill {
+    width: 100%;
+    height: 100%;
+    transform: scaleX(0);
+    transform-origin: left center;
+  }
+
+  .nav-c .nav-spine__list {
+    flex-direction: row;
+    gap: 8px;
+    height: 56px;
+    padding: 0 12px;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x proximity;
+    scrollbar-width: none;
+  }
+  .nav-c .nav-spine__list::-webkit-scrollbar { display: none; }
+  .nav-c .nav-spine__list li { flex: none; }
+
+  .nav-c .nav-spine__tick {
+    width: auto;
+    min-width: 44px;
+    height: 44px;
+    align-self: center;
+    padding: 0 0.625rem;
+    border: 1px solid var(--line);
+    border-radius: var(--r);
+    scroll-snap-align: center;
+  }
+  .nav-c .nav-spine__tick[aria-current="page"] { border-color: var(--c-accent); }
+  .nav-c .nav-spine__tick:focus-visible { outline-offset: -3px; }
+
+  .nav-c .nav-spine__rule { display: none; }
+
+  .nav-c .nav-spine__lab {
+    position: static;
+    margin: 0;
+    opacity: 1;
+    transform: none;
+    color: var(--nav-dim);
+  }
+  .nav-c .nav-spine__tick[aria-current="page"] .nav-spine__lab { color: var(--ink); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* Ticks jump between their two lengths and labels appear without travelling.
+     The thread keeps tracking, because it is information rather than motion. */
+  .nav-c .nav-spine__rule { transition: background-color 160ms ease !important; }
+  .nav-c .nav-spine__lab {
+    transform: none !important;
+    transition: opacity 120ms var(--ease-out) !important;
+  }
+  .nav-c .nav-spine__fill { transition: none !important; }
+}
+
+/* ========================================================= 17. LIMELIGHT */
+
+.nav-c .nav-limelight__nav { margin-left: auto; }
+
+/* The list is the offset parent for both the items and the lamp, so every
+   measurement is in one coordinate space and the lamp can never drift. */
+.nav-c .nav-limelight__nav ul {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* One element, 100px of layout width, everything else scaleX. It is a ground
+   under the label, never a highlight over it. */
+.nav-c .nav-limelight__lamp {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  z-index: 0;
+  width: 100px;
+  height: 32px;
+  margin-top: -16px;
+  border-radius: var(--r);
+  background: rgba(232, 226, 214, 0.10);
+  transform-origin: left center;
+  will-change: transform;
+  pointer-events: none;
+}
+
+/* The item is a flex child, so z-index alone lifts it above the lamp without
+   making it a positioned ancestor. The link is the positioned one, which keeps
+   the list as the offset parent for every measurement the lamp depends on. */
+.nav-c .nav-limelight__nav li { z-index: 1; }
+
+.nav-c .nav-limelight__nav a {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 12px;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--nav-dim);
+  transition: color var(--d-fast) ease, opacity 100ms var(--ease-out);
+}
+.nav-c .nav-limelight__nav a[aria-current="page"] { color: var(--ink); }
+.nav-c .nav-limelight__nav a:active { opacity: 0.7; }
+
+/* Focus is a different mark from the current section, because they are
+   different facts and a keyboard reader needs both at once. */
+.nav-c .nav-limelight__nav a::after {
+  content: "";
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 9px;
+  height: 1px;
+  background: var(--ink-2);
+  opacity: 0;
+}
+.nav-c .nav-limelight__nav a:focus-visible::after { opacity: 1; }
+
+@media (hover: hover) and (pointer: fine) {
+  .nav-c .nav-limelight__nav a:hover { color: var(--ink); }
+}
+
+@media (max-width: 1100px) {
+  .nav-c .nav-limelight__nav a { padding: 0 10px; }
+}
+
+/* Mobile: six destinations do not fit on one line at a legible size, so the
+   row scrolls. A filled plate behind a strip that is itself scrolling reads as
+   two things moving at once, so the lamp becomes a 2px underline instead. */
+@media (max-width: 768px) {
+  .nav-c .nav-limelight__mark { display: none; }
+
+  .nav-c .nav-limelight__bar { padding: 0; }
+
+  .nav-c .nav-limelight__nav {
+    margin-left: 0;
+    width: 100%;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x proximity;
+    scrollbar-width: none;
+  }
+  .nav-c .nav-limelight__nav::-webkit-scrollbar { display: none; }
+
+  .nav-c .nav-limelight__nav ul {
+    width: max-content;
+    padding: 0 12px;
+  }
+  .nav-c .nav-limelight__nav a {
+    min-height: 56px;
+    scroll-snap-align: center;
+  }
+  /* The strip scrolls, so the ring is drawn inside the chip. */
+  .nav-c .nav-limelight__nav a:focus-visible { outline-offset: -3px; }
+
+  .nav-c .nav-limelight__lamp {
+    top: auto;
+    bottom: 0;
+    height: 2px;
+    margin-top: 0;
+    border-radius: 0;
+    background: var(--c-accent);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* The lamp jumps to the target with no travel and no lean. The frame pass
+     bypasses both damping constants, so nothing here has to fight a transform
+     that is still being written. */
+  .nav-c .nav-limelight__lamp {
+    will-change: auto !important;
+    transition: none !important;
+  }
+  .nav-c .nav-limelight__nav a:active { opacity: 1 !important; }
+}

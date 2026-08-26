@@ -1,0 +1,399 @@
+/* ============================================================================
+   BASE  -  tokens, reset, typography, shared controls.
+   ----------------------------------------------------------------------------
+   SHAPE RULE (one system, applied everywhere): every container is 2px. The only
+   round things on the page are things that are genuinely dots - progress
+   indicators, graph nodes, orbit bodies. No pill buttons on a square page.
+
+   COLOR RULE: the shell owns exactly one accent (--accent, signal vermillion).
+   Each concept then owns one signature hue, scoped to its own stage via
+   --c-accent. The shell accent never appears inside a concept stage and a
+   concept hue never leaks into the shell chrome. That is the documented
+   exception to "one accent per page" - the concepts are the thing being
+   compared, so they are allowed to differ from each other, and only from each
+   other.
+   ========================================================================== */
+
+:root {
+  /* ground */
+  --void:      #08080a;
+  --void-2:    #0b0b0f;
+  --surface:   #101015;
+  --surface-2: #16161c;
+
+  /* ink
+     Every step is measured against --void and every step clears the AA 4.5:1
+     floor, because an audit found all four were being used for real text and
+     the bottom two were at 3.0:1 and 1.6:1. The scale is deliberately
+     compressed at the quiet end: below roughly 5:1 there is no room left to
+     fade, so hierarchy down there comes from size, weight and tracking (9px
+     wide-tracked mono against 15px display prose) rather than from dimmer
+     grey. Fading text into the ground is not a hierarchy system. */
+  --ink:    #ececef;   /* 16.9:1  primary */
+  --ink-2:  #9a9aa6;   /*  7.2:1  secondary body */
+  --ink-3:  #85858f;   /*  5.5:1  tertiary prose */
+  --ink-4:  #7a7a86;   /*  4.7:1  quiet labels, counts, metadata */
+
+  /* lines */
+  --line:   rgba(236, 236, 239, 0.08);
+  --line-2: rgba(236, 236, 239, 0.16);
+  --line-3: rgba(236, 236, 239, 0.28);
+
+  /* shell accent - vermillion. Never used inside a concept stage. */
+  --accent:     #ff4a1c;
+  --accent-ink: #08080a;
+  --accent-dim: rgba(255, 74, 28, 0.16);
+
+  /* concept hue, overridden per stage */
+  --c-accent: var(--accent);
+
+  --r: 2px;
+
+  --font-display: "Space Grotesk", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+
+  /* strong curves - the browser built-ins are too weak to read as deliberate */
+  --ease-out:    cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+
+  --d-fast: 140ms;
+  --d-ui:   220ms;
+  --d-slow: 420ms;
+
+  --gutter: clamp(1.25rem, 4vw, 4.5rem);
+  --maxw: 1560px;
+
+  /* Layer order, low to high. The stage is a modal surface, so it sits ABOVE
+     the page chrome: a masthead painting over an open concept was the exact
+     bug this ordering exists to prevent. */
+  --z-chrome: 40;
+  --z-stage: 70;
+  --z-overlay: 80;
+  --z-toast: 90;
+  --z-grain: 95;
+  --z-cursor: 100;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html {
+  background: var(--void);
+  color-scheme: dark;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  min-height: 100dvh;
+  background: var(--void);
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-size: 16px;
+  line-height: 1.6;
+  font-weight: 400;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+
+body.stage-open { overflow: hidden; }
+
+h1, h2, h3, h4, p, figure, ul, ol { margin: 0; }
+ul, ol { padding: 0; list-style: none; }
+img, svg, canvas { display: block; max-width: 100%; }
+button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
+a { color: inherit; text-decoration: none; }
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: var(--r);
+}
+
+/* Screen-reader-only, but still focusable. Every canvas concept mirrors its
+   contents into one of these lists so the whole explorer is keyboard- and
+   screen-reader-navigable rather than being an inaccessible pixel surface. */
+.sr-only {
+  position: absolute;
+  width: 1px; height: 1px;
+  margin: -1px; padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+.sr-only:focus-within {
+  position: fixed;
+  top: 1rem; left: 1rem;
+  width: auto; height: auto;
+  margin: 0; padding: 1rem 1.25rem;
+  clip: auto; clip-path: none;
+  background: var(--surface-2);
+  border: 1px solid var(--line-2);
+  z-index: var(--z-overlay);
+  white-space: normal;
+  max-width: min(30rem, calc(100vw - 2rem));
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+/* --------------------------------------------------- browser surfaces */
+/* The parts nobody draws still carry the design. Selection, caret, and the
+   scrollbar all ship with browser defaults that belong to no design system,
+   and leaving them is the cheapest tell that a page was assembled rather than
+   built. */
+::selection { background: var(--accent); color: var(--accent-ink); }
+::-moz-selection { background: var(--accent); color: var(--accent-ink); }
+
+input, textarea, [contenteditable] { caret-color: var(--accent); }
+
+* { scrollbar-width: thin; scrollbar-color: var(--line-2) transparent; }
+::-webkit-scrollbar { width: 11px; height: 11px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: var(--line-2);
+  border: 3px solid var(--void);
+  border-radius: 99px;
+}
+::-webkit-scrollbar-thumb:hover { background: var(--line-3); }
+::-webkit-scrollbar-corner { background: transparent; }
+
+/* ------------------------------------------------------------- typography */
+.t-display {
+  font-weight: 500;
+  letter-spacing: -0.045em;
+  line-height: 0.86;
+  text-wrap: balance;
+}
+
+.t-label {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.t-num {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+}
+
+.t-body {
+  color: var(--ink-2);
+  font-size: clamp(0.9375rem, 1.05vw, 1.0625rem);
+  line-height: 1.62;
+  max-width: 46ch;
+}
+
+/* ---------------------------------------------------------------- controls */
+.btn {
+  --btn-ink: var(--ink);
+  --btn-line: var(--line-2);
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.75rem 1.125rem;
+  border: 1px solid var(--btn-line);
+  border-radius: var(--r);
+  background: transparent;
+  color: var(--btn-ink);
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  isolation: isolate;
+  transition:
+    border-color var(--d-ui) var(--ease-out),
+    color var(--d-ui) var(--ease-out),
+    transform var(--d-fast) var(--ease-out);
+}
+
+/* Directional fill: a bar wipes up from the bottom edge on hover. Transform
+   only, so it composites; no width/height animation. */
+.btn::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: var(--btn-ink);
+  transform: translateY(101%);
+  transition: transform var(--d-ui) var(--ease-out);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .btn:hover { color: var(--void); border-color: var(--btn-ink); }
+  .btn:hover::before { transform: translateY(0); }
+}
+.btn:active { transform: translateY(1px); }
+
+.btn--accent { --btn-ink: var(--accent); --btn-line: rgba(255, 74, 28, 0.42); }
+.btn--ghost  { --btn-line: var(--line); color: var(--ink-2); }
+.btn--sm     { padding: 0.5rem 0.8125rem; font-size: 0.625rem; }
+
+.btn[disabled] { opacity: 0.4; pointer-events: none; }
+
+/* Quiet icon button used in stage chrome. */
+.iconbtn {
+  display: inline-grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  color: var(--ink-2);
+  transition: border-color var(--d-ui) var(--ease-out), color var(--d-ui) var(--ease-out);
+}
+@media (hover: hover) and (pointer: fine) {
+  .iconbtn:hover { color: var(--ink); border-color: var(--line-3); }
+}
+.iconbtn svg { width: 1rem; height: 1rem; stroke: currentColor; fill: none; stroke-width: 1.4; }
+
+/* --------------------------------------------------------------- hairlines */
+.rule { height: 1px; background: var(--line); width: 100%; }
+
+/* ------------------------------------------------------------------- grain */
+/* Fixed, pointer-events:none, never inside a scrolling container. A grain
+   layer attached to scrolling content repaints the whole layer every frame. */
+.grain {
+  position: fixed;
+  inset: -50%;
+  z-index: var(--z-grain);
+  pointer-events: none;
+  opacity: 0.045;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+  will-change: transform;
+  animation: grainshift 700ms steps(1) infinite;
+}
+@keyframes grainshift {
+  0%   { transform: translate3d(0, 0, 0); }
+  25%  { transform: translate3d(-2%, 1%, 0); }
+  50%  { transform: translate3d(1%, -2%, 0); }
+  75%  { transform: translate3d(-1%, -1%, 0); }
+  100% { transform: translate3d(0, 0, 0); }
+}
+.is-reduced .grain { animation: none; }
+
+/* ------------------------------------------------------------------ cursor */
+/* Not a replacement system cursor. The native cursor stays everywhere except
+   inside a concept's interactive canvas, where there is no text to select and
+   a precise reticle communicates "this surface is spatial". */
+.cursor {
+  position: fixed;
+  top: 0; left: 0;
+  z-index: var(--z-cursor);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 200ms var(--ease-out);
+  mix-blend-mode: difference;
+}
+.cursor.is-on { opacity: 1; }
+.cursor__ring {
+  position: absolute;
+  width: 34px; height: 34px;
+  margin: -17px 0 0 -17px;
+  border: 1px solid rgba(255, 255, 255, 0.65);
+  border-radius: 50%;
+  transition: transform 260ms var(--ease-out);
+}
+.cursor__dot {
+  position: absolute;
+  width: 3px; height: 3px;
+  margin: -1.5px 0 0 -1.5px;
+  background: #fff;
+  border-radius: 50%;
+}
+.cursor__label {
+  position: absolute;
+  top: 22px; left: 22px;
+  font-family: var(--font-mono);
+  font-size: 0.5625rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #fff;
+  white-space: nowrap;
+  opacity: 0;
+  transform: translateY(-3px);
+  transition: opacity 180ms var(--ease-out), transform 180ms var(--ease-out);
+}
+.cursor.has-label .cursor__label { opacity: 1; transform: translateY(0); }
+.cursor.is-grab .cursor__ring { transform: scale(1.45); }
+.cursor.is-down .cursor__ring { transform: scale(0.75); }
+html.is-reduced .cursor { display: none; }
+
+/* ------------------------------------------------------------------- toast */
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: clamp(1.25rem, 4vh, 2.5rem);
+  z-index: var(--z-toast);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.8125rem 1.125rem;
+  border: 1px solid var(--line-2);
+  border-radius: var(--r);
+  background: rgba(16, 16, 21, 0.92);
+  backdrop-filter: blur(14px) saturate(140%);
+  -webkit-backdrop-filter: blur(14px) saturate(140%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 24px 60px rgba(0, 0, 0, 0.6);
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink);
+  /* Transitions, not keyframes: the copy button can be fired twice in a
+     second and a transition retargets from wherever it currently is. */
+  opacity: 0;
+  transform: translate3d(-50%, 14px, 0) scale(0.97);
+  pointer-events: none;
+  transition:
+    opacity 160ms var(--ease-out),
+    transform 160ms var(--ease-out);
+}
+.toast.is-on {
+  opacity: 1;
+  transform: translate3d(-50%, 0, 0) scale(1);
+  transition:
+    opacity 220ms var(--ease-out),
+    transform 220ms var(--ease-out);
+}
+.toast__mark {
+  width: 1.125rem; height: 1.125rem;
+  flex: none;
+  color: var(--accent);
+}
+.toast__mark svg { width: 100%; height: 100%; fill: none; stroke: currentColor; stroke-width: 1.6; }
+.toast__mark path {
+  stroke-dasharray: 22;
+  stroke-dashoffset: 22;
+}
+.toast.is-on .toast__mark path {
+  transition: stroke-dashoffset 320ms var(--ease-out) 80ms;
+  stroke-dashoffset: 0;
+}
+.toast__meta { color: var(--ink-3); letter-spacing: 0.1em; }
+
+@media (prefers-reduced-motion: reduce) {
+  .toast { transform: translate3d(-50%, 0, 0); }
+  .toast.is-on { transform: translate3d(-50%, 0, 0); }
+  .toast .toast__mark path { stroke-dashoffset: 0; transition: none; }
+}
+
+/* ------------------------------------------------------- global reductions */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 120ms !important;
+    scroll-behavior: auto !important;
+  }
+}

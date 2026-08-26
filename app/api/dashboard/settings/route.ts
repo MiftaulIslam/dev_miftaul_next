@@ -7,6 +7,7 @@ import {
   upsertPortfolioSettings,
 } from "@/lib/dashboard/db";
 import { fallbackProfile } from "@/lib/dashboard/fallback-profile";
+import { coerceSiteVersion } from "@/lib/siteVersion";
 
 export async function GET() {
   const unauthorized = await requireDashboardAuth();
@@ -25,7 +26,12 @@ export async function PUT(request: Request) {
     return NextResponse.json({ error: "Invalid payload." }, { status: 400 });
   }
 
-  const next = await upsertPortfolioSettings(payload);
+  // This field decides what every visitor sees, so the client string is never
+  // trusted: anything unrecognised falls back to the default version.
+  const next = await upsertPortfolioSettings({
+    ...payload,
+    siteVersion: coerceSiteVersion(payload.siteVersion),
+  });
   return NextResponse.json(next);
 }
 

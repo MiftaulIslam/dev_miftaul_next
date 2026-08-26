@@ -1,4 +1,5 @@
 import type { PortfolioSettings } from "@/lib/dashboard/types";
+import { DEFAULT_SITE_VERSION } from "@/lib/siteVersion";
 
 export const fallbackProfile: PortfolioSettings = {
   id: 1,
@@ -24,6 +25,7 @@ export const fallbackProfile: PortfolioSettings = {
   currentlyFocusedOn: ["NestJS Microservices", "AWS Architecture", "Golang", "System Design"],
   detailedSummary:
     "I'm a Full Stack Developer with 3+ years of experience crafting high-performance web applications and scalable backend systems.\n\nCurrently building enterprise SaaS at Web Makers LTD while taking on select freelance projects. I care deeply about clean architecture, developer experience, and shipping things that matter to users.",
+  siteVersion: DEFAULT_SITE_VERSION,
   updatedAt: new Date().toISOString(),
 };
 
