@@ -10,12 +10,14 @@
     "db:migrate": "node scripts/db/migrate.mjs",
     "db:seed": "node scripts/db/seed.mjs",
     "db:seed:skills": "node scripts/db/seed-skills-v2.mjs",
-    "db:seed:projects": "node scripts/db/seed-projects-v2.mjs"
+    "db:seed:projects": "node scripts/db/seed-projects-v2.mjs",
+    "db:migrate:uploads": "node scripts/db/migrate-uploads-to-blob.mjs"
   },
   "dependencies": {
     "@gsap/react": "^2.1.2",
     "@neondatabase/serverless": "^1.0.2",
     "@splinetool/react-spline": "^4.1.0",
+    "@vercel/blob": "^2.8.0",
     "clsx": "^2.1.1",
     "framer-motion": "^12.38.0",
     "gsap": "^3.15.0",
