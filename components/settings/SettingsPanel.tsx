@@ -1,13 +1,21 @@
 "use client";
 
 import { useEffect, useId, useRef, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import dynamic from "next/dynamic";
+import { usePathname } from "next/navigation";
 import { Settings, X } from "lucide-react";
 
 import { useDockVisible } from "@/lib/navShell";
-import { useReducedMotion } from "@/lib/useReducedMotion";
 import { cn } from "@/lib/utils";
-import { SETTINGS_SECTIONS } from "./sections";
+
+// The sections (theme, cursor, their dialogs) are only needed once the panel
+// opens, so they are a separate chunk, fetched as soon as the dial is hovered
+// or focused so it is in hand by the time the click lands.
+const loadSections = () => import("./SettingsSections");
+const SettingsSections = dynamic(loadSections, {
+  ssr: false,
+  loading: () => <div className="h-48" aria-busy="true" />,
+});
 
 /**
  * Floating settings dial, bottom-right.
@@ -20,8 +28,11 @@ import { SETTINGS_SECTIONS } from "./sections";
  * `globals.css` already neutralises under `prefers-reduced-motion`.
  */
 export default function SettingsPanel() {
+  const pathname = usePathname();
   const [open, setOpen] = useState(false);
-  const reduced = useReducedMotion();
+  // Stays true through the exit animation, so the popover can animate out.
+  const [shown, setShown] = useState(false);
+  if (open && !shown) setShown(true);
   const { visible: dockVisible, isMobile } = useDockVisible();
   const containerRef = useRef<HTMLDivElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
@@ -55,6 +66,9 @@ export default function SettingsPanel() {
     if (open) panelRef.current?.focus();
   }, [open]);
 
+  // The public site's preferences dial has no place in the admin dashboard.
+  if (pathname.startsWith("/dashboard")) return null;
+
   return (
     <div
       ref={containerRef}
@@ -65,62 +79,56 @@ export default function SettingsPanel() {
         dockVisible && isMobile ? "bottom-[6.5rem]" : "bottom-5 sm:bottom-8"
       )}
     >
-      <AnimatePresence>
-        {open && (
-          <motion.div
-            ref={panelRef}
-            id={panelId}
-            role="dialog"
-            aria-label="Settings"
-            tabIndex={-1}
-            initial={reduced ? { opacity: 0 } : { opacity: 0, y: 12, scale: 0.94 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={
-              reduced
-                ? { opacity: 0 }
-                : { opacity: 0, y: 8, scale: 0.96, transition: { duration: 0.15 } }
-            }
-            transition={{ type: "spring", stiffness: 380, damping: 30, mass: 0.7 }}
-            style={{ transformOrigin: "bottom right" }}
-            className={cn(
-              "glass overflow-hidden rounded-2xl shadow-2xl focus:outline-none",
-              // Wide enough for the transition rail to show several chips, but
-              // never wider than the viewport on a small phone.
-              "w-[min(calc(100vw-2.5rem),24rem)] sm:w-[28rem]"
-            )}
-          >
-            <header className="flex items-center justify-between border-b border-foreground/10 px-5 py-3.5">
-              <h2 className="text-base font-semibold text-foreground">Settings</h2>
-              <button
-                type="button"
-                onClick={() => {
-                  setOpen(false);
-                  triggerRef.current?.focus();
-                }}
-                aria-label="Close settings"
-                className={cn(
-                  "grid h-7 w-7 place-items-center rounded-md text-muted-foreground transition-colors",
-                  "hover:bg-foreground/5 hover:text-foreground",
-                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                )}
-              >
-                <X className="h-4 w-4" aria-hidden />
-              </button>
-            </header>
+      {shown && (
+        <div
+          ref={panelRef}
+          id={panelId}
+          role="dialog"
+          aria-label="Settings"
+          tabIndex={-1}
+          data-state={open ? "open" : "closing"}
+          onAnimationEnd={(event) => {
+            if (event.target === event.currentTarget && !open) setShown(false);
+          }}
+          style={{ transformOrigin: "bottom right" }}
+          className={cn(
+            "ui-pop glass overflow-hidden rounded-2xl shadow-2xl focus:outline-none",
+            // Wide enough for the transition rail to show several chips, but
+            // never wider than the viewport on a small phone.
+            "w-[min(calc(100vw-2.5rem),24rem)] sm:w-[28rem]"
+          )}
+        >
+          <header className="flex items-center justify-between border-b border-foreground/10 px-5 py-3.5">
+            <h2 className="text-base font-semibold text-foreground">Settings</h2>
+            <button
+              type="button"
+              onClick={() => {
+                setOpen(false);
+                triggerRef.current?.focus();
+              }}
+              aria-label="Close settings"
+              className={cn(
+                "grid h-7 w-7 place-items-center rounded-md text-muted-foreground transition-colors",
+                "hover:bg-foreground/5 hover:text-foreground",
+                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              )}
+            >
+              <X className="h-4 w-4" aria-hidden />
+            </button>
+          </header>
 
-            <div className="max-h-[min(70vh,28rem)] overflow-y-auto">
-              {SETTINGS_SECTIONS.map(({ id, Section }) => (
-                <Section key={id} />
-              ))}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+          <div className="max-h-[min(70vh,28rem)] overflow-y-auto">
+            <SettingsSections />
+          </div>
+        </div>
+      )}
 
       <button
         ref={triggerRef}
         type="button"
         onClick={() => setOpen((value) => !value)}
+        onPointerEnter={() => void loadSections()}
+        onFocus={() => void loadSections()}
         aria-expanded={open}
         aria-controls={open ? panelId : undefined}
         aria-label="Settings"

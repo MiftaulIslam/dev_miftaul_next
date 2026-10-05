@@ -1,10 +1,18 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Inbox, Mail, MailCheck, MailOpen, RefreshCw, Trash2, User } from "lucide-react";
+import { Mail, MailCheck, MailOpen, RefreshCw, SearchX, Trash2 } from "lucide-react";
 
 import { requestJson } from "@/components/dashboard/api";
+import { Alert } from "@/components/ui/dashboard/Alert";
+import { Badge } from "@/components/ui/dashboard/Badge";
 import { Button } from "@/components/ui/dashboard/Button";
+import { ConfirmDialog } from "@/components/ui/dashboard/ConfirmDialog";
+import { EmptyState } from "@/components/ui/dashboard/EmptyState";
+import { PageHeader } from "@/components/ui/dashboard/PageHeader";
+import { ListSkeleton } from "@/components/ui/dashboard/Skeleton";
+import { SearchInput, Toolbar } from "@/components/ui/dashboard/Toolbar";
+import { cn } from "@/lib/cn";
 import type { MessageRecord } from "@/lib/dashboard/types";
 
 function initials(name: string) {
@@ -17,6 +25,31 @@ function initials(name: string) {
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 }
 
+/** Compact list date: time for today, otherwise day + month (+ year if not this year). */
+function listDate(value: string) {
+  const date = new Date(value);
+  const now = new Date();
+  if (date.toDateString() === now.toDateString()) {
+    return date.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
+  }
+  return date.toLocaleDateString(undefined, {
+    month: "short",
+    day: "numeric",
+    ...(date.getFullYear() === now.getFullYear() ? {} : { year: "numeric" }),
+  });
+}
+
+function fullDate(value: string) {
+  return new Date(value).toLocaleString(undefined, {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
+}
+
 export default function MessagesPanel() {
   const [messages, setMessages] = useState<MessageRecord[]>([]);
   const [selectedId, setSelectedId] = useState<number | null>(null);
@@ -24,6 +57,8 @@ export default function MessagesPanel() {
   const [status, setStatus] = useState("");
   const [pending, setPending] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [query, setQuery] = useState("");
+  const [deleteTarget, setDeleteTarget] = useState<MessageRecord | null>(null);
 
   const selected = useMemo(
     () => messages.find((m) => m.id === selectedId) ?? null,
@@ -31,6 +66,15 @@ export default function MessagesPanel() {
   );
 
   const unreadCount = useMemo(() => messages.filter((m) => !m.read).length, [messages]);
+
+  /** Client-side filter over the loaded messages only. */
+  const visible = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return messages;
+    return messages.filter((m) =>
+      [m.name, m.email, m.subject, m.message].some((field) => field.toLowerCase().includes(q)),
+    );
+  }, [messages, query]);
 
   const load = async () => {
     try {
@@ -56,6 +100,7 @@ export default function MessagesPanel() {
   const toggleRead = async (message: MessageRecord) => {
     setPending(true);
     setStatus("");
+    setError("");
     try {
       const updated = await requestJson<MessageRecord>("/api/dashboard/messages", {
         method: "PUT",
@@ -73,6 +118,7 @@ export default function MessagesPanel() {
   const remove = async (message: MessageRecord) => {
     setPending(true);
     setStatus("");
+    setError("");
     try {
       await requestJson("/api/dashboard/messages", {
         method: "DELETE",
@@ -82,8 +128,10 @@ export default function MessagesPanel() {
       setMessages(next);
       setSelectedId(next[0]?.id ?? null);
       setStatus("Message deleted.");
+      setDeleteTarget(null);
     } catch (deleteError) {
       setError(deleteError instanceof Error ? deleteError.message : "Failed to delete message.");
+      setDeleteTarget(null);
     } finally {
       setPending(false);
     }
@@ -94,241 +142,256 @@ export default function MessagesPanel() {
 
   return (
     <div className="space-y-6">
-      <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-slate-950/40 p-6 md:p-8">
-        <div
-          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_0%_0%,rgba(59,130,246,0.12),transparent_55%),radial-gradient(ellipse_60%_50%_at_100%_100%,rgba(139,92,246,0.08),transparent_50%)]"
-          aria-hidden
-        />
-        <div className="relative flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <div className="flex flex-wrap items-center gap-2">
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Inbox</p>
-              {unreadCount > 0 ? (
-                <span className="rounded-full bg-blue-500/20 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-cyan-200 ring-1 ring-blue-400/30">
-                  {unreadCount} unread
-                </span>
-              ) : null}
-            </div>
-            <h2 className="mt-2 text-3xl font-semibold tracking-tight text-white md:text-4xl">Messages</h2>
-            <p className="mt-2 max-w-xl text-sm leading-relaxed text-slate-400">
-              Contact form submissions in a simple inbox. Select a thread to read the full message.
-            </p>
-          </div>
-          <Button
-            type="button"
-            variant="ghost"
-            className="shrink-0 self-start border border-white/10 bg-white/5 text-slate-200 hover:bg-white/10 hover:text-white sm:self-auto"
-            onClick={() => void load()}
-            disabled={loading}
-          >
-            <RefreshCw className={`mr-2 h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+      <PageHeader
+        title="Messages"
+        description="Contact form submissions from your site. Select a message to read it and reply by email."
+        meta={
+          loading && !messages.length ? null : (
+            <span className="tabular-nums">
+              {countLabel}
+              {unreadCount > 0 ? ` · ${unreadCount} unread` : ""}
+            </span>
+          )
+        }
+        actions={
+          <Button variant="secondary" onClick={() => void load()} disabled={loading}>
+            <RefreshCw className={cn(loading && "animate-spin")} aria-hidden />
             Refresh
           </Button>
-        </div>
-      </div>
+        }
+      />
 
-      {(status || error) && (
-        <div className="flex flex-wrap gap-2">
-          {status ? (
-            <span className="inline-flex items-center rounded-full border border-emerald-400/25 bg-emerald-500/10 px-3 py-1 text-sm text-emerald-200">
-              {status}
-            </span>
-          ) : null}
-          {error ? (
-            <span className="inline-flex items-center rounded-full border border-rose-400/25 bg-rose-500/10 px-3 py-1 text-sm text-rose-200">
-              {error}
-            </span>
-          ) : null}
-        </div>
-      )}
+      {error ? (
+        <Alert
+          tone="danger"
+          action={
+            <Button size="sm" variant="secondary" onClick={() => void load()} disabled={loading}>
+              Retry
+            </Button>
+          }
+        >
+          {error}
+        </Alert>
+      ) : null}
+      {status ? <Alert tone="success">{status}</Alert> : null}
 
-      <div className="overflow-hidden rounded-2xl border border-white/10 bg-slate-950/50 shadow-[0_24px_80px_rgba(2,8,30,0.35)] ring-1 ring-white/4 lg:grid lg:min-h-[min(640px,calc(100dvh-14rem))] lg:grid-cols-[minmax(280px,380px)_1fr]">
-        {/* List */}
-        <aside className="flex max-h-[min(420px,50vh)] flex-col border-b border-white/10 lg:max-h-none lg:border-b-0 lg:border-r lg:border-white/10">
-          <div className="flex shrink-0 items-center justify-between gap-2 border-b border-white/6 px-4 py-3">
-            <div className="flex items-center gap-2">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-500/15 text-blue-300 ring-1 ring-blue-400/25">
-                <Inbox className="h-4 w-4" />
-              </div>
-              <div>
-                <h3 className="text-sm font-semibold text-white">Inbox</h3>
-                <p className="text-[11px] text-slate-500">{countLabel}</p>
+      {loading && !messages.length ? (
+        <ListSkeleton rows={5} />
+      ) : !messages.length ? (
+        error ? null : (
+          <EmptyState
+            icon={MailOpen}
+            title="No messages yet"
+            description="Submissions from your site's contact form will show up here."
+          />
+        )
+      ) : (
+        <div className="overflow-hidden rounded-xl border border-dash-border bg-dash-surface lg:grid lg:min-h-[min(640px,calc(100dvh-16rem))] lg:grid-cols-[minmax(280px,380px)_1fr]">
+          {/* List */}
+          <aside className="flex max-h-[min(440px,55vh)] flex-col border-b border-dash-border lg:max-h-none lg:border-b-0 lg:border-r">
+            <div className="shrink-0 border-b border-dash-border p-3">
+              <Toolbar className="mb-0">
+                <SearchInput
+                  value={query}
+                  onChange={setQuery}
+                  placeholder="Search name, email, subject…"
+                  label="Search messages"
+                />
+              </Toolbar>
+              <div className="mt-2 flex items-center gap-2 text-xs text-dash-muted">
+                <span className="tabular-nums">
+                  {query.trim() ? `${visible.length} of ${messages.length}` : countLabel}
+                </span>
+                {unreadCount > 0 ? <Badge tone="accent">{unreadCount} unread</Badge> : null}
               </div>
             </div>
-          </div>
-          <div className="min-h-0 flex-1 space-y-1 overflow-y-auto p-2">
-            {loading ? (
-              <div className="flex flex-col items-center justify-center gap-3 py-16 text-sm text-slate-500">
-                <RefreshCw className="h-6 w-6 animate-spin text-slate-600" aria-hidden />
-                Loading…
-              </div>
-            ) : null}
-            {!loading &&
-              messages.map((message) => {
+
+            <ul className="min-h-0 flex-1 divide-y divide-dash-border overflow-y-auto" aria-label="Inbox">
+              {visible.map((message) => {
                 const active = selectedId === message.id;
+                const unread = !message.read;
                 return (
-                  <button
-                    key={message.id}
-                    type="button"
-                    onClick={() => setSelectedId(message.id)}
-                    className={`group relative w-full overflow-hidden rounded-xl border px-3 py-3 text-left transition ${
-                      active
-                        ? "border-blue-400/35 bg-linear-to-r from-blue-500/15 to-cyan-500/5 shadow-[inset_3px_0_0_0_rgba(59,130,246,0.85)]"
-                        : "border-transparent bg-transparent hover:bg-white/4"
-                    }`}
-                  >
-                    <div className="flex gap-3">
-                      <div
-                        className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-xs font-semibold ${
-                          message.read
-                            ? "bg-slate-800/80 text-slate-400 ring-1 ring-white/10"
-                            : "bg-linear-to-br from-blue-500/30 to-cyan-500/20 text-white ring-1 ring-blue-400/35"
-                        }`}
+                  <li key={message.id}>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedId(message.id)}
+                      aria-current={active ? "true" : undefined}
+                      className={cn(
+                        "relative flex w-full gap-3 px-4 py-3 text-left transition-colors",
+                        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-dash-accent/60",
+                        active ? "bg-dash-raised" : "hover:bg-dash-raised",
+                      )}
+                    >
+                      {active ? (
+                        <span className="absolute inset-y-0 left-0 w-0.5 bg-dash-accent" aria-hidden />
+                      ) : null}
+                      <span
+                        className={cn(
+                          "grid size-9 shrink-0 place-items-center rounded-full border text-xs font-semibold",
+                          unread
+                            ? "border-dash-accent/40 bg-dash-accent-soft text-dash-fg"
+                            : "border-dash-border-strong bg-dash-raised text-dash-muted",
+                        )}
+                        aria-hidden
                       >
                         {initials(message.name)}
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-start justify-between gap-2">
-                          <p
-                            className={`truncate text-sm leading-snug ${
-                              message.read ? "font-medium text-slate-300" : "font-semibold text-white"
-                            }`}
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span className="flex items-baseline justify-between gap-2">
+                          <span
+                            className={cn(
+                              "truncate text-sm",
+                              unread ? "font-semibold text-dash-fg" : "font-medium text-dash-fg-2",
+                            )}
+                          >
+                            {message.name}
+                          </span>
+                          <span
+                            className={cn(
+                              "shrink-0 text-xs tabular-nums",
+                              unread ? "font-medium text-dash-fg-2" : "text-dash-muted",
+                            )}
+                          >
+                            {listDate(message.createdAt)}
+                          </span>
+                        </span>
+                        <span className="mt-0.5 flex items-center gap-2">
+                          <span
+                            className={cn(
+                              "min-w-0 flex-1 truncate text-[13px]",
+                              unread ? "font-medium text-dash-fg" : "text-dash-fg-2",
+                            )}
                           >
                             {message.subject || "(No subject)"}
-                          </p>
-                          {!message.read ? (
-                            <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.5)]" />
+                          </span>
+                          {unread ? (
+                            <Badge tone="accent" className="h-5 px-1.5">
+                              New
+                            </Badge>
                           ) : null}
-                        </div>
-                        <p className={`mt-0.5 truncate text-xs ${message.read ? "text-slate-500" : "text-slate-300"}`}>
-                          {message.name}
-                        </p>
-                        <p className="truncate text-[11px] text-slate-500">{message.email}</p>
-                        <p className="mt-1 text-[10px] font-medium uppercase tracking-wider text-slate-600">
-                          {new Date(message.createdAt).toLocaleString(undefined, {
-                            month: "short",
-                            day: "numeric",
-                            year: "numeric",
-                            hour: "numeric",
-                            minute: "2-digit",
-                          })}
-                        </p>
-                      </div>
-                    </div>
-                  </button>
+                        </span>
+                        <span className="mt-0.5 block truncate text-xs text-dash-muted">{message.message}</span>
+                      </span>
+                    </button>
+                  </li>
                 );
               })}
-            {!loading && !messages.length ? (
-              <div className="flex flex-col items-center justify-center gap-3 px-4 py-16 text-center">
-                <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-dashed border-white/15 bg-white/3 text-slate-500">
-                  <MailOpen className="h-6 w-6" />
-                </div>
-                <p className="text-sm font-medium text-slate-400">No messages yet</p>
-                <p className="max-w-[220px] text-xs leading-relaxed text-slate-600">
-                  Submissions from your site contact form will show up here.
-                </p>
-              </div>
-            ) : null}
-          </div>
-        </aside>
+              {!visible.length ? (
+                <li className="p-4">
+                  <EmptyState
+                    icon={SearchX}
+                    title="No matches"
+                    description="No loaded messages match your search."
+                    action={
+                      <Button size="sm" variant="secondary" onClick={() => setQuery("")}>
+                        Clear search
+                      </Button>
+                    }
+                  />
+                </li>
+              ) : null}
+            </ul>
+          </aside>
 
-        {/* Detail */}
-        <main className="flex min-h-[320px] flex-col bg-slate-950/30 lg:min-h-0">
-          {selected ? (
-            <>
-              <div className="shrink-0 border-b border-white/6 px-5 py-4 md:px-6 md:py-5">
-                <div className="flex flex-wrap items-start justify-between gap-4">
-                  <div className="flex min-w-0 gap-4">
-                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-linear-to-br from-blue-500/25 to-violet-500/20 text-sm font-semibold text-white ring-1 ring-white/10">
+          {/* Detail */}
+          <section className="flex min-h-[320px] flex-col lg:min-h-0" aria-label="Message">
+            {selected ? (
+              <>
+                <header className="shrink-0 border-b border-dash-border px-5 py-4 md:px-6">
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <h2 className="min-w-0 text-lg font-semibold leading-snug text-dash-fg">
+                      {selected.subject || "(No subject)"}
+                    </h2>
+                    {selected.read ? (
+                      <Badge>
+                        <MailOpen aria-hidden />
+                        Read
+                      </Badge>
+                    ) : (
+                      <Badge tone="accent">
+                        <Mail aria-hidden />
+                        Unread
+                      </Badge>
+                    )}
+                  </div>
+                  <div className="mt-3 flex min-w-0 items-center gap-3">
+                    <span
+                      className="grid size-9 shrink-0 place-items-center rounded-full border border-dash-border-strong bg-dash-raised text-xs font-semibold text-dash-fg-2"
+                      aria-hidden
+                    >
                       {initials(selected.name)}
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-lg font-semibold leading-snug text-white md:text-xl">
-                        {selected.subject || "(No subject)"}
-                      </p>
-                      <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-slate-400">
-                        <span className="inline-flex items-center gap-1.5 text-slate-200">
-                          <User className="h-3.5 w-3.5 text-slate-500" aria-hidden />
-                          {selected.name}
-                        </span>
+                    </span>
+                    <div className="min-w-0 text-sm">
+                      <p className="truncate font-medium text-dash-fg">{selected.name}</p>
+                      <p className="flex flex-wrap items-center gap-x-2 text-xs text-dash-muted">
                         <a
                           href={`mailto:${selected.email}`}
-                          className="truncate text-cyan-300/90 underline-offset-2 hover:text-cyan-200 hover:underline"
+                          className="truncate rounded text-dash-accent hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-dash-accent/60"
                         >
                           {selected.email}
                         </a>
-                      </div>
-                      <p className="mt-2 text-xs text-slate-500">
-                        {new Date(selected.createdAt).toLocaleString(undefined, {
-                          weekday: "short",
-                          month: "short",
-                          day: "numeric",
-                          year: "numeric",
-                          hour: "numeric",
-                          minute: "2-digit",
-                        })}
-                        {selected.read ? (
-                          <span className="ml-2 rounded-md bg-slate-800/80 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-slate-400">
-                            Read
-                          </span>
-                        ) : (
-                          <span className="ml-2 rounded-md bg-cyan-500/15 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-cyan-200 ring-1 ring-cyan-400/25">
-                            Unread
-                          </span>
-                        )}
+                        <span aria-hidden>·</span>
+                        <time dateTime={selected.createdAt} className="tabular-nums">
+                          {fullDate(selected.createdAt)}
+                        </time>
                       </p>
                     </div>
                   </div>
+                </header>
+
+                <div className="min-h-0 flex-1 overflow-y-auto px-5 py-5 md:px-6">
+                  <p className="max-w-prose whitespace-pre-wrap text-sm leading-relaxed text-dash-fg-2">
+                    {selected.message}
+                  </p>
                 </div>
-              </div>
 
-              <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4 md:px-6 md:py-5">
-                <article className="rounded-xl border border-white/8 bg-slate-900/40 px-4 py-5 shadow-inner shadow-black/20 md:px-6 md:py-6">
-                  <p className="whitespace-pre-wrap text-sm leading-[1.7] text-slate-200">{selected.message}</p>
-                </article>
-              </div>
-
-              <div className="shrink-0 border-t border-white/6 bg-slate-950/40 px-5 py-3 md:px-6">
-                <div className="flex flex-wrap gap-2">
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    disabled={pending}
-                    onClick={() => void toggleRead(selected)}
-                    className="border-white/15 bg-white/5 hover:bg-white/10"
-                  >
+                <footer className="flex shrink-0 flex-wrap items-center justify-end gap-2 border-t border-dash-border px-5 py-3 md:px-6">
+                  <Button variant="ghost" disabled={pending} onClick={() => setDeleteTarget(selected)}>
+                    <Trash2 aria-hidden />
+                    Delete
+                  </Button>
+                  <Button variant="secondary" disabled={pending} onClick={() => void toggleRead(selected)}>
                     {selected.read ? (
                       <>
-                        <Mail className="mr-2 h-4 w-4" />
+                        <Mail aria-hidden />
                         Mark unread
                       </>
                     ) : (
                       <>
-                        <MailCheck className="mr-2 h-4 w-4" />
+                        <MailCheck aria-hidden />
                         Mark read
                       </>
                     )}
                   </Button>
-                  <Button type="button" variant="danger" disabled={pending} onClick={() => void remove(selected)}>
-                    <Trash2 className="mr-2 h-4 w-4" />
-                    Delete
-                  </Button>
-                </div>
+                </footer>
+              </>
+            ) : (
+              <div className="flex flex-1 items-center justify-center p-6">
+                <EmptyState
+                  icon={Mail}
+                  title="Select a message"
+                  description="Choose a message from the inbox to read it."
+                />
               </div>
-            </>
-          ) : (
-            <div className="flex flex-1 flex-col items-center justify-center gap-3 px-6 py-16 text-center">
-              <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-white/10 bg-white/3 text-slate-500">
-                <Mail className="h-7 w-7" />
-              </div>
-              <p className="text-sm font-medium text-slate-400">Select a message</p>
-              <p className="max-w-xs text-xs leading-relaxed text-slate-600">
-                Choose a conversation from the inbox to read the full message and reply by email.
-              </p>
-            </div>
-          )}
-        </main>
-      </div>
+            )}
+          </section>
+        </div>
+      )}
+
+      <ConfirmDialog
+        open={Boolean(deleteTarget)}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={() => (deleteTarget ? remove(deleteTarget) : undefined)}
+        title="Delete message?"
+        message={
+          deleteTarget
+            ? `Delete the message from ${deleteTarget.name}? This cannot be undone.`
+            : ""
+        }
+        confirmLabel="Delete"
+        danger
+        pending={pending}
+      />
     </div>
   );
 }

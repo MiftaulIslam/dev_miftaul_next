@@ -302,7 +302,7 @@ export default function ContactForm() {
             one answer that changes what can be promised. */}
         <fieldset onBlur={() => markTouched("timing")}>
           <legend className={labelClass}>When do you want to start? *</legend>
-          <div className="mt-1 grid grid-cols-3 gap-2">
+          <div className="mt-1 grid grid-cols-1 gap-2 sm:grid-cols-3">
             {TIMING_OPTIONS.map((option, index) => (
               <label
                 key={option.value}

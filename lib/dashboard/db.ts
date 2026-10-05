@@ -1168,6 +1168,20 @@ export async function updateV2Project(
   return getV2Project(id);
 }
 
+/**
+ * Rewrites the reel order in one statement: `ids[0]` becomes sort_order 1, and
+ * so on. Ids not in the list keep their position; unknown ids match no row.
+ */
+export async function reorderV2Projects(ids: number[]) {
+  const sql = getSql();
+  await sql`
+    UPDATE v2_projects AS p
+    SET sort_order = o.ord, updated_at = NOW()
+    FROM unnest(${ids}::int[]) WITH ORDINALITY AS o(id, ord)
+    WHERE p.id = o.id
+  `;
+}
+
 export async function deleteV2Project(id: number) {
   const sql = getSql();
   // The case rows go with it: the foreign key is ON DELETE CASCADE.

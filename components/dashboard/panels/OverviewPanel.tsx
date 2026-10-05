@@ -1,193 +1,219 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Activity, Briefcase, Film, Inbox, Layers3, MessageSquare, NotepadText, Sparkles, Star } from "lucide-react";
+import Link from "next/link";
+import { Briefcase, Film, Inbox, Layers, Layers3, NotepadText, Star, Wrench, Hammer, ArrowRight } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 
 import { requestJson } from "@/components/dashboard/api";
+import { Alert } from "@/components/ui/dashboard/Alert";
+import { Badge } from "@/components/ui/dashboard/Badge";
+import { Button } from "@/components/ui/dashboard/Button";
 import { Card } from "@/components/ui/dashboard/Card";
+import { PageHeader } from "@/components/ui/dashboard/PageHeader";
+import { SectionTitle } from "@/components/ui/dashboard/SectionTitle";
+import { Skeleton } from "@/components/ui/dashboard/Skeleton";
+import { StatCard } from "@/components/ui/dashboard/StatCard";
 import type { DashboardOverview, PortfolioSettings } from "@/lib/dashboard/types";
 
-const kpiConfig = [
-  {
-    key: "projects" as const,
-    label: "Projects (v1)",
-    icon: Briefcase,
-    gradient: "from-blue-500/25 to-blue-600/5",
-    ring: "shadow-[0_0_0_1px_rgba(59,130,246,0.25)]",
-    iconBg: "bg-blue-500/15 text-blue-300",
-  },
-  {
-    key: "v2Projects" as const,
-    label: "Reel projects (v2)",
-    icon: Film,
-    gradient: "from-indigo-500/22 to-indigo-600/5",
-    ring: "shadow-[0_0_0_1px_rgba(99,102,241,0.22)]",
-    iconBg: "bg-indigo-500/15 text-indigo-300",
-  },
-  {
-    key: "reviews" as const,
-    label: "Reviews",
-    icon: Star,
-    gradient: "from-amber-500/20 to-amber-600/5",
-    ring: "shadow-[0_0_0_1px_rgba(245,158,11,0.22)]",
-    iconBg: "bg-amber-500/15 text-amber-300",
-  },
-  {
-    key: "experiences" as const,
-    label: "Experience",
-    icon: Activity,
-    gradient: "from-emerald-500/20 to-emerald-600/5",
-    ring: "shadow-[0_0_0_1px_rgba(16,185,129,0.22)]",
-    iconBg: "bg-emerald-500/15 text-emerald-300",
-  },
-  {
-    key: "skills" as const,
-    label: "Stack categories",
-    icon: Layers3,
-    gradient: "from-violet-500/22 to-violet-600/5",
-    ring: "shadow-[0_0_0_1px_rgba(139,92,246,0.22)]",
-    iconBg: "bg-violet-500/15 text-violet-300",
-  },
-  {
-    key: "blogPosts" as const,
-    label: "Blog posts",
-    icon: NotepadText,
-    gradient: "from-cyan-500/20 to-cyan-600/5",
-    ring: "shadow-[0_0_0_1px_rgba(34,211,238,0.2)]",
-    iconBg: "bg-cyan-500/15 text-cyan-300",
-  },
-  {
-    key: "stackTools" as const,
-    label: "Tools in stacks",
-    icon: MessageSquare,
-    gradient: "from-pink-500/18 to-pink-600/5",
-    ring: "shadow-[0_0_0_1px_rgba(236,72,153,0.2)]",
-    iconBg: "bg-pink-500/15 text-pink-300",
-  },
-  {
-    key: "messages" as const,
-    label: "Messages",
-    icon: Inbox,
-    gradient: "from-sky-500/20 to-sky-600/5",
-    ring: "shadow-[0_0_0_1px_rgba(14,165,233,0.24)]",
-    iconBg: "bg-sky-500/15 text-sky-300",
-  },
-] as const;
+type CountKey = Exclude<keyof DashboardOverview, "lastUpdated">;
+
+type Stat = {
+  label: string;
+  href: string;
+  icon: LucideIcon;
+  /** Omitted when the overview endpoint doesn't count this content. */
+  key?: CountKey;
+  hint?: string;
+};
+
+/** Current content, linked to the page that manages it (hrefs match DashboardShell). */
+const primaryStats: Stat[] = [
+  { key: "v2Projects", label: "Projects", href: "/dashboard/projects-v2", icon: Film },
+  { label: "Skills", href: "/dashboard/skills-v2", icon: Layers, hint: "Manage sections and items" },
+  { key: "experiences", label: "Experience", href: "/dashboard/experience", icon: Wrench },
+  { key: "blogPosts", label: "Blog posts", href: "/dashboard/blog", icon: NotepadText },
+  { key: "reviews", label: "Reviews", href: "/dashboard/reviews", icon: Star },
+  { key: "messages", label: "Messages", href: "/dashboard/messages", icon: Inbox },
+];
+
+const legacyStats: Stat[] = [
+  { key: "projects", label: "Projects v1", href: "/dashboard/projects", icon: Briefcase },
+  { key: "skills", label: "Stack categories", href: "/dashboard/skills", icon: Layers3 },
+  { key: "stackTools", label: "Tools in stacks", href: "/dashboard/skills", icon: Hammer },
+];
+
+function formatDateTime(value: string) {
+  return new Date(value).toLocaleString(undefined, {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
+}
 
 export default function OverviewPanel() {
   const [overview, setOverview] = useState<DashboardOverview | null>(null);
   const [settings, setSettings] = useState<PortfolioSettings | null>(null);
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(true);
+
+  const load = async () => {
+    setError("");
+    setLoading(true);
+    try {
+      const [overviewData, settingsData] = await Promise.all([
+        requestJson<DashboardOverview>("/api/dashboard/overview"),
+        requestJson<PortfolioSettings>("/api/dashboard/settings"),
+      ]);
+      setOverview(overviewData);
+      setSettings(settingsData);
+    } catch (loadError) {
+      setError(loadError instanceof Error ? loadError.message : "Unable to load dashboard data.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const load = async () => {
-      setError("");
-      try {
-        const [overviewData, settingsData] = await Promise.all([
-          requestJson<DashboardOverview>("/api/dashboard/overview"),
-          requestJson<PortfolioSettings>("/api/dashboard/settings"),
-        ]);
-        setOverview(overviewData);
-        setSettings(settingsData);
-      } catch (loadError) {
-        setError(loadError instanceof Error ? loadError.message : "Unable to load dashboard data.");
-      }
-    };
     void load();
   }, []);
 
+  /** null while loading (skeleton), "—" if the load failed or nothing is counted. */
+  const valueFor = (stat: Stat) => {
+    if (!stat.key) return "—";
+    if (overview) return overview[stat.key];
+    return loading ? null : "—";
+  };
+
+  const focus = settings?.currentlyFocusedOn ?? [];
+
   return (
-    <div className="space-y-10">
-      <div>
-        <div className="flex flex-wrap items-end justify-between gap-4">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Dashboard</p>
-            <h2 className="mt-2 text-3xl font-semibold tracking-tight text-white md:text-4xl">Overview</h2>
-            <p className="mt-2 max-w-xl text-sm text-slate-400">
-              Live counts and profile snapshot — keep content in sync with your public site.
-            </p>
-          </div>
-          <div className="flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 text-xs text-slate-400">
-            <Sparkles className="h-3.5 w-3.5 text-cyan-400" />
-            {overview?.lastUpdated
-              ? `Last activity ${new Date(overview.lastUpdated).toLocaleString()}`
-              : "No activity yet"}
-          </div>
-        </div>
-      </div>
+    <div className="space-y-8">
+      <PageHeader
+        title="Overview"
+        description="Content counts and your profile at a glance. Select a card to manage that content."
+        meta={
+          loading && !overview ? (
+            <Skeleton className="h-4 w-40" />
+          ) : overview?.lastUpdated ? (
+            <span className="tabular-nums">Last activity {formatDateTime(overview.lastUpdated)}</span>
+          ) : (
+            "No activity yet"
+          )
+        }
+      />
 
       {error ? (
-        <Card className="border-rose-500/30 bg-rose-950/30">
-          <p className="text-sm text-rose-300">{error}</p>
-        </Card>
+        <Alert
+          tone="danger"
+          title="Couldn't load the overview"
+          action={
+            <Button size="sm" variant="secondary" onClick={() => void load()} disabled={loading}>
+              Retry
+            </Button>
+          }
+        >
+          {error}
+        </Alert>
       ) : null}
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-        {kpiConfig.map((item) => {
-          const Icon = item.icon;
-          const val = overview ? overview[item.key] : null;
-          return (
-            <div
-              key={item.key}
-              className={`relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br ${item.gradient} p-5 ${item.ring}`}
-            >
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400">
-                    {item.label}
-                  </p>
-                  <p className="mt-3 text-4xl font-semibold tabular-nums tracking-tight text-white">
-                    {val === null ? "—" : val}
-                  </p>
-                </div>
-                <div className={`flex h-11 w-11 items-center justify-center rounded-xl ${item.iconBg}`}>
-                  <Icon className="h-5 w-5" />
-                </div>
-              </div>
-            </div>
-          );
-        })}
-      </div>
+      <section aria-labelledby="overview-content">
+        <h2 id="overview-content" className="sr-only">
+          Content
+        </h2>
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+          {primaryStats.map((stat) => (
+            <StatCard
+              key={stat.href}
+              label={stat.label}
+              value={valueFor(stat)}
+              icon={stat.icon}
+              href={stat.href}
+              hint={stat.hint}
+            />
+          ))}
+        </div>
+      </section>
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        <Card
-          title="Profile"
-          subtitle="Pulled from Settings — what visitors see in hero & about."
-          className="border-white/10 bg-slate-950/40"
-        >
-          <div className="space-y-3 text-sm">
-            <p className="text-slate-200">
-              <span className="text-slate-500">Name · </span>
-              {settings?.name ?? "…"}
-            </p>
-            <p className="text-slate-200">
-              <span className="text-slate-500">Availability · </span>
-              {settings?.availability ?? "…"}
-            </p>
-            <p className="text-slate-200">
-              <span className="text-slate-500">Focused on · </span>
-              {(settings?.currentlyFocusedOn ?? []).join(", ") || "—"}
-            </p>
+      <section>
+        <SectionTitle
+          title="Legacy v1"
+          subtitle="Older content kept for reference. The live site uses the pages above."
+        />
+        <ul className="grid gap-2 sm:grid-cols-3">
+          {legacyStats.map((stat) => {
+            const Icon = stat.icon;
+            const value = valueFor(stat);
+            return (
+              <li key={stat.label}>
+                <Link
+                  href={stat.href}
+                  className="flex items-center gap-3 rounded-lg border border-dash-border px-3 py-2.5 text-sm text-dash-fg-2 transition-colors hover:bg-dash-raised hover:text-dash-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-dash-accent/60"
+                >
+                  <Icon className="size-4 shrink-0 text-dash-muted" aria-hidden />
+                  <span className="min-w-0 flex-1 truncate">{stat.label}</span>
+                  {value === null ? (
+                    <Skeleton className="h-5 w-6" />
+                  ) : (
+                    <span className="font-medium text-dash-fg tabular-nums">{value}</span>
+                  )}
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
+      </section>
+
+      <Card
+        title="Profile"
+        subtitle="From Settings. This is what visitors see in the hero and about sections."
+        headerSlot={
+          <Link
+            href="/dashboard/settings"
+            className="inline-flex items-center gap-1.5 rounded-md text-[13px] font-medium text-dash-accent hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-dash-accent/60"
+          >
+            Edit in Settings
+            <ArrowRight className="size-3.5" aria-hidden />
+          </Link>
+        }
+      >
+        {loading && !settings ? (
+          <div className="space-y-3">
+            <Skeleton className="h-5 w-1/2" />
+            <Skeleton className="h-5 w-1/3" />
+            <Skeleton className="h-5 w-2/3" />
           </div>
-        </Card>
-
-        <Card title="Quick tips" subtitle="Ship a cohesive portfolio." className="border-white/10 bg-slate-950/40">
-          <ul className="space-y-3 text-sm text-slate-300">
-            <li className="flex gap-3 rounded-xl border border-white/[0.06] bg-white/[0.03] px-4 py-3">
-              <span className="font-mono text-xs text-cyan-400/90">01</span>
-              Sync Projects & Experience so the landing page stories match.
-            </li>
-            <li className="flex gap-3 rounded-xl border border-white/[0.06] bg-white/[0.03] px-4 py-3">
-              <span className="font-mono text-xs text-cyan-400/90">02</span>
-              Update Settings when contact info or avatars change.
-            </li>
-            <li className="flex gap-3 rounded-xl border border-white/[0.06] bg-white/[0.03] px-4 py-3">
-              <span className="font-mono text-xs text-cyan-400/90">03</span>
-              Use stack colors & tech icons for consistent visual branding.
-            </li>
-          </ul>
-        </Card>
-      </div>
+        ) : (
+          <dl className="space-y-3 text-sm">
+            <div className="grid gap-1 sm:grid-cols-[10rem_1fr] sm:gap-6">
+              <dt className="text-[13px] text-dash-muted">Name</dt>
+              <dd className="font-medium text-dash-fg">{settings?.name || "—"}</dd>
+            </div>
+            <div className="grid gap-1 sm:grid-cols-[10rem_1fr] sm:gap-6">
+              <dt className="text-[13px] text-dash-muted">Availability</dt>
+              <dd className="text-dash-fg-2">{settings?.availability || "—"}</dd>
+            </div>
+            <div className="grid gap-1 sm:grid-cols-[10rem_1fr] sm:gap-6">
+              <dt className="text-[13px] text-dash-muted">Focused on</dt>
+              <dd>
+                {focus.length ? (
+                  <ul className="flex flex-wrap gap-1.5">
+                    {focus.map((item, i) => (
+                      <li key={`${item}-${i}`}>
+                        <Badge>{item}</Badge>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <span className="text-dash-fg-2">—</span>
+                )}
+              </dd>
+            </div>
+          </dl>
+        )}
+      </Card>
     </div>
   );
 }

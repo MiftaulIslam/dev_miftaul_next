@@ -8,10 +8,8 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { AnimatePresence, motion } from "framer-motion";
 import { ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
 
-import { useReducedMotion } from "@/lib/useReducedMotion";
 import { cn } from "@/lib/utils";
 
 /**
@@ -40,7 +38,6 @@ export function SettingsSection({
   children: ReactNode;
 }) {
   const [open, setOpen] = useState(defaultOpen);
-  const reduced = useReducedMotion();
   const bodyId = `settings-section-${title.toLowerCase().replace(/\s+/g, "-")}`;
 
   return (
@@ -70,28 +67,28 @@ export function SettingsSection({
         </button>
       </h3>
 
-      <AnimatePresence initial={false}>
-        {open && (
-          <motion.div
-            id={bodyId}
-            key="body"
-            initial={reduced ? false : { height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={reduced ? { opacity: 0 } : { height: 0, opacity: 0 }}
-            transition={{ duration: 0.26, ease: [0.4, 0, 0.2, 1] }}
-            className="overflow-hidden"
-          >
-            <div className="px-5 pb-5">
-              {description && (
-                <p className="mb-3 text-xs leading-relaxed text-muted-foreground/80">
-                  {description}
-                </p>
-              )}
-              {children}
-            </div>
-          </motion.div>
+      {/* Height to "auto" in CSS: the grid row eases between 0fr and 1fr. The
+          body stays mounted, and `inert` keeps a collapsed one out of the tab
+          order and the accessibility tree. */}
+      <div
+        id={bodyId}
+        inert={!open}
+        className={cn(
+          "grid transition-[grid-template-rows,opacity] duration-[260ms] ease-[cubic-bezier(0.4,0,0.2,1)] motion-reduce:transition-none",
+          open ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
         )}
-      </AnimatePresence>
+      >
+        <div className="min-h-0 overflow-hidden">
+          <div className="px-5 pb-5">
+            {description && (
+              <p className="mb-3 text-xs leading-relaxed text-muted-foreground/80">
+                {description}
+              </p>
+            )}
+            {children}
+          </div>
+        </div>
+      </div>
     </section>
   );
 }

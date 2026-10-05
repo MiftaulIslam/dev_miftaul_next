@@ -6,10 +6,8 @@ import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { MapPin, Mail, CheckCircle2 } from "lucide-react";
-import CountUp from "react-countup";
-import { useInView } from "framer-motion";
-import SectionHeading from "@/components/ui/SectionHeading";
-import ScrollHighlightText from "@/components/ui/ScrollHighlightText";
+import V2SectionHeading from "@/components/ui/v2/V2SectionHeading";
+import V2ScrollHighlightText from "@/components/ui/v2/V2ScrollHighlightText";
 import type { PortfolioSettings } from "@/lib/dashboard/types";
 import { useReducedMotion } from "@/lib/useReducedMotion";
 
@@ -22,9 +20,7 @@ interface AboutProps {
 
 export default function V2About({ portraitTargetRef, profile }: AboutProps) {
   const sectionRef = useRef<HTMLDivElement>(null);
-  const statsRef = useRef<HTMLDivElement>(null);
   const reduced = useReducedMotion();
-  const statsInView = useInView(statsRef, { once: true, margin: "-100px" });
 
   const bioParagraphs = profile.detailedSummary
     .split(/\n+/)
@@ -39,7 +35,45 @@ export default function V2About({ portraitTargetRef, profile }: AboutProps) {
 
   useGSAP(
     () => {
-      if (reduced) return;
+      const section = sectionRef.current;
+      if (!section) return;
+
+      // The stat markup carries the real numbers, so the server HTML (what
+      // crawlers read) and reduced motion show them as they are.
+      const statEls = section.querySelectorAll<HTMLElement>("[data-stat-value]");
+
+      // Writes into React's own text node rather than replacing it, so a later
+      // render still updates the number it owns.
+      const writeStat = (el: HTMLElement, text: string) => {
+        if (el.firstChild) el.firstChild.nodeValue = text;
+      };
+
+      // Reduced motion: nothing slides or counts, but everything below starts
+      // hidden for its entrance, so show it outright.
+      if (reduced) {
+        gsap.set(section.querySelectorAll(".about-text-item, .about-info-card"), { opacity: 1 });
+        if (portraitTargetRef.current) gsap.set(portraitTargetRef.current, { opacity: 1 });
+        statEls.forEach((el) => writeStat(el, `${el.dataset.statValue}${el.dataset.statSuffix ?? ""}`));
+        return;
+      }
+
+      // Each stat counts up from zero the first time it is 100px into view, on
+      // GSAP's ticker rather than a separate count-up library.
+      statEls.forEach((el) => {
+        const end = Number(el.dataset.statValue);
+        const suffix = el.dataset.statSuffix ?? "";
+        const counter = { value: 0 };
+        writeStat(el, `0${suffix}`);
+        gsap.to(counter, {
+          value: end,
+          duration: 2,
+          ease: "expo.out",
+          scrollTrigger: { trigger: el, start: "top bottom-=100", once: true },
+          onUpdate: () => writeStat(el, `${Math.round(counter.value)}${suffix}`),
+          // Killed early (profile change, unmount): leave the real number.
+          onInterrupt: () => writeStat(el, `${end}${suffix}`),
+        });
+      });
 
       const textEls = sectionRef.current?.querySelectorAll(".about-text-item");
       if (textEls) {
@@ -99,7 +133,10 @@ export default function V2About({ portraitTargetRef, profile }: AboutProps) {
         );
       }
     },
-    { scope: sectionRef, dependencies: [profile] },
+    // revertOnUpdate: without it a profile change re-adds every tween and
+    // ScrollTrigger on top of the old ones instead of replacing them. `reduced`
+    // resolves a frame after mount, so it has to be a dependency too.
+    { scope: sectionRef, dependencies: [profile, reduced], revertOnUpdate: true },
   );
 
   return (
@@ -111,12 +148,12 @@ export default function V2About({ portraitTargetRef, profile }: AboutProps) {
 
       <div className="mx-auto max-w-[88rem] px-5 md:px-10">
         <div className="about-text-item opacity-0">
-          <SectionHeading
+          <V2SectionHeading
             eyebrow="About Me"
             title="The Developer Behind The Code"
             subtitle="A passionate engineer who loves building things that matter."
             align="left"
-            titleGradient="linear-gradient(90deg, #bae6fd 0%, #60a5fa 36%, #2563eb 68%, #0f172a 100%)"
+            titleGradient="linear-gradient(90deg, #e0f2fe 0%, #bae6fd 30%, #60a5fa 65%, #3b82f6 100%)"
           />
         </div>
 
@@ -128,7 +165,7 @@ export default function V2About({ portraitTargetRef, profile }: AboutProps) {
 
               <div
                 ref={portraitTargetRef}
-                className="portrait-about relative z-30 w-72 h-[28rem] rounded-2xl overflow-hidden border border-blue-400/15 bg-[#0a111d]"
+                className="portrait-about relative z-30 w-64 h-80 sm:w-72 sm:h-[28rem] rounded-2xl overflow-hidden border border-blue-400/15 bg-[#0a111d]"
                 style={{ opacity: 0 }}
               >
                 <div className="about-static-portrait absolute inset-0">
@@ -138,7 +175,6 @@ export default function V2About({ portraitTargetRef, profile }: AboutProps) {
                     fill
                     sizes="(max-width: 768px) 300px, 420px"
                     className="object-cover object-top"
-                    priority
                   />
                 </div>
                 <div className="absolute inset-0 bg-linear-to-t from-[#080c14]/45 via-transparent to-[#080c14]/5 pointer-events-none" />
@@ -152,7 +188,7 @@ export default function V2About({ portraitTargetRef, profile }: AboutProps) {
 
           <div className="flex flex-col gap-7">
             {bioParagraphs.map((paragraph, index) => (
-              <ScrollHighlightText
+              <V2ScrollHighlightText
                 key={`${paragraph.slice(0, 18)}-${index}`}
                 as="p"
                 text={paragraph}
@@ -182,20 +218,18 @@ export default function V2About({ portraitTargetRef, profile }: AboutProps) {
 
             </div>
 
-            <div ref={statsRef} className="about-info-card opacity-0 grid grid-cols-1 sm:grid-cols-3 border-b border-white/10 pb-5 md:pb-6">
+            <div className="about-info-card opacity-0 grid grid-cols-3 border-b border-white/10 pb-5 md:pb-6">
               {stats.map((stat, idx) => (
                 <div
                   key={stat.label}
-                  className={`py-3 sm:py-0 text-left sm:text-center ${idx > 0 ? "sm:border-l sm:border-white/10" : ""}`}
+                  className={`px-1 text-center ${idx > 0 ? "border-l border-white/10" : ""}`}
                 >
-                  <div className="text-4xl sm:text-3xl font-bold text-white font-display leading-none">
-                    {statsInView ? (
-                      <CountUp end={stat.value} duration={2} suffix={stat.suffix} enableScrollSpy scrollSpyOnce />
-                    ) : (
-                      `0${stat.suffix}`
-                    )}
+                  <div className="text-2xl sm:text-3xl font-bold text-white font-display leading-none">
+                    <span data-stat-value={stat.value} data-stat-suffix={stat.suffix}>
+                      {`${stat.value}${stat.suffix}`}
+                    </span>
                   </div>
-                  <p className="text-[11px] text-muted-foreground mt-2 uppercase tracking-[0.15em]">{stat.label}</p>
+                  <p className="text-[10px] sm:text-[11px] text-muted-foreground mt-2 uppercase tracking-[0.12em] sm:tracking-[0.15em]">{stat.label}</p>
                 </div>
               ))}
             </div>
@@ -206,9 +240,9 @@ export default function V2About({ portraitTargetRef, profile }: AboutProps) {
                 {profile.currentlyFocusedOn.map((item) => (
                   <span
                     key={item}
-                    className="inline-flex items-center gap-2 px-3.5 py-1.5 text-sm rounded-full border border-blue-300/20 text-blue-100/90 bg-linear-to-r from-blue-500/12 to-transparent"
+                    className="inline-flex items-center gap-2 px-3.5 py-1.5 text-sm font-medium rounded-full border border-blue-600/20 max-md:grow max-md:justify-center text-blue-800 bg-linear-to-r from-blue-500/10 to-transparent dark:font-normal dark:border-blue-300/20 dark:text-blue-100/90 dark:from-blue-500/12"
                   >
-                    <span className="w-1.5 h-1.5 rounded-full bg-blue-300/75" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-blue-600/80 dark:bg-blue-300/75" />
                     {item}
                   </span>
                 ))}

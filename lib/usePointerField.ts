@@ -1,25 +1,40 @@
 "use client";
 
-import { useEffect, useRef, useSyncExternalStore, type RefObject } from "react";
-import { useMotionValue, useSpring, type MotionValue } from "framer-motion";
+import { useEffect, useMemo, useRef, useSyncExternalStore, type RefObject } from "react";
+import gsap from "gsap";
 
 import { useReducedMotion } from "@/lib/useReducedMotion";
 
-export interface PointerField {
-  /** Pointer position in element-local px, spring-smoothed. */
-  x: MotionValue<number>;
-  y: MotionValue<number>;
-  /** Offset from element centre, normalised to roughly -0.5..0.5, spring-smoothed. */
-  normX: MotionValue<number>;
-  normY: MotionValue<number>;
+/** The smoothed pointer, in the tracked element's own space. */
+export interface PointerState {
+  /** Pointer position in element-local px. */
+  x: number;
+  y: number;
+  /** Offset from element centre, normalised to roughly -0.5..0.5. */
+  normX: number;
+  normY: number;
   /** 0 while the pointer is away, 1 while it is over the element. */
-  presence: MotionValue<number>;
-  /** False on touch/coarse-pointer devices and under reduced motion. */
-  active: boolean;
+  presence: number;
 }
 
-const SPRING = { stiffness: 140, damping: 22, mass: 0.55, restDelta: 0.001 };
-const PRESENCE_SPRING = { stiffness: 120, damping: 26, mass: 0.5 };
+export interface PointerField {
+  /** False on touch/coarse-pointer devices and under reduced motion. */
+  active: boolean;
+  /**
+   * Calls `listener` with the smoothed state on every frame it changes (and
+   * once immediately), returning the unsubscribe. Consumers write styles
+   * straight to their nodes, so pointer movement never re-renders React.
+   */
+  subscribe: (listener: (state: PointerState) => void) => () => void;
+}
+
+/**
+ * The follow curve. The springs this replaced were overdamped — they settled
+ * in about half a second with no overshoot — and power3.out over the same
+ * span reads the same, without shipping a spring engine.
+ */
+const FOLLOW = { duration: 0.55, ease: "power3.out" };
+const PRESENCE = { duration: 0.6, ease: "power2.out" };
 
 const FINE_POINTER = "(pointer: fine)";
 
@@ -34,14 +49,13 @@ const getFinePointer = () => window.matchMedia(FINE_POINTER).matches;
 const getFinePointerOnServer = () => false;
 
 /**
- * Tracks the pointer over `ref` and publishes it as motion values.
+ * Tracks the pointer over `ref` and publishes it, smoothed, to subscribers.
  *
- * Adapted from the reference project's `lightswind/smooth-cursor`, which pairs
- * framer-motion springs with an rAF-throttled `mousemove` listener. The same
- * two ideas are kept — spring interpolation for the lag, rAF coalescing so a
- * burst of pointer events costs one write per frame — but the output stays in
- * motion values, so consumers animate on the compositor and React never
- * re-renders while the pointer moves.
+ * Two ideas carried over from the reference `lightswind/smooth-cursor`:
+ * interpolation for the lag, and rAF coalescing so a burst of pointer events
+ * costs one write per frame. The smoothing runs on GSAP (already on the page)
+ * rather than framer-motion springs, and everything is published from one
+ * ticker callback, so all consumers update together once per frame.
  *
  * Gated on `(pointer: fine)`: touch devices get `active: false` and consumers
  * fall back to their static presentation.
@@ -55,78 +69,107 @@ export function usePointerField(ref: RefObject<HTMLElement | null>): PointerFiel
   );
   const active = finePointer && !reduced;
 
-  const rawX = useMotionValue(0);
-  const rawY = useMotionValue(0);
-  const rawNormX = useMotionValue(0);
-  const rawNormY = useMotionValue(0);
-  const rawPresence = useMotionValue(0);
-
-  const x = useSpring(rawX, SPRING);
-  const y = useSpring(rawY, SPRING);
-  const normX = useSpring(rawNormX, SPRING);
-  const normY = useSpring(rawNormY, SPRING);
-  const presence = useSpring(rawPresence, PRESENCE_SPRING);
-
-  const frameRef = useRef(0);
-  const pendingRef = useRef<{ clientX: number; clientY: number } | null>(null);
+  const stateRef = useRef<PointerState>({ x: 0, y: 0, normX: 0, normY: 0, presence: 0 });
+  const listenersRef = useRef(new Set<(state: PointerState) => void>());
 
   useEffect(() => {
     const element = ref.current;
     if (!element || !active) return;
 
-    // Cached so pointermove never reads layout (which would thrash on scroll).
+    const state = stateRef.current;
+    const listeners = listenersRef.current;
+
+    // One publish per tick, after GSAP has advanced every channel.
+    let dirty = false;
+    const markDirty = () => {
+      dirty = true;
+    };
+    const publish = () => {
+      if (!dirty) return;
+      dirty = false;
+      listeners.forEach((listener) => listener(state));
+    };
+    gsap.ticker.add(publish);
+
+    const toX = gsap.quickTo(state, "x", { ...FOLLOW, onUpdate: markDirty });
+    const toY = gsap.quickTo(state, "y", { ...FOLLOW, onUpdate: markDirty });
+    const toNormX = gsap.quickTo(state, "normX", { ...FOLLOW, onUpdate: markDirty });
+    const toNormY = gsap.quickTo(state, "normY", { ...FOLLOW, onUpdate: markDirty });
+    const toPresence = gsap.quickTo(state, "presence", { ...PRESENCE, onUpdate: markDirty });
+
+    // Measured lazily: scrolling only marks the rect stale, and it is re-read
+    // on the next pointer frame. The old listener read layout on every scroll
+    // event, i.e. once per frame for the whole time the page scrolled.
     let rect = element.getBoundingClientRect();
-    const measure = () => {
-      rect = element.getBoundingClientRect();
+    let stale = false;
+    const markStale = () => {
+      stale = true;
     };
 
+    let frame = 0;
+    let pending: { clientX: number; clientY: number } | null = null;
+
     const flush = () => {
-      frameRef.current = 0;
-      const pending = pendingRef.current;
+      frame = 0;
       if (!pending) return;
+      if (stale) {
+        rect = element.getBoundingClientRect();
+        stale = false;
+      }
 
       const localX = pending.clientX - rect.left;
       const localY = pending.clientY - rect.top;
 
-      rawX.set(localX);
-      rawY.set(localY);
-      rawNormX.set(rect.width ? localX / rect.width - 0.5 : 0);
-      rawNormY.set(rect.height ? localY / rect.height - 0.5 : 0);
-      rawPresence.set(1);
+      toX(localX);
+      toY(localY);
+      toNormX(rect.width ? localX / rect.width - 0.5 : 0);
+      toNormY(rect.height ? localY / rect.height - 0.5 : 0);
+      toPresence(1);
     };
 
     const onPointerMove = (event: PointerEvent) => {
       if (event.pointerType !== "mouse") return;
-      pendingRef.current = { clientX: event.clientX, clientY: event.clientY };
-      if (frameRef.current) return;
-      frameRef.current = requestAnimationFrame(flush);
+      pending = { clientX: event.clientX, clientY: event.clientY };
+      if (!frame) frame = requestAnimationFrame(flush);
     };
 
     const onPointerLeave = () => {
-      rawPresence.set(0);
-      rawNormX.set(0);
-      rawNormY.set(0);
+      toPresence(0);
+      toNormX(0);
+      toNormY(0);
     };
 
-    const resizeObserver = new ResizeObserver(measure);
+    const resizeObserver = new ResizeObserver(markStale);
     resizeObserver.observe(element);
 
     window.addEventListener("pointermove", onPointerMove, { passive: true });
-    window.addEventListener("scroll", measure, { passive: true });
-    window.addEventListener("resize", measure);
+    window.addEventListener("scroll", markStale, { passive: true });
+    window.addEventListener("resize", markStale);
     element.addEventListener("pointerleave", onPointerLeave);
 
     return () => {
       resizeObserver.disconnect();
       window.removeEventListener("pointermove", onPointerMove);
-      window.removeEventListener("scroll", measure);
-      window.removeEventListener("resize", measure);
+      window.removeEventListener("scroll", markStale);
+      window.removeEventListener("resize", markStale);
       element.removeEventListener("pointerleave", onPointerLeave);
-      if (frameRef.current) cancelAnimationFrame(frameRef.current);
-      frameRef.current = 0;
-      pendingRef.current = null;
+      if (frame) cancelAnimationFrame(frame);
+      gsap.ticker.remove(publish);
+      gsap.killTweensOf(state);
     };
-  }, [ref, active, rawX, rawY, rawNormX, rawNormY, rawPresence]);
+  }, [ref, active]);
 
-  return { x, y, normX, normY, presence, active };
+  return useMemo(
+    () => ({
+      active,
+      subscribe: (listener: (state: PointerState) => void) => {
+        listenersRef.current.add(listener);
+        listener(stateRef.current);
+        return () => {
+          listenersRef.current.delete(listener);
+        };
+      },
+    }),
+    [active],
+  );
 }

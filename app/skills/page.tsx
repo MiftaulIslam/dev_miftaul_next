@@ -7,15 +7,17 @@ import { ArrowLeft } from "lucide-react";
 import type { SkillCategory } from "@/types/skills";
 import type { V2SkillSection } from "@/lib/dashboard/types";
 import { FALLBACK_STACK, mapStackCategories, mapV2Sections } from "@/lib/skills-data";
+import { pageMetadata } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
-export const metadata: Metadata = {
-  title: "Skills — Miftaul Islam Shuvro",
+export const metadata: Metadata = pageMetadata({
+  title: "Skills & Tech Stack",
   description:
-    "The full working stack in one view: interface, services, persistence and infrastructure, side by side.",
-};
+    "The stack Miftaul Islam Shuvro works in, layer by layer — React, Next.js, Node.js, NestJS, GraphQL, PostgreSQL, Redis, AWS and Docker.",
+  path: "/skills",
+});
 
 /**
  * The full stack for the "see more" page behind the reel.

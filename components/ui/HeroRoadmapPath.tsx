@@ -53,6 +53,52 @@ function buildRoadPath(width: number, height: number) {
   return d;
 }
 
+const DESKTOP_QUERY = "(min-width: 768px)";
+
+/**
+ * Where the dot sits `distance` along the path, from an arc-length table built
+ * out of the path's own cubic segments ("M x y" then "C x1 y1, x2 y2, x y"
+ * repeated, as `buildRoadPath` writes it). Plain arithmetic: getPointAtLength
+ * walks the whole curve on every call, which made it costly per scroll frame,
+ * and costlier still sampled up front.
+ */
+function arcLengthTable(d: string, length: number) {
+  const nums = (d.match(/-?\d*\.?\d+(?:e[-+]?\d+)?/gi) ?? []).map(Number);
+  const STEPS = 48; // per segment
+  const xs = [nums[0]];
+  const ys = [nums[1]];
+  const lens = [0];
+  for (let k = 2; k + 5 < nums.length; k += 6) {
+    const x0 = xs[xs.length - 1];
+    const y0 = ys[ys.length - 1];
+    const [x1, y1, x2, y2, x3, y3] = nums.slice(k, k + 6);
+    for (let s = 1; s <= STEPS; s += 1) {
+      const t = s / STEPS;
+      const u = 1 - t;
+      const x = u * u * u * x0 + 3 * u * u * t * x1 + 3 * u * t * t * x2 + t * t * t * x3;
+      const y = u * u * u * y0 + 3 * u * u * t * y1 + 3 * u * t * t * y2 + t * t * t * y3;
+      lens.push(lens[lens.length - 1] + Math.hypot(x - xs[xs.length - 1], y - ys[ys.length - 1]));
+      xs.push(x);
+      ys.push(y);
+    }
+  }
+  const total = lens[lens.length - 1] || 1;
+
+  return (distance: number) => {
+    // `distance` is in the browser's measure of the path; scale it onto ours.
+    const target = Math.min(Math.max(distance / (length || 1), 0), 1) * total;
+    let lo = 0;
+    let hi = lens.length - 1;
+    while (hi - lo > 1) {
+      const mid = (lo + hi) >> 1;
+      if (lens[mid] < target) lo = mid;
+      else hi = mid;
+    }
+    const t = (target - lens[lo]) / (lens[hi] - lens[lo] || 1);
+    return { x: xs[lo] + (xs[hi] - xs[lo]) * t, y: ys[lo] + (ys[hi] - ys[lo]) * t };
+  };
+}
+
 export default function HeroRoadmapPath() {
   const rootRef = useRef<HTMLDivElement>(null);
   const baseRef = useRef<SVGPathElement>(null);
@@ -69,6 +115,13 @@ export default function HeroRoadmapPath() {
     const updatePath = () => {
       cancelAnimationFrame(raf);
       raf = requestAnimationFrame(() => {
+        // The path is `hidden md:block`. Below md nothing is drawn, so measure
+        // nothing either: no section rect reads, no path, and with no path the
+        // scrubbed trigger below is never built.
+        if (!window.matchMedia(DESKTOP_QUERY).matches) {
+          setPathD("");
+          return;
+        }
         const width = window.innerWidth;
         const height = Math.max(
           document.documentElement.scrollHeight,
@@ -103,6 +156,8 @@ export default function HeroRoadmapPath() {
       const path = baseRef.current;
       const length = path.getTotalLength();
       const segment = Math.max(length * 0.07, 200);
+
+      const pointAt = arcLengthTable(pathD, length);
       const scroller = document.getElementById("smooth-wrapper") ?? window;
       const trigger = document.getElementById("smooth-content") ?? document.documentElement;
 
@@ -121,7 +176,7 @@ export default function HeroRoadmapPath() {
         const offset = length * (1 - normalized);
         const glowOffset = gsap.utils.clamp(-segment, length, offset - segment * 0.35);
         const traveled = length - offset;
-        const point = path.getPointAtLength(Math.min(Math.max(traveled, 0), length));
+        const point = pointAt(traveled);
 
         gsap.set(revealRef.current, { strokeDashoffset: offset });
         gsap.set(glowRef.current, { strokeDashoffset: glowOffset });
@@ -146,7 +201,10 @@ export default function HeroRoadmapPath() {
 
       return () => st.kill();
     },
-    { scope: rootRef, dependencies: [pathD, size.width, size.height] }
+    // revertOnUpdate: the path is re-measured on every ScrollTrigger refresh,
+    // and without it each change of path or page size stacked another scrubbed
+    // trigger on top of the old ones.
+    { scope: rootRef, dependencies: [pathD, size.width, size.height], revertOnUpdate: true }
   );
 
   if (!pathD) return null;
@@ -163,7 +221,10 @@ export default function HeroRoadmapPath() {
         className="h-full w-full overflow-hidden"
       >
         <defs>
-          <filter id="roadGlow" x="-80%" y="-80%" width="260%" height="260%">
+          {/* The region only needs to clear the 4px blur. It was 260% of a
+              bounding box as tall as the page, so every repaint of the glow
+              filtered a surface several pages tall. */}
+          <filter id="roadGlow" x="-10%" y="-2%" width="120%" height="104%">
             <feGaussianBlur stdDeviation="4" result="blur" />
             <feMerge>
               <feMergeNode in="blur" />

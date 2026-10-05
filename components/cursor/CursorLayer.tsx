@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
+import { usePathname } from "next/navigation";
 
 import { useCursorSettings } from "@/lib/cursor";
 import { useReducedMotion } from "@/lib/useReducedMotion";
@@ -36,6 +37,8 @@ const FireworkCursor = dynamic(
 export default function CursorLayer() {
   const { settings } = useCursorSettings();
   const reduced = useReducedMotion();
+  // The admin dashboard is a tool: native cursor only.
+  const inDashboard = usePathname().startsWith("/dashboard");
   const [finePointer, setFinePointer] = useState(false);
 
   // The orbit component takes its hue range as a tuple. A fresh array each
@@ -58,7 +61,7 @@ export default function CursorLayer() {
     return () => query.removeEventListener("change", sync);
   }, []);
 
-  if (!finePointer || reduced || settings.kind === "none") return null;
+  if (inDashboard || !finePointer || reduced || settings.kind === "none") return null;
 
   if (settings.kind === "firework") {
     const firework = settings.firework;

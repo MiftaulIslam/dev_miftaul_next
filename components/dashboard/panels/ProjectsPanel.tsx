@@ -2,17 +2,23 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
-import { Pencil, Plus, Trash2, X } from "lucide-react";
+import { FolderKanban, ImageOff, Pencil, Plus, RotateCw, Star, Trash2, X } from "lucide-react";
 import { Controller, useFieldArray, useForm } from "react-hook-form";
 
 import { lineFieldsFromStrings, requestJson, stringsFromLineFields } from "@/components/dashboard/api";
+import { Alert } from "@/components/ui/dashboard/Alert";
+import { Badge } from "@/components/ui/dashboard/Badge";
 import { Button } from "@/components/ui/dashboard/Button";
 import { Card } from "@/components/ui/dashboard/Card";
 import { ColorPicker } from "@/components/ui/dashboard/ColorPicker";
 import { ConfirmDialog } from "@/components/ui/dashboard/ConfirmDialog";
 import { Dialog } from "@/components/ui/dashboard/Dialog";
+import { EmptyState } from "@/components/ui/dashboard/EmptyState";
 import { ImageUpload } from "@/components/ui/dashboard/ImageUpload";
 import { Input } from "@/components/ui/dashboard/Input";
+import { PageHeader } from "@/components/ui/dashboard/PageHeader";
+import { ListSkeleton } from "@/components/ui/dashboard/Skeleton";
+import { SearchInput, Toolbar } from "@/components/ui/dashboard/Toolbar";
 import type { ProjectRecord } from "@/lib/dashboard/types";
 
 type ProjectForm = {
@@ -69,8 +75,30 @@ function toFormValues(project?: ProjectRecord): ProjectForm {
   };
 }
 
+/** Small primary-image preview for a list row; falls back to an icon. */
+function ProjectThumb({ project }: { project: ProjectRecord }) {
+  return (
+    <div className="relative h-12 w-20 shrink-0 overflow-hidden rounded-md border border-dash-border bg-dash-field">
+      {project.image ? (
+        <Image src={project.image} alt="" fill sizes="80px" unoptimized className="object-cover" />
+      ) : (
+        <div className="grid h-full w-full place-items-center text-dash-muted">
+          <ImageOff className="size-4" aria-hidden />
+        </div>
+      )}
+      <span
+        aria-hidden
+        className="absolute bottom-1 left-1 size-2.5 rounded-full border border-dash-bg"
+        style={{ background: project.accent || "#3b82f6" }}
+      />
+    </div>
+  );
+}
+
 export default function ProjectsPanel() {
   const [projects, setProjects] = useState<ProjectRecord[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [query, setQuery] = useState("");
   const [status, setStatus] = useState("");
   const [error, setError] = useState("");
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -83,17 +111,25 @@ export default function ProjectsPanel() {
   const techLines = useFieldArray({ control: form.control, name: "techLines" });
 
   const load = async () => {
+    setLoading(true);
     try {
       const data = await requestJson<ProjectRecord[]>("/api/dashboard/projects");
       setProjects(data);
     } catch (loadError) {
       setError(loadError instanceof Error ? loadError.message : "Failed to load projects.");
+    } finally {
+      setLoading(false);
     }
   };
 
   useEffect(() => {
     void load();
   }, []);
+
+  const retry = () => {
+    setError("");
+    void load();
+  };
 
   const onSubmit = form.handleSubmit(async (values) => {
     setStatus("");
@@ -163,6 +199,8 @@ export default function ProjectsPanel() {
       await load();
     } catch (removeError) {
       setError(removeError instanceof Error ? removeError.message : "Failed to delete project.");
+      // Close the confirm so the error alert on the page is not hidden behind it.
+      setDeleteTarget(null);
     } finally {
       setDeletePending(false);
     }
@@ -171,246 +209,353 @@ export default function ProjectsPanel() {
   const openCreateDialog = () => {
     form.reset(toFormValues());
     setEditingId(null);
+    setError("");
     setDialogOpen(true);
   };
 
   const openEditDialog = (project: ProjectRecord) => {
     form.reset(toFormValues(project));
     setEditingId(project.id);
+    setError("");
     setDialogOpen(true);
   };
 
+  const closeDialog = () => {
+    setDialogOpen(false);
+    form.reset(toFormValues());
+    setEditingId(null);
+  };
+
+  const q = query.trim().toLowerCase();
+  const visible = q
+    ? projects.filter((p) =>
+        [p.title, p.subtitle, p.role, p.tag].some((v) => v?.toLowerCase().includes(q)),
+      )
+    : projects;
+
+  const titleError = form.formState.errors.title?.message;
+  const submitting = form.formState.isSubmitting;
+  const galleryImages = form.watch("galleryImages");
+
   return (
-    <div className="space-y-8">
-      <div>
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Portfolio</p>
-        <h2 className="mt-2 text-3xl font-semibold tracking-tight text-white">Projects</h2>
-        <p className="mt-2 max-w-xl text-sm text-slate-400">
-          Case studies with gallery uploads, accent color, and add-as-you-go bullets and tech tags.
-        </p>
-      </div>
+    <div className="space-y-6">
+      <PageHeader
+        title="Projects (v1)"
+        description="Legacy case studies with gallery images, bullets and tech tags. Changes here only affect the v1 site, not the v2 reel."
+        actions={
+          <Button onClick={openCreateDialog}>
+            <Plus aria-hidden />
+            Add project
+          </Button>
+        }
+      />
 
-      <div className="flex flex-wrap items-center gap-3">
-        {status ? <span className="text-sm text-emerald-300">{status}</span> : null}
-        {error ? <span className="text-sm text-rose-300">{error}</span> : null}
-      </div>
+      {error && !dialogOpen ? (
+        <Alert
+          tone="danger"
+          title={projects.length ? "Something went wrong" : "Couldn't load projects"}
+          action={
+            projects.length ? undefined : (
+              <Button variant="secondary" size="sm" onClick={retry}>
+                <RotateCw aria-hidden />
+                Retry
+              </Button>
+            )
+          }
+        >
+          {error}
+        </Alert>
+      ) : null}
+      {status ? <Alert tone="success">{status}</Alert> : null}
 
-      <Card>
-        <div className="mb-4 flex items-center justify-between">
-          <h3 className="text-sm font-semibold text-white">All projects</h3>
-          <div className="flex items-center gap-3">
-            <span className="text-xs text-slate-500">{projects.length} total</span>
-            <Button type="button" onClick={openCreateDialog}>
-              Create Project
-            </Button>
-          </div>
-        </div>
-        <div className="space-y-2">
-          {projects.map((project) => (
-            <div
-              key={project.id}
-              className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-white/[0.07] bg-slate-950/50 px-4 py-3"
-            >
-              <div className="flex min-w-0 items-center gap-3">
-                <span
-                  className="h-8 w-1 shrink-0 rounded-full"
-                  style={{ background: project.accent || "#3b82f6" }}
-                />
-                <div className="min-w-0">
-                  <p className="truncate font-medium text-white">{project.title}</p>
-                  <p className="text-xs text-slate-500">
-                    {project.subtitle} · {project.role}
-                  </p>
-                </div>
-              </div>
-              <div className="flex gap-1">
-                <Button
-                  type="button"
-                  variant="ghost"
-                  onClick={() => openEditDialog(project)}
-                >
-                  <Pencil className="h-4 w-4" />
-                </Button>
-                <Button type="button" variant="danger" onClick={() => setDeleteTarget(project)}>
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-          ))}
-          {!projects.length ? (
-            <p className="text-center text-sm text-slate-500">No projects yet.</p>
+      {loading && !projects.length ? (
+        <ListSkeleton rows={5} />
+      ) : !projects.length ? (
+        error ? null : (
+          <EmptyState
+            icon={FolderKanban}
+            title="No projects yet"
+            description="Add a case study to show it on the v1 site."
+            action={
+              <Button onClick={openCreateDialog}>
+                <Plus aria-hidden />
+                Add project
+              </Button>
+            }
+          />
+        )
+      ) : (
+        <>
+          {projects.length > 5 ? (
+            <Toolbar className="mb-0">
+              <SearchInput
+                value={query}
+                onChange={setQuery}
+                placeholder="Search by title, role, tag…"
+                label="Search projects"
+              />
+            </Toolbar>
           ) : null}
-        </div>
-      </Card>
+
+          <Card flush title="All projects" headerSlot={<Badge>{projects.length} total</Badge>}>
+            {visible.length ? (
+              <ul className="divide-y divide-dash-border">
+                {visible.map((project) => {
+                  const meta = [project.subtitle, project.role].filter(Boolean);
+                  return (
+                    <li
+                      key={project.id}
+                      className="flex flex-wrap items-center gap-3 px-5 py-3 transition-colors hover:bg-dash-raised"
+                    >
+                      <ProjectThumb project={project} />
+                      <div className="min-w-0 flex-1 basis-40">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => openEditDialog(project)}
+                            className="truncate rounded text-left text-sm font-medium text-dash-fg hover:text-dash-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-dash-accent/60"
+                          >
+                            {project.title}
+                          </button>
+                          {project.featured ? (
+                            <Badge tone="accent">
+                              <Star aria-hidden />
+                              Featured
+                            </Badge>
+                          ) : null}
+                          {project.tag ? <Badge>{project.tag}</Badge> : null}
+                        </div>
+                        <p className="mt-0.5 truncate text-xs text-dash-muted">
+                          {meta.length ? meta.join(" · ") : "No subtitle or role"}
+                        </p>
+                      </div>
+                      <div className="ml-auto flex items-center gap-2">
+                        <Badge className="tabular-nums">Order {project.sortOrder}</Badge>
+                        <Button variant="ghost" size="sm" onClick={() => openEditDialog(project)}>
+                          <Pencil aria-hidden />
+                          Edit
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="w-8 px-0 hover:text-dash-danger"
+                          onClick={() => setDeleteTarget(project)}
+                          aria-label={`Delete ${project.title}`}
+                          title="Delete"
+                        >
+                          <Trash2 aria-hidden />
+                        </Button>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            ) : (
+              <p className="px-5 py-8 text-center text-sm text-dash-muted">
+                No projects match &ldquo;{query}&rdquo;.
+              </p>
+            )}
+          </Card>
+        </>
+      )}
 
       <Dialog
         open={dialogOpen}
         onClose={() => setDialogOpen(false)}
-        title={editingId ? "Edit project" : "Create project"}
-        description="Case studies with gallery uploads, accent color, and repeatable bullets and tech tags."
+        title={editingId ? "Edit project" : "Add project"}
+        description="v1 case study: basics, images, description bullets, tech tags and links."
         size="full"
       >
-        <form className="grid gap-4 md:grid-cols-2" onSubmit={onSubmit}>
-          <Input label="Title" placeholder="Product name" {...form.register("title", { required: true })} />
-          <Input label="Subtitle" placeholder="Short hook" {...form.register("subtitle")} />
-          <Input label="Role" placeholder="Full Stack Developer" {...form.register("role")} />
-          <Input label="Tag" placeholder="SaaS · API" {...form.register("tag")} />
-          <Controller
-            name="accent"
-            control={form.control}
-            render={({ field }) => (
-              <ColorPicker label="Accent color" value={field.value} onChange={field.onChange} />
-            )}
-          />
-          <Input
-            label="Sort order"
-            type="number"
-            {...form.register("sortOrder", { valueAsNumber: true })}
-          />
-          <Controller
-            name="image"
-            control={form.control}
-            render={({ field }) => (
-              <div className="md:col-span-2">
+        <form className="space-y-4" onSubmit={onSubmit}>
+          <Card title="Basics" subtitle="How the project is titled and ordered on the v1 site.">
+            <div className="grid gap-4 md:grid-cols-2">
+              <Input
+                label="Title"
+                placeholder="Product name"
+                error={titleError}
+                {...form.register("title", { required: "Title is required." })}
+              />
+              <Input label="Subtitle" placeholder="Short hook" {...form.register("subtitle")} />
+              <Input label="Role" placeholder="Full Stack Developer" {...form.register("role")} />
+              <Input label="Tag" placeholder="SaaS · API" {...form.register("tag")} />
+              <Input
+                label="Sort order"
+                type="number"
+                className="tabular-nums"
+                {...form.register("sortOrder", { valueAsNumber: true })}
+              />
+              <Controller
+                name="accent"
+                control={form.control}
+                render={({ field }) => (
+                  <ColorPicker label="Accent color" value={field.value} onChange={field.onChange} />
+                )}
+              />
+              <label className="flex items-center gap-2 text-sm text-dash-fg-2 md:col-span-2">
+                <input
+                  type="checkbox"
+                  {...form.register("featured")}
+                  className="size-4 rounded border-dash-border-strong bg-dash-field accent-dash-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-dash-accent/60"
+                />
+                Featured project
+              </label>
+            </div>
+          </Card>
+
+          <Card title="Images" subtitle="Primary thumbnail plus an optional gallery.">
+            <div className="space-y-6">
+              <Controller
+                name="image"
+                control={form.control}
+                render={({ field }) => (
+                  <ImageUpload
+                    label="Primary image"
+                    value={field.value}
+                    onChange={field.onChange}
+                    hint="Main thumbnail for cards and carousel."
+                  />
+                )}
+              />
+
+              <div className="space-y-3 border-t border-dash-border pt-4">
+                <div className="flex items-center gap-2">
+                  <span className="text-[13px] font-medium text-dash-fg-2">Gallery</span>
+                  <Badge>{galleryImages.length}</Badge>
+                </div>
+                {galleryImages.length ? (
+                  <ul className="flex flex-wrap gap-3">
+                    {galleryImages.map((url, index) => (
+                      <li
+                        key={`${url}-${index}`}
+                        className="relative h-24 w-36 overflow-hidden rounded-lg border border-dash-border bg-dash-field"
+                      >
+                        <Image
+                          src={url}
+                          alt={`Gallery image ${index + 1}`}
+                          fill
+                          className="object-cover"
+                          sizes="144px"
+                          unoptimized={url.startsWith("/uploads/")}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => removeGalleryAt(index)}
+                          className="absolute right-1 top-1 grid size-7 place-items-center rounded-md border border-dash-border-strong bg-dash-bg/85 text-dash-fg transition-colors hover:text-dash-danger focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-dash-accent/60"
+                          aria-label={`Remove gallery image ${index + 1}`}
+                          title="Remove"
+                        >
+                          <X className="size-3.5" aria-hidden />
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-xs text-dash-muted">No gallery images yet.</p>
+                )}
                 <ImageUpload
-                  label="Primary image"
-                  value={field.value}
-                  onChange={field.onChange}
-                  hint="Main thumbnail for cards and carousel."
+                  label="Add gallery image"
+                  value=""
+                  onChange={(url) => {
+                    if (url) appendGallery(url);
+                  }}
+                  hint="Each upload is added to the gallery."
+                  compact
                 />
               </div>
-            )}
-          />
-          <Input label="GitHub URL" placeholder="https://github.com/..." {...form.register("github")} />
-          <Input label="Demo URL" placeholder="https://…" {...form.register("demo")} />
-          <label className="flex items-center gap-2 text-sm text-slate-300 md:col-span-2">
-            <input type="checkbox" {...form.register("featured")} className="h-4 w-4 rounded border-white/20" />
-            Featured project
-          </label>
-
-          <div className="md:col-span-2 space-y-2">
-            <div className="flex items-center justify-between gap-2">
-              <span className="text-xs font-medium uppercase tracking-[0.08em] text-slate-400">Description</span>
-              <Button
-                type="button"
-                variant="ghost"
-                className="h-9 px-2"
-                onClick={() => descriptionLines.append({ value: "" })}
-                aria-label="Add description bullet"
-              >
-                <Plus className="h-4 w-4" />
-              </Button>
             </div>
+          </Card>
+
+          <Card
+            title="Description"
+            subtitle="One bullet per row."
+            headerSlot={
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => descriptionLines.append({ value: "" })}
+              >
+                <Plus aria-hidden />
+                Add bullet
+              </Button>
+            }
+          >
             <div className="space-y-2">
               {descriptionLines.fields.map((field, index) => (
                 <div key={field.id} className="flex gap-2">
                   <div className="min-w-0 flex-1">
                     <Input
                       placeholder="Shipped X… or Improved Y by Z%…"
+                      aria-label={`Bullet ${index + 1}`}
                       {...form.register(`descriptionLines.${index}.value`)}
                     />
                   </div>
                   <Button
-                    type="button"
                     variant="ghost"
-                    className="shrink-0 px-2"
+                    className="w-9 px-0"
                     disabled={descriptionLines.fields.length <= 1}
                     onClick={() => descriptionLines.remove(index)}
-                    aria-label="Remove bullet"
+                    aria-label={`Remove bullet ${index + 1}`}
                   >
-                    <X className="h-4 w-4 text-slate-400" />
+                    <X aria-hidden />
                   </Button>
                 </div>
               ))}
             </div>
-          </div>
+          </Card>
 
-          <div className="md:col-span-2 space-y-2">
-            <div className="flex items-center justify-between gap-2">
-              <span className="text-xs font-medium uppercase tracking-[0.08em] text-slate-400">Tech stack</span>
-              <Button
-                type="button"
-                variant="ghost"
-                className="h-9 px-2"
-                onClick={() => techLines.append({ value: "" })}
-                aria-label="Add technology"
-              >
-                <Plus className="h-4 w-4" />
+          <Card
+            title="Tech stack"
+            subtitle="One technology per row."
+            headerSlot={
+              <Button variant="secondary" size="sm" onClick={() => techLines.append({ value: "" })}>
+                <Plus aria-hidden />
+                Add technology
               </Button>
-            </div>
-            <div className="space-y-2">
+            }
+          >
+            <div className="grid gap-2 md:grid-cols-2">
               {techLines.fields.map((field, index) => (
                 <div key={field.id} className="flex gap-2">
                   <div className="min-w-0 flex-1">
-                    <Input placeholder="e.g. Next.js" {...form.register(`techLines.${index}.value`)} />
+                    <Input
+                      placeholder="e.g. Next.js"
+                      aria-label={`Technology ${index + 1}`}
+                      {...form.register(`techLines.${index}.value`)}
+                    />
                   </div>
                   <Button
-                    type="button"
                     variant="ghost"
-                    className="shrink-0 px-2"
+                    className="w-9 px-0"
                     disabled={techLines.fields.length <= 1}
                     onClick={() => techLines.remove(index)}
-                    aria-label="Remove technology"
+                    aria-label={`Remove technology ${index + 1}`}
                   >
-                    <X className="h-4 w-4 text-slate-400" />
+                    <X aria-hidden />
                   </Button>
                 </div>
               ))}
             </div>
-          </div>
+          </Card>
 
-          <div className="md:col-span-2 space-y-3 rounded-xl border border-white/8 bg-slate-950/40 p-4">
-            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-400">Gallery images</p>
-            <div className="flex flex-wrap gap-3">
-              {form.watch("galleryImages").map((url, index) => (
-                <div
-                  key={`${url}-${index}`}
-                  className="group relative h-24 w-36 overflow-hidden rounded-lg border border-white/10"
-                >
-                  <Image
-                    src={url}
-                    alt=""
-                    fill
-                    className="object-cover"
-                    sizes="144px"
-                    unoptimized={url.startsWith("/uploads/")}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => removeGalleryAt(index)}
-                    className="absolute right-1 top-1 rounded-md bg-black/60 p-1 text-white opacity-0 transition group-hover:opacity-100"
-                    aria-label="Remove image"
-                  >
-                    <X className="h-3.5 w-3.5" />
-                  </button>
-                </div>
-              ))}
+          <Card title="Links">
+            <div className="grid gap-4 md:grid-cols-2">
+              <Input label="GitHub URL" placeholder="https://github.com/..." {...form.register("github")} />
+              <Input label="Demo URL" placeholder="https://…" {...form.register("demo")} />
             </div>
-            <ImageUpload
-              label="Add gallery image"
-              value=""
-              onChange={(url) => {
-                if (url) appendGallery(url);
-              }}
-              hint="Upload adds to the gallery list."
-              compact
-            />
-          </div>
+          </Card>
 
-          <div className="md:col-span-2 flex flex-wrap gap-2">
-            <Button type="submit" disabled={form.formState.isSubmitting}>
-              {editingId ? "Update project" : "Create project"}
-            </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={() => {
-                setDialogOpen(false);
-                form.reset(toFormValues());
-                setEditingId(null);
-              }}
-            >
+          {error ? (
+            <Alert tone="danger" title="Couldn't save project">
+              {error}
+            </Alert>
+          ) : null}
+
+          <div className="sticky bottom-0 -mx-5 -mb-4 flex flex-wrap items-center justify-end gap-2 border-t border-dash-border bg-dash-surface px-5 py-3">
+            <Button variant="ghost" onClick={closeDialog} disabled={submitting}>
               Cancel
+            </Button>
+            <Button type="submit" disabled={submitting}>
+              {submitting ? "Saving…" : editingId ? "Save changes" : "Create project"}
             </Button>
           </div>
         </form>

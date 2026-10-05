@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { getImageProps } from "next/image";
 import type { ReelProject } from "@/types/projects";
 
 /**
@@ -47,6 +48,11 @@ interface PlateProps {
   total: number;
   /** Paused plates skip the draw entirely — the back layer is never visible. */
   active: boolean;
+}
+
+/** Hosts the image optimizer accepts (next.config.ts remotePatterns). */
+function optimizable(src: string): boolean {
+  return src.startsWith("/") || /^https:\/\/[^/]+\.public\.blob\.vercel-storage\.com\/uploads\//.test(src);
 }
 
 export default function Plate({ project, index, total, active }: PlateProps) {
@@ -156,7 +162,10 @@ export default function Plate({ project, index, total, active }: PlateProps) {
       /* Frame number, bottom-right of the plate box, mono and tabular. */
       context.globalAlpha = 0.6;
       context.fillStyle = accent;
-      context.font = `500 ${Math.max(10, Math.min(13, width * 0.009))}px "JetBrains Mono", ui-monospace, monospace`;
+      // next/font self-hosts JetBrains Mono under a generated family name, so
+      // read it from the variable layout.tsx sets rather than naming it.
+      const mono = getComputedStyle(document.documentElement).getPropertyValue("--font-jetbrains-mono").trim();
+      context.font = `500 ${Math.max(10, Math.min(13, width * 0.009))}px ${mono || "ui-monospace"}, ui-monospace, monospace`;
       context.textAlign = "right";
       context.textBaseline = "alphabetic";
       context.fillText(
@@ -189,20 +198,30 @@ export default function Plate({ project, index, total, active }: PlateProps) {
         // Intentionally a plain <img>: the plate is a full-bleed background
         // element inside a transform-animated layer, and next/image's wrapper
         // adds a layout box that fights the handoff. Sizing is pure CSS.
+        // The src set still comes from the image optimizer: the first capture
+        // was a 583KB PNG. Lazy for every plate, the first included — the reel
+        // sits several screens below the fold, so an eager, high-priority fetch
+        // only competed with the hero for bandwidth.
         // eslint-disable-next-line @next/next/no-img-element
         <img
           className="wreel-plate-img"
-          src={project.plate.src}
-          alt=""
+          {...plateSources(project.plate.src)}
+          alt={`${project.name} — ${project.plate.caption}`}
           aria-hidden="true"
           draggable={false}
           decoding="async"
-          loading={index === 0 ? "eager" : "lazy"}
-          fetchPriority={index === 0 ? "high" : "auto"}
+          loading="lazy"
           style={{ objectPosition: project.plate.focus ?? "50% 50%" }}
         />
       ) : null}
       <canvas ref={canvasRef} className="wreel-plate-canvas" aria-hidden="true" />
     </div>
   );
+}
+
+/** src/srcSet/sizes for a full-bleed plate; raw src for hosts the optimizer refuses. */
+function plateSources(src: string) {
+  if (!optimizable(src)) return { src };
+  const { props } = getImageProps({ src, alt: "", fill: true, sizes: "100vw" });
+  return { src: props.src, srcSet: props.srcSet, sizes: props.sizes };
 }

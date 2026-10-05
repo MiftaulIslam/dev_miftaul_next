@@ -4,6 +4,17 @@ import { notFound } from "next/navigation";
 import { ArrowLeft, ArrowRight, ArrowUpRight } from "lucide-react";
 import { GitHubIcon } from "@/components/ui/SocialIcons";
 import { findReelProjectBySlug } from "@/lib/projects/v2.server";
+import {
+  absoluteUrl,
+  breadcrumbNode,
+  jsonLd,
+  pageMetadata,
+  PERSON_ID,
+  projectUrl,
+  SITE_NAME,
+  WEBSITE_ID,
+} from "@/lib/seo";
+import type { ReelProject } from "@/types/projects";
 
 /**
  * One project’s full case.
@@ -26,17 +37,48 @@ type Params = Promise<{ slug: string }>;
 export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
   const { slug } = await params;
   const found = await findReelProjectBySlug(slug);
-  if (!found) return { title: "Case not found" };
+  if (!found) return { title: "Case not found", robots: { index: false } };
   const { project } = found;
 
-  return {
-    title: `${project.name} — ${project.discipline}`,
+  return pageMetadata({
+    title: `${project.name} — ${project.discipline} case study`,
     description: project.outcome,
-    openGraph: {
-      title: `${project.name} — ${project.discipline}`,
-      description: project.outcome,
-      images: project.plate.src ? [{ url: project.plate.src }] : undefined,
-    },
+    path: `/work/${project.id}`,
+    images: project.plate.src ? [project.plate.src] : undefined,
+    type: "article",
+  });
+}
+
+/** The case page, the project it describes, and who wrote it — one graph. */
+function caseJsonLd(project: ReelProject) {
+  const url = projectUrl(project);
+  return {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebPage",
+        "@id": url,
+        url,
+        name: `${project.name} — ${project.discipline} case study`,
+        description: project.outcome,
+        isPartOf: { "@id": WEBSITE_ID },
+        author: { "@id": PERSON_ID },
+        primaryImageOfPage: project.plate.src ? absoluteUrl(project.plate.src) : undefined,
+        about: {
+          "@type": "CreativeWork",
+          name: project.name,
+          description: project.problem,
+          url: project.links.live,
+          keywords: project.tech.join(", "),
+          contributor: { "@id": PERSON_ID },
+        },
+        breadcrumb: breadcrumbNode([
+          { name: "Home", path: "/" },
+          { name: "Work", path: "/work" },
+          { name: project.name, path: `/work/${project.id}` },
+        ]),
+      },
+    ],
   };
 }
 
@@ -49,6 +91,7 @@ export default async function WorkCasePage({ params }: { params: Params }) {
 
   return (
     <main className="wpage wcase" style={{ ["--c-accent" as string]: project.accent }}>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(caseJsonLd(project)) }} />
       <Link href="/work" className="wcase-back">
         <ArrowLeft aria-hidden="true" />
         All work
@@ -64,6 +107,9 @@ export default async function WorkCasePage({ params }: { params: Params }) {
         </p>
         <h1 className="wcase-title">{project.name}</h1>
         <p className="wcase-outcome">{project.outcome}</p>
+        <p className="wcase-meta" style={{ margin: "1.25rem 0 0" }}>
+          Case notes by <Link href="/">{SITE_NAME}</Link>
+        </p>
       </header>
 
       <figure className="wcase-figure">

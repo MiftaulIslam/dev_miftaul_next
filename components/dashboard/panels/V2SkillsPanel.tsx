@@ -1,19 +1,24 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Pencil, Plus, Trash2 } from "lucide-react";
+import { useEffect, useState, type ReactNode } from "react";
+import { ArrowDown, ArrowUp, Layers, Pencil, Plus, Trash2 } from "lucide-react";
 import { Controller, useForm } from "react-hook-form";
 
 import { requestJson } from "@/components/dashboard/api";
+import { Alert } from "@/components/ui/dashboard/Alert";
+import { Badge } from "@/components/ui/dashboard/Badge";
 import { Button } from "@/components/ui/dashboard/Button";
-import { Card } from "@/components/ui/dashboard/Card";
 import { ColorPicker } from "@/components/ui/dashboard/ColorPicker";
 import { ConfirmDialog } from "@/components/ui/dashboard/ConfirmDialog";
 import { Dialog } from "@/components/ui/dashboard/Dialog";
+import { EmptyState } from "@/components/ui/dashboard/EmptyState";
 import { Input } from "@/components/ui/dashboard/Input";
+import { PageHeader } from "@/components/ui/dashboard/PageHeader";
 import { Select } from "@/components/ui/dashboard/Select";
+import { ListSkeleton } from "@/components/ui/dashboard/Skeleton";
 import { Textarea } from "@/components/ui/dashboard/Textarea";
-import type { V2SkillSection } from "@/lib/dashboard/types";
+import { cn } from "@/lib/cn";
+import type { V2SkillItem, V2SkillSection } from "@/lib/dashboard/types";
 
 const SECTIONS_URL = "/api/dashboard/skills/v2/sections";
 const ITEMS_URL = "/api/dashboard/skills/v2/items";
@@ -60,6 +65,71 @@ const emptyItem = (sectionId: number): ItemForm => ({
   sortOrder: 0,
 });
 
+/** Swap two entries and return the new order. */
+function swapped<T>(list: T[], index: number, direction: -1 | 1) {
+  const next = [...list];
+  const target = index + direction;
+  [next[index], next[target]] = [next[target], next[index]];
+  return next;
+}
+
+/** Small square icon-only action with an accessible name and a hover tooltip. */
+function IconAction({
+  label,
+  onClick,
+  disabled,
+  tone = "default",
+  children,
+}: {
+  label: string;
+  onClick: () => void;
+  disabled?: boolean;
+  tone?: "default" | "danger";
+  children: ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      aria-label={label}
+      title={label}
+      className={cn(
+        "grid size-8 place-items-center rounded-md text-dash-muted transition-colors [&_svg]:size-4",
+        "hover:bg-dash-raised focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-dash-accent/60",
+        "disabled:pointer-events-none disabled:opacity-35",
+        tone === "danger" ? "hover:text-dash-danger" : "hover:text-dash-fg",
+      )}
+    >
+      {children}
+    </button>
+  );
+}
+
+/** Thin divider between action groups inside a row. */
+function ActionDivider() {
+  return <span aria-hidden className="mx-1 h-5 w-px bg-dash-border" />;
+}
+
+/** Icon from /public, with a monogram underneath that shows if the path is blank or broken. */
+function SkillIcon({ name, icon }: { name: string; icon: string }) {
+  const [broken, setBroken] = useState(false);
+  return (
+    <span className="relative grid size-9 shrink-0 place-items-center overflow-hidden rounded-lg border border-dash-border bg-dash-raised text-xs font-semibold text-dash-fg-2">
+      {name.trim().slice(0, 2).toUpperCase() || "?"}
+      {icon && !broken ? (
+        // eslint-disable-next-line @next/next/no-img-element -- arbitrary /public paths typed by the editor
+        <img
+          src={icon}
+          alt=""
+          className="absolute inset-0 size-full bg-dash-raised object-contain p-1.5"
+          onError={() => setBroken(true)}
+        />
+      ) : null}
+    </span>
+  );
+}
+
 /**
  * Editor for the v2 skills reel.
  *
@@ -74,8 +144,11 @@ const emptyItem = (sectionId: number): ItemForm => ({
  */
 export default function V2SkillsPanel() {
   const [sections, setSections] = useState<V2SkillSection[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
   const [status, setStatus] = useState("");
   const [error, setError] = useState("");
+  const [reordering, setReordering] = useState(false);
   const [sectionDialogOpen, setSectionDialogOpen] = useState(false);
   const [itemDialogOpen, setItemDialogOpen] = useState(false);
   const [editingSection, setEditingSection] = useState(false);
@@ -89,17 +162,25 @@ export default function V2SkillsPanel() {
   const itemForm = useForm<ItemForm>({ defaultValues: emptyItem(0) });
 
   const load = async () => {
+    setLoadError("");
     try {
       const data = await requestJson<V2SkillSection[]>(SECTIONS_URL);
       setSections(data);
-    } catch (loadError) {
-      setError(loadError instanceof Error ? loadError.message : "Failed to load v2 skills.");
+    } catch (loadErr) {
+      setLoadError(loadErr instanceof Error ? loadErr.message : "Failed to load v2 skills.");
+    } finally {
+      setLoading(false);
     }
   };
 
   useEffect(() => {
     void load();
   }, []);
+
+  const retryLoad = () => {
+    setLoading(true);
+    void load();
+  };
 
   const submitSection = sectionForm.handleSubmit(async (values) => {
     setError("");
@@ -157,6 +238,51 @@ export default function V2SkillsPanel() {
     }
   };
 
+  /**
+   * Reorder by rewriting sortOrder as the list index through the existing PUT
+   * endpoints. Only rows whose index changed are sent, so seeded rows that all
+   * share sortOrder 0 get normalised the first time they are moved.
+   */
+  const persistOrder = async <T extends { id: number; sortOrder: number }>(
+    list: T[],
+    url: string,
+    toPayload: (row: T, sortOrder: number) => object,
+  ) => {
+    setReordering(true);
+    setError("");
+    setStatus("");
+    try {
+      for (const [index, row] of list.entries()) {
+        if (row.sortOrder === index) continue;
+        await requestJson(url, { method: "PUT", body: JSON.stringify(toPayload(row, index)) });
+      }
+      await load();
+    } catch (orderError) {
+      setError(orderError instanceof Error ? orderError.message : "Failed to reorder.");
+      await load();
+    } finally {
+      setReordering(false);
+    }
+  };
+
+  const moveSection = (index: number, direction: -1 | 1) =>
+    persistOrder(swapped(sections, index, direction), SECTIONS_URL, (section, sortOrder) => ({
+      id: section.id,
+      key: section.key,
+      title: section.title,
+      subtitle: section.subtitle,
+      description: section.description,
+      layer: section.layer,
+      accent: section.accent,
+      sortOrder,
+    }));
+
+  const moveItem = (section: V2SkillSection, index: number, direction: -1 | 1) =>
+    persistOrder(swapped(section.skills, index, direction), ITEMS_URL, (skill: V2SkillItem, sortOrder) => ({
+      ...skill,
+      sortOrder,
+    }));
+
   const openNewSection = () => {
     sectionForm.reset({ ...EMPTY_SECTION, sortOrder: sections.length });
     setEditingSection(false);
@@ -184,7 +310,7 @@ export default function V2SkillsPanel() {
     setItemDialogOpen(true);
   };
 
-  const openEditItem = (section: V2SkillSection, skill: V2SkillSection["skills"][number]) => {
+  const openEditItem = (section: V2SkillSection, skill: V2SkillItem) => {
     itemForm.reset({
       id: skill.id,
       sectionId: section.id,
@@ -199,108 +325,190 @@ export default function V2SkillsPanel() {
     setItemDialogOpen(true);
   };
 
+  const totalSkills = sections.reduce((sum, section) => sum + section.skills.length, 0);
+
   return (
-    <div className="space-y-4">
-      <Card
-        title="Skills — v2 reel"
-        subtitle="Sections and their skills, as the v2 homepage reel and /skills render them."
-        headerSlot={
-          <Button type="button" onClick={openNewSection}>
-            <Plus className="mr-1.5 h-4 w-4" />
+    <div>
+      <PageHeader
+        title="Skills"
+        description="Sections and the skills inside them, in the order the homepage reel and /skills render them."
+        meta={
+          !loading && !loadError
+            ? `${sections.length} ${sections.length === 1 ? "section" : "sections"} · ${totalSkills} ${totalSkills === 1 ? "skill" : "skills"}`
+            : undefined
+        }
+        actions={
+          <Button onClick={openNewSection} disabled={loading}>
+            <Plus />
             New section
           </Button>
         }
-      >
-        {status ? <p className="mb-3 text-sm text-emerald-300">{status}</p> : null}
-        {error ? <p className="mb-3 text-sm text-rose-300">{error}</p> : null}
-        {!sections.length ? (
-          <p className="text-sm text-slate-400">
-            No sections yet. Run <code className="text-slate-300">npm run db:seed:skills</code> to
-            load the starting content, or create one above.
-          </p>
-        ) : null}
-      </Card>
+      />
 
-      {sections.map((section) => (
-        <Card key={section.id}>
-          <div className="mb-3 flex flex-wrap items-start justify-between gap-3">
-            <div className="min-w-0">
-              <div className="flex items-center gap-2">
-                <span
-                  className="h-3 w-3 shrink-0 rounded-full"
-                  style={{ background: section.accent }}
-                />
-                <h3 className="truncate text-sm font-semibold text-white">{section.title}</h3>
-                <span className="shrink-0 rounded-full border border-white/12 px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider text-slate-400">
-                  {section.key}
-                </span>
-              </div>
-              <p className="mt-1 text-xs text-slate-400">{section.subtitle}</p>
-              {section.description ? (
-                <p className="mt-1.5 max-w-3xl text-xs leading-relaxed text-slate-500">
-                  {section.description}
-                </p>
-              ) : null}
-            </div>
-            <div className="flex shrink-0 gap-2">
-              <Button type="button" variant="secondary" onClick={() => openNewItem(section)}>
-                <Plus className="mr-1.5 h-4 w-4" />
-                Skill
-              </Button>
-              <Button type="button" variant="ghost" onClick={() => openEditSection(section)}>
-                <Pencil className="h-4 w-4" />
-              </Button>
-              <Button
-                type="button"
-                variant="danger"
-                onClick={() =>
-                  setConfirm({ type: "section", id: section.id, label: section.title })
-                }
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
+      <div className="space-y-4">
+        {status ? <Alert tone="success">{status}</Alert> : null}
+        {error ? <Alert tone="danger">{error}</Alert> : null}
 
-          <ul className="space-y-1.5">
-            {section.skills.map((skill) => (
-              <li
-                key={skill.id}
-                className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-xl border border-white/10 bg-slate-950/50 px-3 py-2"
-              >
-                <span className="text-sm text-slate-100">{skill.name}</span>
-                <span className="text-xs text-slate-400">{skill.title}</span>
-                {skill.icon ? (
-                  <span className="font-mono text-[10px] text-slate-600">{skill.icon}</span>
-                ) : null}
-                <span className="ml-auto flex shrink-0 items-center gap-1">
-                  <button
-                    type="button"
-                    className="p-1 text-slate-400 transition-colors hover:text-white"
-                    aria-label={`Edit ${skill.name}`}
-                    onClick={() => openEditItem(section, skill)}
+        {loading ? (
+          <ListSkeleton rows={5} />
+        ) : loadError ? (
+          <Alert
+            tone="danger"
+            title="Could not load skills"
+            action={
+              <Button size="sm" variant="secondary" onClick={retryLoad}>
+                Retry
+              </Button>
+            }
+          >
+            {loadError}
+          </Alert>
+        ) : !sections.length ? (
+          <EmptyState
+            icon={Layers}
+            title="No sections yet"
+            description="Run npm run db:seed:skills to load the starting content, or create the first section."
+            action={
+              <Button onClick={openNewSection}>
+                <Plus />
+                New section
+              </Button>
+            }
+          />
+        ) : (
+          sections.map((section, sectionIndex) => (
+            <section
+              key={section.id}
+              aria-labelledby={`v2-section-${section.id}`}
+              className="overflow-hidden rounded-xl border border-dash-border bg-dash-surface"
+            >
+              <header className="flex flex-wrap items-start justify-between gap-3 border-b border-dash-border px-4 py-4 sm:px-5">
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span
+                      aria-hidden
+                      className="size-3 shrink-0 rounded-full border border-dash-border-strong"
+                      style={{ background: section.accent }}
+                    />
+                    <h2 id={`v2-section-${section.id}`} className="text-[15px] font-semibold text-dash-fg">
+                      {section.title}
+                    </h2>
+                    <Badge className="font-mono">{section.key}</Badge>
+                    {section.layer ? <Badge>Layer: {section.layer}</Badge> : null}
+                    <Badge tone="accent">
+                      {section.skills.length} {section.skills.length === 1 ? "skill" : "skills"}
+                    </Badge>
+                  </div>
+                  {section.subtitle ? (
+                    <p className="mt-1.5 text-sm text-dash-fg-2">{section.subtitle}</p>
+                  ) : null}
+                  {section.description ? (
+                    <p className="mt-1 max-w-3xl text-[13px] leading-relaxed text-dash-muted">
+                      {section.description}
+                    </p>
+                  ) : null}
+                </div>
+                <div className="flex shrink-0 items-center gap-1">
+                  <Button size="sm" variant="secondary" onClick={() => openNewItem(section)}>
+                    <Plus />
+                    Add skill
+                  </Button>
+                  <ActionDivider />
+                  <IconAction
+                    label={`Move ${section.title} up`}
+                    disabled={reordering || sectionIndex === 0}
+                    onClick={() => void moveSection(sectionIndex, -1)}
                   >
-                    <Pencil className="h-3.5 w-3.5" />
-                  </button>
-                  <button
-                    type="button"
-                    className="p-1 text-rose-300 transition-colors hover:text-rose-200"
-                    aria-label={`Delete ${skill.name}`}
-                    onClick={() => setConfirm({ type: "item", id: skill.id, label: skill.name })}
+                    <ArrowUp />
+                  </IconAction>
+                  <IconAction
+                    label={`Move ${section.title} down`}
+                    disabled={reordering || sectionIndex === sections.length - 1}
+                    onClick={() => void moveSection(sectionIndex, 1)}
                   >
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </button>
-                </span>
-              </li>
-            ))}
-            {!section.skills.length ? (
-              <li className="text-xs text-slate-500">
-                No skills yet — a section with none is skipped by the reel.
-              </li>
-            ) : null}
-          </ul>
-        </Card>
-      ))}
+                    <ArrowDown />
+                  </IconAction>
+                  <ActionDivider />
+                  <IconAction label={`Edit section ${section.title}`} onClick={() => openEditSection(section)}>
+                    <Pencil />
+                  </IconAction>
+                  <IconAction
+                    label={`Delete section ${section.title}`}
+                    tone="danger"
+                    onClick={() => setConfirm({ type: "section", id: section.id, label: section.title })}
+                  >
+                    <Trash2 />
+                  </IconAction>
+                </div>
+              </header>
+
+              {section.skills.length ? (
+                <ul className="divide-y divide-dash-border" aria-label={`Skills in ${section.title}`}>
+                  {section.skills.map((skill, index) => (
+                    <li
+                      key={skill.id}
+                      className="flex flex-wrap items-center gap-x-3 gap-y-2 py-2.5 pl-4 pr-3 transition-colors hover:bg-dash-raised/60 sm:pl-8"
+                    >
+                      <span className="w-5 shrink-0 text-right text-xs tabular-nums text-dash-muted">
+                        {index + 1}
+                      </span>
+                      <SkillIcon name={skill.name} icon={skill.icon} />
+                      <div className="min-w-0 flex-1 basis-40">
+                        <p className="truncate text-sm">
+                          <span className="font-medium text-dash-fg">{skill.name}</span>
+                          {skill.title ? <span className="text-dash-fg-2"> · {skill.title}</span> : null}
+                        </p>
+                        {skill.note ? (
+                          <p className="truncate text-xs text-dash-muted" title={skill.note}>
+                            {skill.note}
+                          </p>
+                        ) : null}
+                      </div>
+                      <div className="ml-auto flex shrink-0 items-center">
+                        <IconAction
+                          label={`Move ${skill.name} up`}
+                          disabled={reordering || index === 0}
+                          onClick={() => void moveItem(section, index, -1)}
+                        >
+                          <ArrowUp />
+                        </IconAction>
+                        <IconAction
+                          label={`Move ${skill.name} down`}
+                          disabled={reordering || index === section.skills.length - 1}
+                          onClick={() => void moveItem(section, index, 1)}
+                        >
+                          <ArrowDown />
+                        </IconAction>
+                        <ActionDivider />
+                        <IconAction label={`Edit ${skill.name}`} onClick={() => openEditItem(section, skill)}>
+                          <Pencil />
+                        </IconAction>
+                        <IconAction
+                          label={`Delete ${skill.name}`}
+                          tone="danger"
+                          onClick={() => setConfirm({ type: "item", id: skill.id, label: skill.name })}
+                        >
+                          <Trash2 />
+                        </IconAction>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-4 sm:px-5">
+                  <p className="text-[13px] text-dash-muted">
+                    No skills yet. A section with none is skipped by the reel.
+                  </p>
+                  <Button size="sm" variant="ghost" onClick={() => openNewItem(section)}>
+                    <Plus />
+                    Add skill
+                  </Button>
+                </div>
+              )}
+            </section>
+          ))
+        )}
+      </div>
 
       <Dialog
         open={sectionDialogOpen}
@@ -313,6 +521,7 @@ export default function V2SkillsPanel() {
             <Input
               label="Title"
               placeholder="Interface"
+              error={sectionForm.formState.errors.title ? "Title is required." : undefined}
               {...sectionForm.register("title", { required: true })}
             />
             <Input
@@ -351,11 +560,17 @@ export default function V2SkillsPanel() {
               <ColorPicker label="Accent" value={field.value} onChange={field.onChange} />
             )}
           />
-          <div className="flex justify-end gap-2 border-t border-white/10 pt-4">
-            <Button type="button" variant="ghost" onClick={() => setSectionDialogOpen(false)}>
+          <div className="flex justify-end gap-2 border-t border-dash-border pt-4">
+            <Button variant="ghost" onClick={() => setSectionDialogOpen(false)}>
               Cancel
             </Button>
-            <Button type="submit">{editingSection ? "Save section" : "Create section"}</Button>
+            <Button type="submit" disabled={sectionForm.formState.isSubmitting}>
+              {sectionForm.formState.isSubmitting
+                ? "Saving…"
+                : editingSection
+                  ? "Save section"
+                  : "Create section"}
+            </Button>
           </div>
         </form>
       </Dialog>
@@ -371,6 +586,7 @@ export default function V2SkillsPanel() {
             <Input
               label="Name"
               placeholder="React"
+              error={itemForm.formState.errors.name ? "Name is required." : undefined}
               {...itemForm.register("name", { required: true })}
             />
             <Input
@@ -392,7 +608,11 @@ export default function V2SkillsPanel() {
             {...itemForm.register("note")}
           />
           <div className="grid gap-4 md:grid-cols-3">
-            <Select label="Section" {...itemForm.register("sectionId", { valueAsNumber: true })}>
+            <Select
+              label="Section"
+              hint={editingItem ? "Can't be changed after creation. Add the skill to the other section instead." : undefined}
+              {...itemForm.register("sectionId", { valueAsNumber: true, disabled: editingItem })}
+            >
               {sections.map((section) => (
                 <option key={section.id} value={section.id}>
                   {section.title}
@@ -414,11 +634,13 @@ export default function V2SkillsPanel() {
               {...itemForm.register("sortOrder", { valueAsNumber: true })}
             />
           </div>
-          <div className="flex justify-end gap-2 border-t border-white/10 pt-4">
-            <Button type="button" variant="ghost" onClick={() => setItemDialogOpen(false)}>
+          <div className="flex justify-end gap-2 border-t border-dash-border pt-4">
+            <Button variant="ghost" onClick={() => setItemDialogOpen(false)}>
               Cancel
             </Button>
-            <Button type="submit">{editingItem ? "Save skill" : "Add skill"}</Button>
+            <Button type="submit" disabled={itemForm.formState.isSubmitting}>
+              {itemForm.formState.isSubmitting ? "Saving…" : editingItem ? "Save skill" : "Add skill"}
+            </Button>
           </div>
         </form>
       </Dialog>

@@ -203,6 +203,14 @@ export default function ReelChoreography({
   }, [isMobile, total]);
 
   /* desktop: one ScrollTrigger drives pan + the manual viewport pin */
+  // Queried once per scene set, not on every scroll frame.
+  const numeralsRef = useRef<HTMLElement[]>([]);
+  useEffect(() => {
+    numeralsRef.current = Array.from(
+      sectionRef.current?.querySelectorAll<HTMLElement>("[data-reel-numeral]") ?? []
+    );
+  }, [total, categories]);
+
   const onProgressRef = useRef<(self: ScrollTrigger) => void>(() => {});
   onProgressRef.current = (self) => {
     const viewport = viewportRef.current;
@@ -210,10 +218,9 @@ export default function ReelChoreography({
       gsap.set(viewport, { y: Math.max(0, self.progress) * (self.end - self.start) });
     }
 
-    const rmNow =
-      reduced || window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const numerals = sectionRef.current?.querySelectorAll("[data-reel-numeral]");
-    if (numerals?.length && !rmNow) {
+    // `reduced` already follows the media query; no fresh matchMedia per frame.
+    const numerals = numeralsRef.current;
+    if (numerals.length && !reduced) {
       const spread = Math.max(1, total - 1);
       numerals.forEach((numeral, i) => {
         const offset = gsap.utils.clamp(-1.4, 1.4, i - self.progress * spread);

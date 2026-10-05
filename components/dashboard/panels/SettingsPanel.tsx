@@ -1,15 +1,20 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Eye, EyeOff, Plus, Trash2 } from "lucide-react";
-import { Controller, useFieldArray, useForm, useWatch } from "react-hook-form";
+import { useCallback, useEffect, useId, useState, type ReactNode } from "react";
+import { Check, Plus, RotateCw, X } from "lucide-react";
+import { Controller, useFieldArray, useForm, useWatch, type UseFormRegisterReturn } from "react-hook-form";
 
 import { requestJson } from "@/components/dashboard/api";
+import { Alert } from "@/components/ui/dashboard/Alert";
+import { Badge } from "@/components/ui/dashboard/Badge";
 import { Button } from "@/components/ui/dashboard/Button";
 import { Card } from "@/components/ui/dashboard/Card";
 import { ImageUpload } from "@/components/ui/dashboard/ImageUpload";
 import { Input } from "@/components/ui/dashboard/Input";
-import { Select } from "@/components/ui/dashboard/Select";
+import { PageHeader } from "@/components/ui/dashboard/PageHeader";
+import { Skeleton } from "@/components/ui/dashboard/Skeleton";
+import { fieldClass, hintClass, labelClass } from "@/components/ui/dashboard/fieldStyles";
+import { cn } from "@/lib/cn";
 import { renderSummaryWithHighlights } from "@/lib/dashboard/render-summary-highlights";
 import type { PortfolioSettings } from "@/lib/dashboard/types";
 import { coerceSiteVersion, DEFAULT_SITE_VERSION, type SiteVersion } from "@/lib/siteVersion";
@@ -89,9 +94,163 @@ function fromFormValues(values: SettingsFormValues) {
   };
 }
 
+const SITE_VERSION_OPTIONS: Array<{ value: SiteVersion; title: string; description: string }> = [
+  {
+    value: "v1",
+    title: "v1 — Original site",
+    description: "Shows the original design, built from “Projects v1” and “Skills v1”.",
+  },
+  {
+    value: "v2",
+    title: "v2 — Redesigned site",
+    description: "Shows the redesign, built from the Projects and Skills pages above.",
+  },
+];
+
+const INTRO_OPTIONS: Array<{ value: "on" | "off"; title: string; description: string }> = [
+  { value: "on", title: "Play the intro", description: "Plays once per browser session." },
+  { value: "off", title: "Skip the intro", description: "Visitors go straight to the page." },
+];
+
+/** Selectable option card backed by a native radio input. */
+function RadioCard({
+  registration,
+  value,
+  title,
+  description,
+  badge,
+}: {
+  registration: UseFormRegisterReturn;
+  value: string;
+  title: string;
+  description: string;
+  badge?: ReactNode;
+}) {
+  return (
+    <label
+      className={cn(
+        "flex cursor-pointer items-start gap-3 rounded-lg border border-dash-border-strong bg-dash-field p-4 transition-colors",
+        "hover:bg-dash-raised has-[:checked]:border-dash-accent has-[:checked]:bg-dash-accent-soft",
+        "has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-dash-accent/60",
+      )}
+    >
+      <input type="radio" value={value} {...registration} className="mt-0.5 size-4 shrink-0 accent-dash-accent focus:outline-none" />
+      <span className="min-w-0 flex-1">
+        <span className="flex flex-wrap items-center gap-2">
+          <span className="text-sm font-medium text-dash-fg">{title}</span>
+          {badge}
+        </span>
+        <span className="mt-1 block text-[13px] leading-relaxed text-dash-muted">{description}</span>
+      </span>
+    </label>
+  );
+}
+
+/** Long-text field with a Write / Preview switch for the **highlight** syntax. */
+function SummaryField({
+  label,
+  hint,
+  rows,
+  minHeight,
+  placeholder,
+  preview,
+  onPreviewChange,
+  liveValue,
+  registration,
+}: {
+  label: string;
+  hint: string;
+  rows: number;
+  minHeight: string;
+  placeholder: string;
+  preview: boolean;
+  onPreviewChange: (preview: boolean) => void;
+  liveValue: string;
+  registration: UseFormRegisterReturn;
+}) {
+  const id = useId();
+  const tabClass = (active: boolean) =>
+    cn(
+      "h-7 rounded-md px-2.5 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-dash-accent/60",
+      active ? "bg-dash-raised text-dash-fg" : "text-dash-muted hover:text-dash-fg",
+    );
+
+  return (
+    <div className="space-y-1.5 md:col-span-2">
+      <div className="flex items-center justify-between gap-2">
+        <label htmlFor={id} className={labelClass}>
+          {label}
+        </label>
+        <div role="group" aria-label={`${label} view`} className="flex gap-0.5 rounded-lg border border-dash-border p-0.5">
+          <button type="button" className={tabClass(!preview)} aria-pressed={!preview} onClick={() => onPreviewChange(false)}>
+            Write
+          </button>
+          <button type="button" className={tabClass(preview)} aria-pressed={preview} onClick={() => onPreviewChange(true)}>
+            Preview
+          </button>
+        </div>
+      </div>
+      {preview ? (
+        <div
+          className={cn("rounded-lg border border-dash-border-strong bg-dash-field px-3 py-2 text-sm leading-relaxed text-dash-fg-2", minHeight)}
+        >
+          {renderSummaryWithHighlights(liveValue ?? "")}
+        </div>
+      ) : (
+        <textarea
+          id={id}
+          rows={rows}
+          placeholder={placeholder}
+          className={cn(fieldClass, "py-2 leading-relaxed", minHeight)}
+          {...registration}
+        />
+      )}
+      <p className={hintClass}>{hint}</p>
+    </div>
+  );
+}
+
+function ListLabel({ children, hint }: { children: ReactNode; hint?: string }) {
+  return (
+    <div className="mb-2">
+      <p className={labelClass}>{children}</p>
+      {hint ? <p className={cn("mt-0.5", hintClass)}>{hint}</p> : null}
+    </div>
+  );
+}
+
+function RemoveButton({ label, onClick, disabled }: { label: string; onClick: () => void; disabled: boolean }) {
+  return (
+    <Button type="button" variant="ghost" className="w-9 px-0" aria-label={label} title={label} onClick={onClick} disabled={disabled}>
+      <X />
+    </Button>
+  );
+}
+
+function SettingsSkeleton() {
+  return (
+    <div className="space-y-6" role="status" aria-label="Loading settings">
+      {[3, 4, 2].map((rows, i) => (
+        <div key={i} className="rounded-xl border border-dash-border bg-dash-surface p-5">
+          <Skeleton className="mb-5 h-4 w-40" />
+          <div className="grid gap-4 md:grid-cols-2">
+            {Array.from({ length: rows }, (_, j) => (
+              <Skeleton key={j} className="h-14 w-full" />
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export default function SettingsPanel() {
   const [status, setStatus] = useState("");
   const [error, setError] = useState("");
+  const [loadError, setLoadError] = useState("");
+  const [loading, setLoading] = useState(true);
+  /** Version currently stored on the server, i.e. what visitors see right now. */
+  const [liveVersion, setLiveVersion] = useState<SiteVersion | null>(null);
   const [shortSummaryPreview, setShortSummaryPreview] = useState(false);
   const [detailedSummaryPreview, setDetailedSummaryPreview] = useState(false);
 
@@ -124,20 +283,31 @@ export default function SettingsPanel() {
 
   const shortSummaryLive = useWatch({ control: form.control, name: "shortSummary" });
   const detailedSummaryLive = useWatch({ control: form.control, name: "detailedSummary" });
+  const selectedVersion = useWatch({ control: form.control, name: "siteVersion" });
+
+  const load = useCallback(async () => {
+    try {
+      const data = await requestJson<PortfolioSettings>("/api/dashboard/settings");
+      const values = toFormValues(data);
+      form.reset(values);
+      setLiveVersion(values.siteVersion);
+      setLoadError("");
+    } catch (err) {
+      setLoadError(err instanceof Error ? err.message : "Failed to load settings.");
+    } finally {
+      setLoading(false);
+    }
+  }, [form]);
 
   useEffect(() => {
-    const load = async () => {
-      setError("");
-      try {
-        const data = await requestJson<PortfolioSettings>("/api/dashboard/settings");
-        form.reset(toFormValues(data));
-      } catch (loadError) {
-        setError(loadError instanceof Error ? loadError.message : "Failed to load settings.");
-      }
-    };
-
     void load();
-  }, [form]);
+  }, [load]);
+
+  const retry = () => {
+    setLoading(true);
+    setLoadError("");
+    void load();
+  };
 
   const onSubmit = form.handleSubmit(async (values) => {
     setStatus("");
@@ -148,262 +318,321 @@ export default function SettingsPanel() {
         method: "PUT",
         body: JSON.stringify(payload),
       });
-      setStatus("Settings saved successfully.");
+      // Re-baseline so "Unsaved changes" tracks edits made after this save.
+      form.reset(values);
+      setLiveVersion(payload.siteVersion);
+      setStatus("All changes saved.");
     } catch (submitError) {
       setError(submitError instanceof Error ? submitError.message : "Failed to save settings.");
     }
   });
 
+  const { isSubmitting, isDirty, errors } = form.formState;
+  const versionChanging = liveVersion !== null && selectedVersion !== liveVersion;
+  const ready = !loading && !loadError;
+
   return (
-    <form className="space-y-8" onSubmit={onSubmit}>
-      <div>
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Profile</p>
-        <h2 className="mt-2 text-3xl font-semibold tracking-tight text-white">Settings</h2>
-        <p className="mt-2 max-w-xl text-sm text-slate-400">
-          Identity, imagery, and copy used on the public portfolio. Images are stored under{" "}
-          <code className="rounded bg-white/10 px-1.5 py-0.5 text-xs text-cyan-200">/public/uploads</code>.
-        </p>
-      </div>
+    <form onSubmit={onSubmit}>
+      <PageHeader
+        title="Settings"
+        description="Your profile details and the site-wide options every visitor gets."
+      />
 
-      <Card title="First impression" subtitle="What a visitor meets before any of your content.">
-        <div className="grid gap-4 md:grid-cols-2">
-          <Select
-            label="Active version"
-            hint="Every visitor sees this build. Takes effect as soon as you save."
-            {...form.register("siteVersion")}
+      {loading ? <SettingsSkeleton /> : null}
+
+      {!loading && loadError ? (
+        <Alert
+          tone="danger"
+          title="Couldn’t load settings"
+          action={
+            <Button size="sm" variant="secondary" onClick={retry}>
+              <RotateCw />
+              Retry
+            </Button>
+          }
+        >
+          {loadError} Saving is disabled until settings load, so nothing gets overwritten with blanks.
+        </Alert>
+      ) : null}
+
+      {ready ? (
+        <div className="space-y-6">
+          <Card
+            title="Site"
+            subtitle="Applies to every visitor as soon as you save."
           >
-            <option value="v1">v1 — Original</option>
-            <option value="v2">v2 — Current</option>
-          </Select>
-          <Select
-            label="Intro animation"
-            hint="Plays once per browser session. Off sends every visitor straight to the page."
-            {...form.register("introEnabled")}
-          >
-            <option value="on">On — play the intro</option>
-            <option value="off">Off — skip straight to the page</option>
-          </Select>
-        </div>
-      </Card>
+            <fieldset>
+              <legend className={labelClass}>Site version</legend>
+              <p className={cn("mt-0.5", hintClass)}>Decides which design the public site shows.</p>
+              <div className="mt-3 grid gap-3 md:grid-cols-2">
+                {SITE_VERSION_OPTIONS.map((option) => (
+                  <RadioCard
+                    key={option.value}
+                    registration={form.register("siteVersion")}
+                    value={option.value}
+                    title={option.title}
+                    description={option.description}
+                    badge={option.value === liveVersion ? <Badge tone="success">Live now</Badge> : null}
+                  />
+                ))}
+              </div>
+            </fieldset>
+            {versionChanging ? (
+              <Alert tone="warning" title={`Switching every visitor to ${selectedVersion}`} className="mt-4">
+                Saving changes replaces the {liveVersion} site with {selectedVersion} for everyone, immediately.
+              </Alert>
+            ) : null}
 
-      <Card>
-        <div className="grid gap-4 md:grid-cols-2">
-          <Input label="Name" placeholder="Your full name" {...form.register("name", { required: true })} />
-          <Input
-            label="Availability"
-            placeholder="Open to opportunities"
-            {...form.register("availability", { required: true })}
-          />
-          <Input
-            label="Total Projects"
-            type="number"
-            {...form.register("totalProjects", { valueAsNumber: true })}
-          />
-          <Input
-            label="Years Of Experience"
-            type="number"
-            {...form.register("yearsOfExperience", { valueAsNumber: true })}
-          />
-          <Input label="Location" placeholder="City, Country" {...form.register("location")} />
-          <Input label="Email" type="email" placeholder="you@domain.com" {...form.register("email")} />
-          <Input label="Phone" placeholder="+1 …" {...form.register("phone")} />
-          <Input
-            label="Happy Clients"
-            type="number"
-            {...form.register("happyClients", { valueAsNumber: true })}
-          />
-        </div>
-      </Card>
+            <fieldset className="mt-6 border-t border-dash-border pt-5">
+              <legend className={labelClass}>Intro animation</legend>
+              <div className="mt-3 grid gap-3 md:grid-cols-2">
+                {INTRO_OPTIONS.map((option) => (
+                  <RadioCard
+                    key={option.value}
+                    registration={form.register("introEnabled")}
+                    value={option.value}
+                    title={option.title}
+                    description={option.description}
+                  />
+                ))}
+              </div>
+            </fieldset>
+          </Card>
 
-      <Card title="Media" subtitle="Upload images — paths are saved to your profile.">
-        <div className="grid gap-8 md:grid-cols-2">
-          <Controller
-            name="primaryAvatar"
-            control={form.control}
-            render={({ field }) => (
-              <ImageUpload
-                label="Primary avatar"
-                value={field.value}
-                onChange={field.onChange}
-                hint="Hero / main portrait."
+          <Card title="Profile" subtitle="Who you are, as shown in the hero and about sections.">
+            <div className="grid gap-4 md:grid-cols-2">
+              <Input
+                label="Name"
+                placeholder="Your full name"
+                error={errors.name ? "Name is required." : undefined}
+                {...form.register("name", { required: true })}
               />
-            )}
-          />
-          <Controller
-            name="subAvatar"
-            control={form.control}
-            render={({ field }) => (
-              <ImageUpload
-                label="Sub avatar"
-                value={field.value}
-                onChange={field.onChange}
-                hint="Secondary shot (e.g. About)."
+              <Input
+                label="Availability"
+                placeholder="Open to opportunities"
+                error={errors.availability ? "Availability is required." : undefined}
+                {...form.register("availability", { required: true })}
               />
-            )}
-          />
-          <div className="md:col-span-2">
-            <Controller
-              name="bannerImage"
-              control={form.control}
-              render={({ field }) => (
-                <ImageUpload
-                  label="Banner image"
-                  value={field.value}
-                  onChange={field.onChange}
-                  hint="Wide banner for sections that use it."
+
+              <div className="md:col-span-2">
+                <ListLabel hint="Rotating titles, e.g. Full stack developer.">Designations</ListLabel>
+                <div className="space-y-2">
+                  {designationFields.fields.map((field, index) => (
+                    <div key={field.id} className="flex gap-2">
+                      <div className="min-w-0 flex-1">
+                        <Input
+                          aria-label={`Designation ${index + 1}`}
+                          placeholder="e.g. Full stack developer"
+                          {...form.register(`designations.${index}.value`)}
+                        />
+                      </div>
+                      <RemoveButton
+                        label={`Remove designation ${index + 1}`}
+                        onClick={() => designationFields.remove(index)}
+                        disabled={designationFields.fields.length === 1}
+                      />
+                    </div>
+                  ))}
+                </div>
+                <Button size="sm" variant="ghost" className="mt-2" onClick={() => designationFields.append({ value: "" })}>
+                  <Plus />
+                  Add designation
+                </Button>
+              </div>
+
+              <SummaryField
+                label="Short summary"
+                hint="One or two lines for cards and meta. Wrap words in **double** or ***triple*** asterisks to highlight them."
+                rows={3}
+                minHeight="min-h-[88px]"
+                placeholder="One or two lines for cards and meta."
+                preview={shortSummaryPreview}
+                onPreviewChange={setShortSummaryPreview}
+                liveValue={shortSummaryLive}
+                registration={form.register("shortSummary")}
+              />
+              <SummaryField
+                label="Detailed summary"
+                hint="Longer bio for the about section. Same highlight syntax."
+                rows={6}
+                minHeight="min-h-[160px]"
+                placeholder="Longer bio for the about section."
+                preview={detailedSummaryPreview}
+                onPreviewChange={setDetailedSummaryPreview}
+                liveValue={detailedSummaryLive}
+                registration={form.register("detailedSummary")}
+              />
+
+              <div className="md:col-span-2">
+                <ListLabel>Currently focused on</ListLabel>
+                <div className="space-y-2">
+                  {focusedFields.fields.map((field, index) => (
+                    <div key={field.id} className="flex gap-2">
+                      <div className="min-w-0 flex-1">
+                        <Input
+                          aria-label={`Focus item ${index + 1}`}
+                          placeholder="e.g. Distributed systems"
+                          {...form.register(`currentlyFocusedOn.${index}.value`)}
+                        />
+                      </div>
+                      <RemoveButton
+                        label={`Remove focus item ${index + 1}`}
+                        onClick={() => focusedFields.remove(index)}
+                        disabled={focusedFields.fields.length === 1}
+                      />
+                    </div>
+                  ))}
+                </div>
+                <Button size="sm" variant="ghost" className="mt-2" onClick={() => focusedFields.append({ value: "" })}>
+                  <Plus />
+                  Add focus item
+                </Button>
+              </div>
+            </div>
+          </Card>
+
+          <Card title="Contact & socials">
+            <div className="grid gap-4 md:grid-cols-2">
+              <Input label="Email" type="email" placeholder="you@domain.com" {...form.register("email")} />
+              <Input label="Phone" type="tel" placeholder="+1 …" {...form.register("phone")} />
+              <Input label="Location" placeholder="City, Country" {...form.register("location")} />
+
+              <div className="md:col-span-2">
+                <ListLabel hint="Icon name such as github, linkedin or mail, plus the full URL. Rows missing either are skipped.">
+                  Social links
+                </ListLabel>
+                <div className="space-y-2">
+                  {socialsFields.fields.map((field, index) => (
+                    <div key={field.id} className="flex flex-wrap gap-2 sm:flex-nowrap">
+                      <div className="w-full sm:w-40 sm:shrink-0">
+                        <Input
+                          aria-label={`Social ${index + 1} icon name`}
+                          placeholder="github"
+                          {...form.register(`socials.${index}.iconName`)}
+                        />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <Input
+                          aria-label={`Social ${index + 1} link`}
+                          placeholder="https://…"
+                          {...form.register(`socials.${index}.link`)}
+                        />
+                      </div>
+                      <RemoveButton
+                        label={`Remove social link ${index + 1}`}
+                        onClick={() => socialsFields.remove(index)}
+                        disabled={socialsFields.fields.length === 1}
+                      />
+                    </div>
+                  ))}
+                </div>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="mt-2"
+                  onClick={() => socialsFields.append({ iconName: "", link: "" })}
+                >
+                  <Plus />
+                  Add social link
+                </Button>
+              </div>
+            </div>
+          </Card>
+
+          <Card title="Stats" subtitle="Headline numbers shown on the public site.">
+            <div className="grid gap-4 sm:grid-cols-3">
+              <Input
+                label="Total projects"
+                type="number"
+                min={0}
+                className="tabular-nums"
+                {...form.register("totalProjects", { valueAsNumber: true })}
+              />
+              <Input
+                label="Years of experience"
+                type="number"
+                min={0}
+                className="tabular-nums"
+                {...form.register("yearsOfExperience", { valueAsNumber: true })}
+              />
+              <Input
+                label="Happy clients"
+                type="number"
+                min={0}
+                className="tabular-nums"
+                {...form.register("happyClients", { valueAsNumber: true })}
+              />
+            </div>
+          </Card>
+
+          <Card title="Images" subtitle="Uploaded images are saved to your profile when you save changes.">
+            <div className="grid gap-6 md:grid-cols-2">
+              <Controller
+                name="primaryAvatar"
+                control={form.control}
+                render={({ field }) => (
+                  <ImageUpload label="Primary avatar" value={field.value} onChange={field.onChange} hint="Main portrait in the hero." />
+                )}
+              />
+              <Controller
+                name="subAvatar"
+                control={form.control}
+                render={({ field }) => (
+                  <ImageUpload
+                    label="Secondary avatar"
+                    value={field.value}
+                    onChange={field.onChange}
+                    hint="Second portrait, e.g. in the about section."
+                  />
+                )}
+              />
+              <div className="md:col-span-2">
+                <Controller
+                  name="bannerImage"
+                  control={form.control}
+                  render={({ field }) => (
+                    <ImageUpload
+                      label="Banner image"
+                      value={field.value}
+                      onChange={field.onChange}
+                      hint="Wide image for sections that use a banner."
+                    />
+                  )}
                 />
+              </div>
+            </div>
+          </Card>
+
+          {error ? (
+            <Alert tone="danger" title="Changes not saved">
+              {error}
+            </Alert>
+          ) : null}
+
+          <div className="sticky bottom-4 z-10 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-dash-border-strong bg-dash-surface px-4 py-3">
+            <p className="text-[13px]" aria-live="polite">
+              {isSubmitting ? (
+                <span className="text-dash-muted">Saving…</span>
+              ) : isDirty ? (
+                <span className="inline-flex items-center gap-2 text-dash-warning">
+                  <span className="size-1.5 rounded-full bg-current" aria-hidden />
+                  Unsaved changes
+                </span>
+              ) : status ? (
+                <span className="inline-flex items-center gap-1.5 text-dash-success">
+                  <Check className="size-4" aria-hidden />
+                  {status}
+                </span>
+              ) : (
+                <span className="text-dash-muted">No unsaved changes</span>
               )}
-            />
+            </p>
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? "Saving…" : "Save changes"}
+            </Button>
           </div>
         </div>
-      </Card>
-
-      <Card>
-        <div className="space-y-1.5">
-          <div className="flex items-center justify-between gap-2">
-            <span className="text-xs font-medium uppercase tracking-[0.08em] text-slate-400">Short summary</span>
-            <button
-              type="button"
-              onClick={() => setShortSummaryPreview((v) => !v)}
-              className="rounded-lg p-2 text-slate-400 transition hover:bg-white/10 hover:text-cyan-300"
-              title={shortSummaryPreview ? "Edit" : "Preview"}
-              aria-label={shortSummaryPreview ? "Switch to edit mode" : "Switch to preview mode"}
-            >
-              {shortSummaryPreview ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-            </button>
-          </div>
-          {shortSummaryPreview ? (
-            <div className="min-h-[88px] rounded-xl border border-white/12 bg-slate-950/60 px-3 py-2.5 text-sm">
-              {renderSummaryWithHighlights(shortSummaryLive ?? "")}
-            </div>
-          ) : (
-            <textarea
-              placeholder="One or two lines for cards and meta. Use **emphasis** or ***strong emphasis***."
-              rows={3}
-              className="min-h-[88px] w-full rounded-xl border border-white/12 bg-slate-900/70 px-3 py-2 text-sm text-white outline-none transition focus:border-blue-400/55 focus:ring-2 focus:ring-blue-500/20"
-              {...form.register("shortSummary")}
-            />
-          )}
-        </div>
-
-        <div className="mt-6 space-y-1.5">
-          <div className="flex items-center justify-between gap-2">
-            <span className="text-xs font-medium uppercase tracking-[0.08em] text-slate-400">Detailed summary</span>
-            <button
-              type="button"
-              onClick={() => setDetailedSummaryPreview((v) => !v)}
-              className="rounded-lg p-2 text-slate-400 transition hover:bg-white/10 hover:text-cyan-300"
-              title={detailedSummaryPreview ? "Edit" : "Preview"}
-              aria-label={detailedSummaryPreview ? "Switch to edit mode" : "Switch to preview mode"}
-            >
-              {detailedSummaryPreview ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-            </button>
-          </div>
-          {detailedSummaryPreview ? (
-            <div className="min-h-[160px] rounded-xl border border-white/12 bg-slate-950/60 px-3 py-2.5 text-sm">
-              {renderSummaryWithHighlights(detailedSummaryLive ?? "")}
-            </div>
-          ) : (
-            <textarea
-              placeholder="Longer bio for the about section. **Bold phrases** and ***key highlights***."
-              rows={6}
-              className="min-h-[160px] w-full rounded-xl border border-white/12 bg-slate-900/70 px-3 py-2 text-sm text-white outline-none transition focus:border-blue-400/55 focus:ring-2 focus:ring-blue-500/20"
-              {...form.register("detailedSummary")}
-            />
-          )}
-        </div>
-      </Card>
-
-      <Card title="Designations">
-        <div className="space-y-2">
-          {designationFields.fields.map((field, index) => (
-            <div key={field.id} className="flex gap-2">
-              <Input
-                className="flex-1"
-                placeholder="e.g. Full Stack Developer"
-                {...form.register(`designations.${index}.value`)}
-              />
-              <Button
-                type="button"
-                variant="danger"
-                onClick={() => designationFields.remove(index)}
-                disabled={designationFields.fields.length === 1}
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            </div>
-          ))}
-          <Button
-            type="button"
-            variant="secondary"
-            onClick={() => designationFields.append({ value: "" })}
-          >
-            <Plus className="mr-1 h-4 w-4" />
-            Add Designation
-          </Button>
-        </div>
-      </Card>
-
-      <Card title="Social Links" subtitle="Use iconName values like github, linkedin, mail.">
-        <div className="space-y-2">
-          {socialsFields.fields.map((field, index) => (
-            <div key={field.id} className="grid gap-2 md:grid-cols-[160px_1fr_auto]">
-              <Input
-                placeholder="iconName"
-                {...form.register(`socials.${index}.iconName`)}
-              />
-              <Input placeholder="https://..." {...form.register(`socials.${index}.link`)} />
-              <Button
-                type="button"
-                variant="danger"
-                onClick={() => socialsFields.remove(index)}
-                disabled={socialsFields.fields.length === 1}
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            </div>
-          ))}
-          <Button type="button" variant="secondary" onClick={() => socialsFields.append({ iconName: "", link: "" })}>
-            <Plus className="mr-1 h-4 w-4" />
-            Add Social
-          </Button>
-        </div>
-      </Card>
-
-      <Card title="Currently Focused On">
-        <div className="space-y-2">
-          {focusedFields.fields.map((field, index) => (
-            <div key={field.id} className="flex gap-2">
-              <Input className="flex-1" {...form.register(`currentlyFocusedOn.${index}.value`)} />
-              <Button
-                type="button"
-                variant="danger"
-                onClick={() => focusedFields.remove(index)}
-                disabled={focusedFields.fields.length === 1}
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            </div>
-          ))}
-          <Button
-            type="button"
-            variant="secondary"
-            onClick={() => focusedFields.append({ value: "" })}
-          >
-            <Plus className="mr-1 h-4 w-4" />
-            Add Focus Item
-          </Button>
-        </div>
-      </Card>
-
-      <div className="flex items-center gap-3">
-        <Button type="submit" disabled={form.formState.isSubmitting}>
-          {form.formState.isSubmitting ? "Saving..." : "Save Settings"}
-        </Button>
-        {status ? <span className="text-sm text-emerald-300">{status}</span> : null}
-        {error ? <span className="text-sm text-rose-300">{error}</span> : null}
-      </div>
+      ) : null}
     </form>
   );
 }
-

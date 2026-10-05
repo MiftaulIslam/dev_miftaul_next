@@ -1,7 +1,6 @@
 "use client";
 
-import { useId } from "react";
-import { motion, useTransform } from "framer-motion";
+import { useEffect, useId, useRef } from "react";
 
 import type { PointerField } from "@/lib/usePointerField";
 
@@ -32,8 +31,24 @@ interface HeroAmbienceProps {
  */
 export default function HeroAmbience({ pointer }: HeroAmbienceProps) {
   const dotId = useId();
-  const counterX = useTransform(pointer.x, (value) => -value);
-  const counterY = useTransform(pointer.y, (value) => -value);
+  const lightRef = useRef<HTMLDivElement>(null);
+  const windowRef = useRef<HTMLDivElement>(null);
+  const gridRef = useRef<HTMLDivElement>(null);
+
+  // Written straight to the nodes from the pointer field: no React render per
+  // pointer frame, and only transform/opacity change.
+  useEffect(() => {
+    if (!pointer.active) return;
+    return pointer.subscribe(({ x, y, presence }) => {
+      const move = `translate3d(${x}px, ${y}px, 0)`;
+      for (const node of [lightRef.current, windowRef.current]) {
+        if (!node) continue;
+        node.style.transform = move;
+        node.style.opacity = String(presence);
+      }
+      if (gridRef.current) gridRef.current.style.transform = `translate3d(${-x}px, ${-y}px, 0)`;
+    });
+  }, [pointer]);
 
   return (
     <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden>
@@ -69,58 +84,59 @@ export default function HeroAmbience({ pointer }: HeroAmbienceProps) {
         className="animate-drift absolute -left-24 top-[8%] h-[30rem] w-[30rem] rounded-full blur-[110px]"
         style={{ background: "radial-gradient(circle, var(--hero-halo) 0%, transparent 68%)" }}
       />
+      {/* The drift comes from `.animate-drift`, not an inline `animation`, so the
+          reduced-motion rule in globals.css can stop it; only its timing is
+          inline (inline longhands override the class, `!important` still wins). */}
       <div
-        className="absolute -right-16 bottom-[6%] h-[24rem] w-[24rem] rounded-full blur-[110px]"
+        className="animate-drift absolute -right-16 bottom-[6%] h-[24rem] w-[24rem] rounded-full blur-[110px]"
         style={{
           background: "radial-gradient(circle, var(--hero-halo-alt) 0%, transparent 68%)",
-          animation: "drift 19s ease-in-out infinite reverse",
+          animationDuration: "19s",
+          animationDirection: "reverse",
         }}
       />
 
       {pointer.active && (
         <>
           {/* Pointer light */}
-          <motion.div
+          <div
+            ref={lightRef}
             className="absolute rounded-full blur-[90px] will-change-transform"
             style={{
               width: SPOT,
               height: SPOT,
               left: -SPOT / 2,
               top: -SPOT / 2,
-              x: pointer.x,
-              y: pointer.y,
-              opacity: pointer.presence,
+              opacity: 0,
               background: "radial-gradient(circle, var(--hero-spot) 0%, transparent 62%)",
             }}
           />
 
           {/* Grid brightened inside the moving window */}
-          <motion.div
+          <div
+            ref={windowRef}
             className="absolute overflow-hidden rounded-full will-change-transform"
             style={{
               width: SPOT,
               height: SPOT,
               left: -SPOT / 2,
               top: -SPOT / 2,
-              x: pointer.x,
-              y: pointer.y,
-              opacity: pointer.presence,
+              opacity: 0,
               maskImage: "radial-gradient(circle, #000 0%, transparent 62%)",
               WebkitMaskImage: "radial-gradient(circle, #000 0%, transparent 62%)",
             }}
           >
-            <motion.div
+            <div
+              ref={gridRef}
               className="bg-grid absolute opacity-90"
               style={{
                 width: FIELD,
                 height: FIELD,
                 left: FIELD_OFFSET,
                 top: FIELD_OFFSET,
-                x: counterX,
-                y: counterY,
               }}
             />
-          </motion.div>
+          </div>
         </>
       )}
 

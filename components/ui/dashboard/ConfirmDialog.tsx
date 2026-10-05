@@ -26,8 +26,8 @@ export function ConfirmDialog({
 }) {
   return (
     <Dialog open={open} onClose={onClose} title={title} size="sm">
-      <p className="text-sm leading-relaxed text-slate-300">{message}</p>
-      <div className="mt-6 flex flex-wrap justify-end gap-2 border-t border-white/10 pt-4">
+      <p className="text-sm leading-relaxed text-dash-fg-2">{message}</p>
+      <div className="mt-6 flex flex-wrap justify-end gap-2 border-t border-dash-border pt-4">
         <Button type="button" variant="ghost" onClick={onClose} disabled={pending}>
           {cancelLabel}
         </Button>

@@ -1,6 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Lets parallel local sessions build side by side (e.g. NEXT_DIST_DIR=.next-perf)
+  // without overwriting the .next a running `next start` serves from.
+  distDir: process.env.NEXT_DIST_DIR || ".next",
   images: {
     remotePatterns: [
       {
@@ -16,6 +19,14 @@ const nextConfig: NextConfig = {
         search: "",
       },
     ],
+  },
+  // Kept out of search indexes: API JSON, the dashboard, and the /devxp scratch page.
+  async headers() {
+    const noindex = [{ key: "X-Robots-Tag", value: "noindex" }];
+    return ["/api/:path*", "/dashboard", "/dashboard/:path*", "/devxp"].map((source) => ({
+      source,
+      headers: noindex,
+    }));
   },
 };
 

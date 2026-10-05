@@ -55,6 +55,14 @@ export default function ReelPlates({ project, index, total, direction, dragRef }
     const slots: [ReelProject, ReelProject] = [...layers.slots] as [ReelProject, ReelProject];
     slots[back] = project;
     setLayers({ slots, front: back, forId: project.id });
+  } else if (layers.slots[layers.front] !== project) {
+    // Same project, fresher data: the section paints the shipped fallback list
+    // first and swaps in the dashboard rows once fetched. The id matches, so no
+    // handoff should play, but the front slot must take the new object or it
+    // keeps showing the fallback's plate until the reader steps away and back.
+    const slots: [ReelProject, ReelProject] = [...layers.slots] as [ReelProject, ReelProject];
+    slots[layers.front] = project;
+    setLayers({ ...layers, slots });
   }
 
   // Parallax is written straight to the node from the motion values; it never
@@ -63,28 +71,17 @@ export default function ReelPlates({ project, index, total, direction, dragRef }
     const node = parallaxRef.current;
     if (!node || !pointer.active) return;
 
-    let frame = 0;
-    const write = () => {
-      frame = 0;
-      const x = pointer.normX.get() * PARALLAX_X;
-      const y = pointer.normY.get() * PARALLAX_Y;
+    const unsubscribe = pointer.subscribe(({ normX, normY }) => {
+      const x = normX * PARALLAX_X;
+      const y = normY * PARALLAX_Y;
       node.style.transform = `translate3d(${x.toFixed(2)}px, ${y.toFixed(2)}px, 0)`;
-    };
-    const schedule = () => {
-      if (frame) return;
-      frame = requestAnimationFrame(write);
-    };
-
-    const unsubX = pointer.normX.on("change", schedule);
-    const unsubY = pointer.normY.on("change", schedule);
+    });
 
     return () => {
-      unsubX();
-      unsubY();
-      if (frame) cancelAnimationFrame(frame);
+      unsubscribe();
       node.style.transform = "";
     };
-  }, [pointer.active, pointer.normX, pointer.normY]);
+  }, [pointer]);
 
   return (
     <div className="wreel-plates" ref={parallaxRef} aria-hidden="true">

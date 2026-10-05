@@ -1,3 +1,4 @@
+import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
 
 import { requireDashboardAuth } from "@/lib/dashboard/api-auth";
@@ -32,6 +33,9 @@ export async function PUT(request: Request) {
     ...payload,
     siteVersion: coerceSiteVersion(payload.siteVersion),
   });
+  // Public pages are prerendered with the profile baked in (revalidate 60).
+  // Refresh them now so a save shows on the next visit, not up to a minute later.
+  revalidatePath("/", "layout");
   return NextResponse.json(next);
 }
 
