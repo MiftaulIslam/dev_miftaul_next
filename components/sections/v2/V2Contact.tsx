@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef } from "react";
+import Link from "next/link";
 
 import ContactForm from "@/components/contact/ContactForm";
 import StudioClock from "@/components/contact/StudioClock";
@@ -38,7 +39,7 @@ export default function V2Contact({ profile }: ContactProps) {
     <section
       id="contact"
       ref={sectionRef}
-      className="relative overflow-hidden py-24 md:py-32"
+      className="console-site relative overflow-hidden py-24 md:py-32"
     >
       <div className="mx-auto max-w-[88rem] px-5 md:px-10">
         <div className="grid grid-cols-1 items-center gap-14 min-[768px]:grid-cols-2 min-[768px]:gap-[5vw] min-[1100px]:grid-cols-[6fr_5fr]">
@@ -55,8 +56,10 @@ export default function V2Contact({ profile }: ContactProps) {
               panel beside it sends straight to my inbox.
             </p>
 
-            {/* Three readings, one hairline above, no borders between */}
-            <div className="mt-10 grid grid-cols-2 gap-x-6 gap-y-9 border-t border-console-hairline pt-5 min-[900px]:grid-cols-3">
+            {/* Three readings, one hairline above, no borders between. The
+                clock is ~175px of fixed-width digits, wider than a third (or
+                a half, on phones) of this column, so it takes its own row. */}
+            <div className="mt-10 grid grid-cols-2 gap-x-6 gap-y-9 border-t border-console-hairline pt-5 [&>*:first-child]:col-span-2">
               <StudioClock initialTime={initialTime} initialAtDesk={initialAtDesk} />
 
               {/* Cell 3 — booking: a standing fact, not a control */}
@@ -120,14 +123,17 @@ export default function V2Contact({ profile }: ContactProps) {
           </div>
 
           {/* ── Form column ───────────────────────────────────────────── */}
-          <div className="rounded-xl border border-console-hairline bg-console-panel p-[clamp(1.5rem,2.6vw,2.25rem)]">
+          <div className="glass rounded-2xl p-[clamp(1.5rem,2.6vw,2.25rem)] shadow-2xl shadow-black/10">
             <ContactForm />
           </div>
         </div>
 
         <div className="mt-20 pt-8 text-center text-sm text-console-caption">
           <p>
-            &copy; {new Date().getFullYear()} {profile.name}.
+            &copy; {new Date().getFullYear()} {profile.name}.{" "}
+            <Link href="/resume" className="underline-offset-4 transition-colors hover:text-console-ink hover:underline">
+              Resume
+            </Link>
           </p>
         </div>
       </div>

@@ -484,6 +484,11 @@ export default function ProjectReel({ projects, initialSlug, syncUrl = false }: 
 
               <p className="wreel-problem">{project.problem}</p>
               <p className="wreel-outcome">{project.outcome}</p>
+              {/* Problem and outcome are clamped to a teaser; the full text
+                  lives in the case sheet. */}
+              <button type="button" className="wreel-more" onClick={() => setCaseOpen(true)}>
+                See more
+              </button>
 
               <ul className="wreel-tech">
                 {project.tech.map((tech) => (

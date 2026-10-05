@@ -704,6 +704,19 @@
   color: color-mix(in oklab, var(--ink) 30%, transparent);
 }
 
+/* Touch has no hover: show the tap copy unless a fine pointer can hover. */
+.xp-hint-fine {
+  display: none;
+}
+@media (hover: hover) and (pointer: fine) {
+  .xp-hint-fine {
+    display: inline;
+  }
+  .xp-hint-touch {
+    display: none;
+  }
+}
+
 /* The same derived fact the popover carries, kept here so nothing in this
    section exists only on hover. */
 .xp-panel-shared {

@@ -7,7 +7,7 @@
  */
 export function renderSummaryWithHighlights(text: string): ReactNode {
   if (!text.trim()) {
-    return <span className="text-slate-500">Empty</span>;
+    return <span className="text-dash-muted">Empty</span>;
   }
 
   const nodes: ReactNode[] = [];
@@ -58,5 +58,5 @@ export function renderSummaryWithHighlights(text: string): ReactNode {
     nodes.push(<span key={`plain-${key++}`}>{text.slice(lastIndex)}</span>);
   }
 
-  return <span className="whitespace-pre-wrap leading-relaxed text-slate-200">{nodes}</span>;
+  return <span className="whitespace-pre-wrap leading-relaxed text-dash-fg-2">{nodes}</span>;
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useEffect, useState, type ComponentType } from "react";
+import { useRef, useEffect, useState, type ComponentType, type CSSProperties } from "react";
 import Image from "next/image";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
@@ -8,12 +8,13 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { ArrowDown, ArrowUpRight, Globe, Mail } from "lucide-react";
 
 import { GitHubIcon, LinkedInIcon } from "@/components/ui/SocialIcons";
-import ScrollHighlightText from "@/components/ui/ScrollHighlightText";
+import V2ScrollHighlightText from "@/components/ui/v2/V2ScrollHighlightText";
 import HeroAmbience from "@/components/hero/HeroAmbience";
 import DeveloperIdCard from "@/components/hero/DeveloperIdCard";
 import type { PortfolioSettings } from "@/lib/dashboard/types";
 import { useReducedMotion } from "@/lib/useReducedMotion";
 import { usePointerField } from "@/lib/usePointerField";
+import V2Button from "@/components/ui/v2/V2Button";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -43,41 +44,38 @@ function splitName(fullName: string) {
   };
 }
 
-export default function V2Hero({ profile }: HeroProps) {
-  const sectionRef = useRef<HTMLElement>(null);
-  const bgLayerRef = useRef<HTMLDivElement>(null);
-  const contentLeftRef = useRef<HTMLDivElement>(null);
-  const headingRef = useRef<HTMLDivElement>(null);
-  const roleRef = useRef<HTMLSpanElement>(null);
-  const ctaRef = useRef<HTMLDivElement>(null);
-  const socialsRef = useRef<HTMLDivElement>(null);
-  const cardRef = useRef<HTMLDivElement>(null);
-  const figureRef = useRef<HTMLDivElement>(null);
+/** Socials rise in one after another, 80ms apart, after the CTAs. */
+function socialEntrance(index: number): CSSProperties {
+  return {
+    "--hero-delay": `${1.32 + index * 0.08}s`,
+    "--hero-dur": "0.4s",
+    "--hero-rise": "15px",
+  } as CSSProperties;
+}
 
-  const reduced = useReducedMotion();
-  const pointer = usePointerField(sectionRef);
-  const [roleIndex, setRoleIndex] = useState(0);
-
-  const roles = profile.designations.length ? profile.designations : DEFAULT_ROLES;
-  const socialLinks = profile.socials.length
-    ? profile.socials
-    : [{ iconName: "mail", link: `mailto:${profile.email}` }];
-  const nameParts = splitName(profile.name);
-  const safeRole = roles[roleIndex % roles.length];
+/**
+ * The cycling designation under the name.
+ *
+ * Its own component so each tick re-renders one span instead of the whole hero
+ * (ID card, ambience, CTAs). It also stops while off screen: the interval, its
+ * tweens and its renders used to keep running for the rest of the visit.
+ */
+function RoleTicker({ roles, reduced }: { roles: string[]; reduced: boolean }) {
+  const ref = useRef<HTMLSpanElement>(null);
+  const [index, setIndex] = useState(0);
 
   useEffect(() => {
-    if (reduced) return;
+    const el = ref.current;
+    if (reduced || !el) return;
 
     const cycle = () => {
-      const el = roleRef.current;
-      if (!el) return;
       gsap.to(el, {
         y: -20,
         opacity: 0,
         duration: 0.35,
         ease: "power2.in",
         onComplete: () => {
-          setRoleIndex((prev) => (prev + 1) % roles.length);
+          setIndex((prev) => (prev + 1) % roles.length);
           gsap.fromTo(
             el,
             { y: 20, opacity: 0 },
@@ -87,9 +85,54 @@ export default function V2Hero({ profile }: HeroProps) {
       });
     };
 
-    const id = setInterval(cycle, 2800);
-    return () => clearInterval(id);
+    let id: ReturnType<typeof setInterval> | undefined;
+    const observer = new IntersectionObserver(([entry]) => {
+      clearInterval(id);
+      id = entry.isIntersecting ? setInterval(cycle, 2800) : undefined;
+    });
+    observer.observe(el);
+
+    return () => {
+      observer.disconnect();
+      clearInterval(id);
+    };
   }, [reduced, roles]);
+
+  return (
+    <span ref={ref} className="block text-lg font-medium text-muted-foreground md:text-xl">
+      {roles[index % roles.length]}
+    </span>
+  );
+}
+
+export default function V2Hero({ profile }: HeroProps) {
+  const sectionRef = useRef<HTMLElement>(null);
+  const bgLayerRef = useRef<HTMLDivElement>(null);
+  const contentLeftRef = useRef<HTMLDivElement>(null);
+  const cardRef = useRef<HTMLDivElement>(null);
+  const figureRef = useRef<HTMLDivElement>(null);
+
+  const reduced = useReducedMotion();
+  const pointer = usePointerField(sectionRef);
+
+  // The hero's CSS loops (drifting halos, the status pulse, the scroll cue)
+  // pause once it scrolls away: a running animation is restyled on every frame
+  // the page renders, and during smooth scrolling that is every frame.
+  useEffect(() => {
+    const section = sectionRef.current;
+    if (!section) return;
+    const observer = new IntersectionObserver(([entry]) => {
+      section.toggleAttribute("data-offscreen", !entry.isIntersecting);
+    });
+    observer.observe(section);
+    return () => observer.disconnect();
+  }, []);
+
+  const roles = profile.designations.length ? profile.designations : DEFAULT_ROLES;
+  const socialLinks = profile.socials.length
+    ? profile.socials
+    : [{ iconName: "mail", link: `mailto:${profile.email}` }];
+  const nameParts = splitName(profile.name);
 
   useGSAP(
     () => {
@@ -138,67 +181,11 @@ export default function V2Hero({ profile }: HeroProps) {
         }
       }
 
-      // Everything below is the intro timeline, which is skipped wholesale under
-      // reduced motion. The figure above must therefore be handled before this
-      // return, or its reduced-motion branch is unreachable.
-      if (reduced || !headingRef.current) return;
-
-      const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
-
-      const lines = headingRef.current.querySelectorAll(".hero-line");
-      tl.fromTo(
-        lines,
-        { y: 70, opacity: 0, clipPath: "inset(0 0 100% 0)" },
-        { y: 0, opacity: 1, clipPath: "inset(0 0 0% 0)", duration: 0.9, stagger: 0.12 },
-      );
-
-      tl.fromTo(
-        ".hero-greeting",
-        { y: 20, opacity: 0 },
-        { y: 0, opacity: 1, duration: 0.5 },
-        "-=0.6",
-      );
-
-      tl.fromTo(
-        ".hero-summary",
-        { y: 20, opacity: 0 },
-        { y: 0, opacity: 1, duration: 0.5 },
-        "-=0.3",
-      );
-
-      if (ctaRef.current) {
-        tl.fromTo(
-          ctaRef.current.children,
-          { y: 20, opacity: 0 },
-          { y: 0, opacity: 1, duration: 0.45, stagger: 0.1 },
-          "-=0.25",
-        );
-      }
-
-      if (socialsRef.current) {
-        tl.fromTo(
-          socialsRef.current.children,
-          { y: 15, opacity: 0 },
-          { y: 0, opacity: 1, duration: 0.4, stagger: 0.08 },
-          "-=0.2",
-        );
-      }
-
-      // The badge drops in on its lanyard rather than fading up.
-      if (cardRef.current) {
-        tl.fromTo(
-          cardRef.current,
-          { y: -46, opacity: 0, filter: "blur(10px)" },
-          {
-            y: 0,
-            opacity: 1,
-            filter: "blur(0px)",
-            duration: 1.1,
-            ease: "power3.out",
-          },
-          0.35,
-        );
-      }
+      // The entrance (name, greeting, summary, CTAs, socials, badge) is CSS,
+      // `.hero-in*` in globals.css, so it plays from the first paint of the
+      // server HTML instead of waiting for hydration, and reduced motion simply
+      // leaves everything visible. Only the scroll-linked parallax stays here.
+      if (reduced) return;
 
       const mm = gsap.matchMedia();
 
@@ -377,42 +364,42 @@ export default function V2Hero({ profile }: HeroProps) {
 
       <div className="relative z-10 mx-auto grid w-full min-w-0 max-w-[88rem] grid-cols-1 items-center gap-12 px-5 pb-16 pt-24 md:px-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,26rem)] lg:gap-20 lg:pb-16 lg:pt-24">
         <div ref={contentLeftRef} className="flex min-w-0 flex-col gap-6">
-          <div className="hero-greeting inline-flex w-fit items-center gap-2 opacity-0">
+          <div className="hero-greeting hero-in inline-flex w-fit items-center gap-2 [--hero-delay:0.42s]">
             <span className="h-2 w-2 animate-pulse-glow rounded-full bg-emerald-400" />
             <span className="rounded-full border border-hairline bg-tint-soft px-3 py-1 font-mono text-xs tracking-wider text-muted-foreground">
               &lt;available for work /&gt;
             </span>
           </div>
 
-          <div ref={headingRef} className="flex flex-col gap-1 overflow-hidden">
-            <h1 className="hero-line text-5xl font-bold leading-[1.05] tracking-tight text-foreground opacity-0 sm:text-6xl lg:text-7xl">
-              {nameParts.firstName}
-            </h1>
-            <h1 className="hero-line text-5xl font-bold leading-[1.05] tracking-tight text-foreground opacity-0 sm:text-6xl lg:text-7xl">
-              <span className="text-primary">{nameParts.highlighted}</span> {nameParts.remainder}
+          <div className="overflow-hidden">
+            {/* One h1 reading "Miftaul Islam Shuvro"; each line still animates on
+                its own. The space between the spans keeps the extracted text
+                from running the two lines together. */}
+            <h1 className="flex flex-col gap-1">
+              <span className="hero-line hero-in-line block text-5xl font-bold leading-[1.05] tracking-tight text-foreground sm:text-6xl lg:text-7xl">
+                {nameParts.firstName}
+              </span>{" "}
+              <span className="hero-line hero-in-line block text-5xl font-bold leading-[1.05] tracking-tight text-foreground [--hero-delay:0.12s] sm:text-6xl lg:text-7xl">
+                <span className="text-primary">{nameParts.highlighted}</span> {nameParts.remainder}
+              </span>
             </h1>
           </div>
 
           <div className="h-7 overflow-hidden">
-            <span
-              ref={roleRef}
-              className="block text-lg font-medium text-muted-foreground md:text-xl"
-            >
-              {safeRole}
-            </span>
+            <RoleTicker roles={roles} reduced={reduced} />
           </div>
 
-          <ScrollHighlightText
+          <V2ScrollHighlightText
             as="p"
             text={profile.shortSummary}
-            className="hero-summary max-w-lg text-base leading-relaxed text-muted-foreground opacity-0 md:text-lg"
+            className="hero-summary hero-in max-w-lg text-base leading-relaxed text-muted-foreground [--hero-delay:0.72s] md:text-lg"
             triggerStart="top 82%"
           />
 
-          <div ref={ctaRef} className="flex flex-wrap gap-3">
+          <div className="flex flex-col gap-3 sm:flex-row">
             <button
               onClick={() => scrollToId("projects")}
-              className="group relative flex items-center gap-2 overflow-hidden rounded-xl bg-primary px-6 py-3 font-medium text-primary-foreground opacity-0 shadow-lg shadow-primary/25 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-primary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+              className="group relative flex w-full items-center justify-center gap-2 overflow-hidden h-control rounded-xl bg-primary px-6 font-medium sm:w-auto text-primary-foreground hero-in [--hero-delay:0.97s] [--hero-dur:0.45s] shadow-lg shadow-primary/25 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-primary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
             >
               {/* Sheen sweep on hover */}
               <span
@@ -422,15 +409,17 @@ export default function V2Hero({ profile }: HeroProps) {
               <span className="relative">View Projects</span>
               <ArrowUpRight className="relative h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
             </button>
-            <button
+            <V2Button
               onClick={() => scrollToId("about")}
-              className="glass flex items-center gap-2 rounded-xl px-6 py-3 text-foreground opacity-0 transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+              className="w-full sm:w-auto hero-in [--hero-delay:1.07s] [--hero-dur:0.45s]"
+              // Points where the click goes; nudges down on hover
+              icon={<ArrowDown className="transition-transform duration-200 group-hover:translate-y-0.5" />}
             >
               About Me
-            </button>
+            </V2Button>
           </div>
 
-          <div ref={socialsRef} className="flex items-center gap-3 pt-1">
+          <div className="flex items-center gap-3 pt-1">
             {socialLinks.map((social, index) => {
               const key = social.iconName.toLowerCase();
               const Icon = iconMap[key] ?? iconMap.link;
@@ -441,19 +430,23 @@ export default function V2Hero({ profile }: HeroProps) {
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label={social.iconName}
-                  className="flex h-10 w-10 items-center justify-center rounded-xl border border-hairline text-muted-foreground opacity-0 transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/50 hover:bg-primary/10 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                  style={socialEntrance(index)}
+                  className="hero-in flex size-control items-center justify-center rounded-xl border border-hairline text-muted-foreground transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/50 hover:bg-primary/10 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                 >
                   <Icon className="h-4 w-4" />
                 </a>
               );
             })}
-            <div className="h-px max-w-16 flex-1 bg-linear-to-r from-hairline-strong to-transparent" />
+            <div
+              style={socialEntrance(socialLinks.length)}
+              className="hero-in h-px max-w-16 flex-1 bg-linear-to-r from-hairline-strong to-transparent"
+            />
           </div>
         </div>
 
         <div
           ref={cardRef}
-          className="relative flex min-w-0 items-center justify-center opacity-0 lg:justify-end"
+          className="hero-in-card relative flex min-w-0 items-center justify-center lg:justify-end"
         >
           {/* Restrained halo behind the badge */}
           <div
@@ -472,7 +465,7 @@ export default function V2Hero({ profile }: HeroProps) {
       >
         <span className="font-mono text-xs uppercase tracking-widest">scroll</span>
         <div className="h-8 w-px bg-linear-to-b from-muted-foreground to-transparent transition-colors group-hover:from-foreground" />
-        <ArrowDown className="h-3 w-3 animate-bounce" />
+        <ArrowDown className="h-3 w-3 motion-safe:animate-bounce" />
       </button>
     </section>
   );

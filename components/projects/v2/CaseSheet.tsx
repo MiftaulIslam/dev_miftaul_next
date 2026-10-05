@@ -1,31 +1,25 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 import Link from "next/link";
-import Lenis from "lenis";
-import gsap from "gsap";
+import { ScrollSmoother } from "gsap/ScrollSmoother";
 import { ArrowUpRight, X } from "lucide-react";
 import { GitHubIcon } from "@/components/ui/SocialIcons";
-import { useReducedMotion } from "@/lib/useReducedMotion";
+import { Sheet, SheetClose, SheetContent, SheetDescription, SheetTitle } from "@/components/ui/sheet";
 import type { ReelProject } from "@/types/projects";
 
 /**
- * The full write-up, as a right-hand sheet.
+ * The full write-up, as a right-hand shadcn Sheet.
  *
- * Mounted once for the life of the section and toggled with `data-open`, never
- * created per open — so the entrance is a transform on an element the compositor
- * already has, and the exit can actually play instead of being unmounted
- * mid-transition.
+ * Radix portals it to <body>. It used to be rendered inside the pinned stage,
+ * which lives in ScrollSmoother's transformed #smooth-content: a transformed
+ * ancestor turns `fixed`/`absolute` into "relative to that ancestor", so the
+ * drawer slid in as part of the section and read as shoving the content aside,
+ * and it could never stack above the fixed navbar. From <body> it overlays the
+ * whole page.
  *
- * This is the only scrolling region inside the reel, which is what makes it the
- * one honest place for Lenis: it smooths the sheet's own scroll while
- * `overscroll-behavior: contain` stops reaching the end from scrolling the
- * document underneath. The page-level smoother (GSAP ScrollSmoother, see
- * components/LenisProvider.tsx) is left alone.
- *
- * Non-modal by choice: it does not trap focus or freeze the page, because it is
- * supplementary reading rather than a task that needs protecting. Escape closes
- * it and focus returns to whatever opened it.
+ * Radix also supplies the scrim, focus trap, scroll lock, Escape, and focus
+ * return (pointed at `returnFocusRef`, since the opener is not a Radix trigger).
  */
 
 interface CaseSheetProps {
@@ -37,95 +31,29 @@ interface CaseSheetProps {
 }
 
 export default function CaseSheet({ project, open, onClose, returnFocusRef }: CaseSheetProps) {
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const contentRef = useRef<HTMLDivElement>(null);
-  const panelRef = useRef<HTMLElement>(null);
-  const closeRef = useRef<HTMLButtonElement>(null);
-  const lenisRef = useRef<Lenis | null>(null);
-  const reduced = useReducedMotion();
-
-  /* Lenis drives the sheet's inner scroll, sharing GSAP's ticker so the page
-     runs one rAF loop rather than two competing ones. */
-  useEffect(() => {
-    const wrapper = scrollRef.current;
-    const content = contentRef.current;
-    if (!wrapper || !content || reduced) return;
-
-    const lenis = new Lenis({
-      wrapper,
-      content,
-      lerp: 0.11,
-      smoothWheel: true,
-      // The document behind must never move; `contain` on the wrapper handles
-      // the browser side, this handles Lenis's own propagation.
-      overscroll: false,
-    });
-    lenisRef.current = lenis;
-
-    const update = (time: number) => lenis.raf(time * 1000);
-    gsap.ticker.add(update);
-
-    return () => {
-      gsap.ticker.remove(update);
-      lenis.destroy();
-      lenisRef.current = null;
-    };
-  }, [reduced]);
-
-  /* Reset to the top and hand focus to the close control on open; give focus
-     back to the opener on close.
-
-     `wasOpen` is what makes "on close" mean an actual close. The effect also
-     runs on mount, where `open` is false and the else-branch used to fire
-     anyway: it focused a button sitting deep inside the pinned reel, and the
-     browser dutifully scrolled it into view — so simply mounting the v2
-     homepage threw the reader from the hero into the middle of the projects
-     section before they had touched anything. Nothing had opened the sheet, so
-     there was nothing to return focus to. */
-  const wasOpenRef = useRef(open);
-  useEffect(() => {
-    if (open) {
-      wasOpenRef.current = true;
-      lenisRef.current?.scrollTo(0, { immediate: true });
-      if (scrollRef.current) scrollRef.current.scrollTop = 0;
-      const raf = requestAnimationFrame(() => closeRef.current?.focus());
-      return () => cancelAnimationFrame(raf);
-    }
-    if (!wasOpenRef.current) return;
-    wasOpenRef.current = false;
-    returnFocusRef.current?.focus();
-  }, [open, returnFocusRef]);
-
-  /* Escape closes the sheet and is stopped here, so it never also reaches the
-     reel's own key handler. */
+  /* Radix's scroll lock stops native scrolling, but on desktop ScrollSmoother
+     takes wheel input at the window, beyond its reach. Paused, the smoother
+     ignores the wheel while the sheet's own scroller still works. */
   useEffect(() => {
     if (!open) return;
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key !== "Escape") return;
-      event.stopPropagation();
-      event.preventDefault();
-      onClose();
+    const smoother = ScrollSmoother.get();
+    smoother?.paused(true);
+    return () => {
+      smoother?.paused(false);
     };
-    document.addEventListener("keydown", onKeyDown, true);
-    return () => document.removeEventListener("keydown", onKeyDown, true);
-  }, [open, onClose]);
+  }, [open]);
 
   return (
-    <>
-      <div
-        className="wreel-case-scrim"
-        data-open={open}
-        onClick={onClose}
-        aria-hidden="true"
-      />
-      <aside
-        ref={panelRef}
+    <Sheet open={open} onOpenChange={(next) => !next && onClose()}>
+      <SheetContent
+        side="right"
+        showClose={false}
         className="wreel-case"
-        data-open={open}
-        aria-label={`${project.name} — case notes`}
-        // Closed content stays out of the tab order without unmounting it.
-        inert={!open}
         style={{ ["--c-accent" as string]: project.accent }}
+        onCloseAutoFocus={(event) => {
+          event.preventDefault();
+          returnFocusRef.current?.focus({ preventScroll: true });
+        }}
       >
         <header className="wreel-case-head">
           <p className="wreel-case-meta">
@@ -133,17 +61,22 @@ export default function CaseSheet({ project, open, onClose, returnFocusRef }: Ca
             <span aria-hidden="true">·</span>
             <span>{project.year}</span>
           </p>
-          <button ref={closeRef} type="button" className="wreel-case-close" onClick={onClose}>
+          <SheetClose className="wreel-case-close">
             <X aria-hidden="true" />
             <span className="wreel-sr">Close case notes</span>
-          </button>
+          </SheetClose>
         </header>
 
-        <div className="wreel-case-scroll" ref={scrollRef}>
-          <div ref={contentRef} className="wreel-case-content">
-            <h3 className="wreel-case-title">{project.name}</h3>
-            <p className="wreel-case-lede">{project.outcome}</p>
+        <div className="wreel-case-scroll">
+          <div className="wreel-case-content">
+            <SheetTitle className="wreel-case-title">{project.name}</SheetTitle>
+            <SheetDescription className="wreel-case-lede">{project.outcome}</SheetDescription>
             <div className="wreel-case-rule" aria-hidden="true" />
+
+            <section className="wreel-case-block">
+              <h4>The problem</h4>
+              <p>{project.problem}</p>
+            </section>
 
             {project.case.map((block) => (
               <section key={block.heading} className="wreel-case-block">
@@ -199,7 +132,7 @@ export default function CaseSheet({ project, open, onClose, returnFocusRef }: Ca
             </div>
           </div>
         </div>
-      </aside>
-    </>
+      </SheetContent>
+    </Sheet>
   );
 }

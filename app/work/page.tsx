@@ -2,12 +2,14 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 import { getReelProjects } from "@/lib/projects/v2.server";
+import { breadcrumbNode, jsonLd, pageMetadata, PERSON_ID, projectUrl, SITE_URL, WEBSITE_ID } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: "Work — Miftaul Islam Shuvro",
+export const metadata: Metadata = pageMetadata({
+  title: "Projects & Case Studies",
   description:
-    "Selected work: commercial real estate intelligence, fresh-food delivery, location-based rental search, and storefronts.",
-};
+    "Case studies by Miftaul Islam Shuvro: a commercial real estate deal platform, fresh-food delivery, location-based rental search and storefronts.",
+  path: "/work",
+});
 
 /**
  * The index behind the reel's "See all work".
@@ -29,12 +31,36 @@ export const revalidate = 0;
 export default async function WorkIndexPage() {
   const projects = await getReelProjects();
 
+  const graph = {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "@id": `${SITE_URL}/work`,
+    url: `${SITE_URL}/work`,
+    name: "Projects & Case Studies",
+    isPartOf: { "@id": WEBSITE_ID },
+    author: { "@id": PERSON_ID },
+    breadcrumb: breadcrumbNode([
+      { name: "Home", path: "/" },
+      { name: "Work", path: "/work" },
+    ]),
+    mainEntity: {
+      "@type": "ItemList",
+      itemListElement: projects.map((project, i) => ({
+        "@type": "ListItem",
+        position: i + 1,
+        url: projectUrl(project),
+        name: project.name,
+      })),
+    },
+  };
+
   return (
     <main className="wpage">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(graph) }} />
       <header className="wpage-head">
         <h1 className="wpage-title">Work</h1>
         <p className="wpage-sub">
-          {projects.length} projects, newest first. Each one links to its case notes.
+          {projects.length} projects by Miftaul Islam Shuvro, newest first. Each one links to its case notes.
         </p>
       </header>
 

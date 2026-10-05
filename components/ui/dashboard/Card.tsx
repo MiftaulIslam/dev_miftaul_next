@@ -8,21 +8,24 @@ interface CardProps {
   className?: string;
   children: ReactNode;
   headerSlot?: ReactNode;
+  /** Drop the body padding, e.g. for edge-to-edge lists and tables. */
+  flush?: boolean;
 }
 
-export function Card({ title, subtitle, className, children, headerSlot }: CardProps) {
+export function Card({ title, subtitle, className, children, headerSlot, flush }: CardProps) {
+  const hasHeader = Boolean(title || subtitle || headerSlot);
   return (
-    <section
-      className={cn(
-        "rounded-2xl border border-white/10 bg-slate-950/45 p-4 shadow-[0_20px_60px_rgba(2,8,30,0.25)]",
-        className,
-      )}
-    >
-      {(title || subtitle || headerSlot) && (
-        <header className="mb-4 flex items-start justify-between gap-3">
-          <div>
-            {title ? <h3 className="text-sm font-semibold text-white">{title}</h3> : null}
-            {subtitle ? <p className="mt-1 text-xs text-slate-400">{subtitle}</p> : null}
+    <section className={cn("rounded-xl border border-dash-border bg-dash-surface", !flush && "p-5", className)}>
+      {hasHeader && (
+        <header
+          className={cn(
+            "flex flex-wrap items-start justify-between gap-3",
+            flush ? "border-b border-dash-border px-5 py-4" : "mb-4",
+          )}
+        >
+          <div className="min-w-0">
+            {title ? <h3 className="text-[15px] font-semibold text-dash-fg">{title}</h3> : null}
+            {subtitle ? <p className="mt-1 text-[13px] leading-relaxed text-dash-muted">{subtitle}</p> : null}
           </div>
           {headerSlot}
         </header>
@@ -31,4 +34,3 @@ export function Card({ title, subtitle, className, children, headerSlot }: CardP
     </section>
   );
 }
-

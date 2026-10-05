@@ -43,38 +43,38 @@ export default function DashboardLogin() {
   });
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[#060b16] px-5 py-12">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(59,130,246,0.22),transparent_40%),radial-gradient(circle_at_80%_80%,rgba(16,185,129,0.18),transparent_42%)]" />
-      <div className="relative z-10 w-full max-w-md">
-        <Card className="border-white/15 bg-slate-950/80 p-6 md:p-7">
-          <div className="mb-5 flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-blue-400/35 bg-blue-500/15">
-              <LockKeyhole className="h-5 w-5 text-blue-300" />
-            </div>
-            <div>
-              <p className="text-xs uppercase tracking-[0.12em] text-slate-400">Portfolio Admin</p>
-              <h1 className="text-xl font-semibold text-white">Dashboard Access</h1>
-            </div>
+    <div className="flex min-h-[100dvh] items-center justify-center bg-dash-bg px-5 py-12 [color-scheme:dark]">
+      <div className="w-full max-w-sm">
+        <div className="mb-6 flex items-center gap-3">
+          <span className="grid size-10 place-items-center rounded-lg bg-dash-accent text-white">
+            <LockKeyhole className="size-5" aria-hidden />
+          </span>
+          <div>
+            <h1 className="text-lg font-semibold text-dash-fg">Portfolio admin</h1>
+            <p className="text-[13px] text-dash-muted">Sign in to manage your site content.</p>
           </div>
+        </div>
 
+        <Card className="p-6">
           <form className="space-y-4" onSubmit={onSubmit}>
             <Input
               label="Password"
               type="password"
               autoComplete="current-password"
-              placeholder="Enter your dashboard password"
+              placeholder="Dashboard password"
+              autoFocus
               {...register("password", { required: true })}
             />
 
             {error ? (
-              <p className="flex items-center gap-2 rounded-xl border border-rose-400/30 bg-rose-500/10 px-3 py-2 text-sm text-rose-200">
-                <ShieldAlert className="h-4 w-4" />
+              <p role="alert" className="flex items-center gap-2 rounded-lg border border-red-400/35 bg-red-500/10 px-3 py-2 text-sm text-red-200">
+                <ShieldAlert className="size-4 shrink-0" aria-hidden />
                 {error}
               </p>
             ) : null}
 
             <Button type="submit" className="w-full" disabled={isSubmitting}>
-              {isSubmitting ? "Verifying..." : "Unlock Dashboard"}
+              {isSubmitting ? "Signing in…" : "Sign in"}
             </Button>
           </form>
         </Card>
@@ -82,4 +82,3 @@ export default function DashboardLogin() {
     </div>
   );
 }
-

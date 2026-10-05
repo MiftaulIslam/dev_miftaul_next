@@ -1,10 +1,8 @@
 "use client";
 
-import { useEffect, useRef, type ReactNode } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { X } from "lucide-react";
 
-import { useReducedMotion } from "@/lib/useReducedMotion";
 import { cn } from "@/lib/utils";
 
 /**
@@ -33,8 +31,10 @@ export default function SettingsDialog({
   /** "wide" suits dialogs with tabs or side-by-side controls. */
   size?: "default" | "wide";
 }) {
-  const reduced = useReducedMotion();
   const panelRef = useRef<HTMLDivElement>(null);
+  // Stays true through the exit animation, so the dialog can animate out.
+  const [shown, setShown] = useState(open);
+  if (open && !shown) setShown(true);
 
   useEffect(() => {
     if (!open) return;
@@ -53,69 +53,63 @@ export default function SettingsDialog({
     if (open) panelRef.current?.focus();
   }, [open]);
 
-  return (
-    <AnimatePresence>
-      {open && (
-        <div className="fixed inset-0 z-[70] grid place-items-center p-4">
-          {/* Blur signals that tapping the backdrop dismisses. */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.18 }}
-            onClick={onClose}
-            className="absolute inset-0 bg-background/60 backdrop-blur-sm"
-          />
+  if (!shown) return null;
 
-          <motion.div
-            ref={panelRef}
-            role="dialog"
-            aria-modal="true"
-            aria-label={title}
-            tabIndex={-1}
-            initial={reduced ? { opacity: 0 } : { opacity: 0, y: 16, scale: 0.96 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={
-              reduced
-                ? { opacity: 0 }
-                : { opacity: 0, y: 8, scale: 0.98, transition: { duration: 0.15 } }
-            }
-            transition={{ type: "spring", stiffness: 380, damping: 30, mass: 0.7 }}
+  // Enter/exit are CSS (`.ui-fade`, `.ui-pop` in globals.css); the dialog stays
+  // mounted through "closing" so the exit can play.
+  const state = open ? "open" : "closing";
+  return (
+    <div className="fixed inset-0 z-[70] grid place-items-center p-4">
+      {/* Blur signals that tapping the backdrop dismisses. */}
+      <div
+        data-state={state}
+        onClick={onClose}
+        className="ui-fade absolute inset-0 bg-background/60 backdrop-blur-sm"
+      />
+
+      <div
+        ref={panelRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label={title}
+        tabIndex={-1}
+        data-state={state}
+        onAnimationEnd={(event) => {
+          if (event.target === event.currentTarget && !open) setShown(false);
+        }}
+        className={cn(
+          "ui-pop glass relative overflow-hidden rounded-2xl shadow-2xl focus:outline-none",
+          size === "wide"
+            ? "w-[min(calc(100vw-2rem),32rem)]"
+            : "w-[min(calc(100vw-2rem),24rem)]"
+        )}
+      >
+        <header className="flex items-center justify-between border-b border-foreground/10 px-5 py-3.5">
+          <h2 className="text-sm font-semibold text-foreground">{title}</h2>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label={`Close ${title}`}
             className={cn(
-              "glass relative overflow-hidden rounded-2xl shadow-2xl focus:outline-none",
-              size === "wide"
-                ? "w-[min(calc(100vw-2rem),32rem)]"
-                : "w-[min(calc(100vw-2rem),24rem)]"
+              "grid h-7 w-7 place-items-center rounded-md text-muted-foreground transition-colors",
+              "hover:bg-foreground/5 hover:text-foreground",
+              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             )}
           >
-            <header className="flex items-center justify-between border-b border-foreground/10 px-5 py-3.5">
-              <h2 className="text-sm font-semibold text-foreground">{title}</h2>
-              <button
-                type="button"
-                onClick={onClose}
-                aria-label={`Close ${title}`}
-                className={cn(
-                  "grid h-7 w-7 place-items-center rounded-md text-muted-foreground transition-colors",
-                  "hover:bg-foreground/5 hover:text-foreground",
-                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                )}
-              >
-                <X className="h-4 w-4" aria-hidden />
-              </button>
-            </header>
+            <X className="h-4 w-4" aria-hidden />
+          </button>
+        </header>
 
-            <div className="max-h-[min(70vh,26rem)] overflow-y-auto px-5 py-3">
-              {children}
-            </div>
-
-            {footer && (
-              <footer className="border-t border-foreground/10 px-5 py-3">
-                {footer}
-              </footer>
-            )}
-          </motion.div>
+        <div className="max-h-[min(70vh,26rem)] overflow-y-auto px-5 py-3">
+          {children}
         </div>
-      )}
-    </AnimatePresence>
+
+        {footer && (
+          <footer className="border-t border-foreground/10 px-5 py-3">
+            {footer}
+          </footer>
+        )}
+      </div>
+    </div>
   );
 }

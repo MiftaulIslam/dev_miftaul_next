@@ -1,7 +1,7 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import Image from "next/image";
-import { motion, useTransform, type MotionValue } from "framer-motion";
 
 import { HangingIdCard } from "@/components/lightswind/hanging-id-card";
 import type { PointerField } from "@/lib/usePointerField";
@@ -13,6 +13,8 @@ const BARCODE = Array.from({ length: 34 }, (_, i) => ({
   width: i % 4 === 0 ? 3 : i % 2 === 0 ? 2 : 1,
   height: 13 + Math.abs(Math.sin(i * 1.37)) * 11,
 }));
+
+const clampHalf = (value: number) => Math.min(0.5, Math.max(-0.5, value));
 
 function initialsOf(name: string) {
   return (
@@ -60,13 +62,21 @@ export default function DeveloperIdCard({ profile, pointer, className }: Develop
   const badgeId =
     initialsOf(profile.name) + "-" + String(profile.yearsOfExperience).padStart(2, "0") + "-FS";
 
-  const sheenX = useTransform(pointer.normX, [-0.5, 0.5], ["12%", "88%"]);
-  const sheenY = useTransform(pointer.normY, [-0.5, 0.5], ["8%", "92%"]);
-  const sheen = useTransform(
-    [sheenX, sheenY] as [MotionValue<string>, MotionValue<string>],
-    ([sx, sy]: string[]) =>
-      "radial-gradient(circle 220px at " + sx + " " + sy + ", var(--card-sheen) 0%, transparent 62%)",
-  );
+  const sheenRef = useRef<HTMLDivElement>(null);
+
+  // The sheen centre maps the pointer's -0.5..0.5 offset onto 12–88% across
+  // and 8–92% down, clamped, written straight to the node each pointer frame.
+  useEffect(() => {
+    if (!pointer.active) return;
+    return pointer.subscribe(({ normX, normY, presence }) => {
+      const node = sheenRef.current;
+      if (!node) return;
+      const sx = 12 + (clampHalf(normX) + 0.5) * 76;
+      const sy = 8 + (clampHalf(normY) + 0.5) * 84;
+      node.style.background = `radial-gradient(circle 220px at ${sx}% ${sy}%, var(--card-sheen) 0%, transparent 62%)`;
+      node.style.opacity = String(presence);
+    });
+  }, [pointer]);
 
   return (
     <HangingIdCard
@@ -77,10 +87,11 @@ export default function DeveloperIdCard({ profile, pointer, className }: Develop
     >
       {/* Specular sheen tracking the pointer */}
       {pointer.active && (
-        <motion.div
+        <div
+          ref={sheenRef}
           aria-hidden
           className="pointer-events-none absolute inset-0 z-30 mix-blend-soft-light"
-          style={{ background: sheen, opacity: pointer.presence }}
+          style={{ opacity: 0 }}
         />
       )}
 

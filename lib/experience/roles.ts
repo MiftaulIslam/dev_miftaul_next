@@ -106,6 +106,26 @@ function toMilestones(record: ExperienceRecord, enrichment: RoleEnrichment): Mil
  * chart encodes reading order and nothing else, and "most recent at the top" is
  * the order a reader already expects from a resume.
  */
+let liveTimeline: Promise<Timeline | null> | null = null;
+
+/**
+ * The dashboard's roles, fetched once per page load and shared. On a phone the
+ * desktop chart hydrates first and is then swapped for the mobile timeline, and
+ * each used to request the same data, so the call went out twice.
+ * Resolves to null when the API is down or empty: callers keep the static set.
+ */
+export function loadLiveTimeline(): Promise<Timeline | null> {
+  liveTimeline ??= fetch("/api/public/experience", { cache: "no-store" })
+    .then((response) => (response.ok ? (response.json() as Promise<ExperienceRecord[]>) : null))
+    .then((data) => {
+      if (!Array.isArray(data) || !data.length) return null;
+      const next = buildTimeline(data);
+      return next.roles.length ? next : null;
+    })
+    .catch(() => null);
+  return liveTimeline;
+}
+
 export function buildTimeline(records: ExperienceRecord[], now: Date = new Date()): Timeline {
   const nowIndex = monthIndexOf(now);
 

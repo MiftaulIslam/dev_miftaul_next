@@ -1,4 +1,9 @@
+"use client";
+
+import { useSyncExternalStore } from "react";
+
 import OverlapChart from "@/components/experience/OverlapChart";
+import V2ExperienceMobile from "@/components/experience/v2/V2ExperienceMobile";
 import { FALLBACK_TIMELINE } from "@/lib/experience/roles";
 
 /**
@@ -17,20 +22,39 @@ import { FALLBACK_TIMELINE } from "@/lib/experience/roles";
  * else, deliberately: if lane order also meant seniority the chart would be
  * making two claims with one axis.
  *
- * This shell holds no hooks and no browser APIs on purpose. The anchor, the
- * section element and the timeline all resolve without a client runtime, so if
- * `app/page.tsx` ever stops being a Client Component this file becomes a true
- * Server Component with no edits. Every piece of motion, pointer handling and
- * measurement lives in the one isolated leaf below it.
+ * The only hook in this shell is the breakpoint switch below. Every piece of
+ * motion, pointer handling and measurement lives in the leaves it renders.
  *
  * The id is load-bearing: Navbar and SiteDock scroll to `#experience` and
  * dispatch `nav-section-jump` / `nav-section-settled`, which the chart listens
  * for to reset its own selection.
+ *
+ * Below md the chart is swapped (not hidden) for a vertical timeline: the chart
+ * scroll-pins, and a pin left mounted under display:none still eats scroll.
  */
+const DESKTOP_QUERY = "(min-width: 768px)";
+
+function subscribe(onChange: () => void) {
+  const mq = window.matchMedia(DESKTOP_QUERY);
+  mq.addEventListener("change", onChange);
+  return () => mq.removeEventListener("change", onChange);
+}
+
 export default function V2Experience() {
+  // Server renders the desktop chart; phones swap after hydration.
+  const desktop = useSyncExternalStore(
+    subscribe,
+    () => window.matchMedia(DESKTOP_QUERY).matches,
+    () => true
+  );
+
   return (
-    <section id="experience" className="xp">
-      <OverlapChart initial={FALLBACK_TIMELINE} />
+    <section id="experience" className={desktop ? "xp" : "relative"}>
+      {desktop ? (
+        <OverlapChart initial={FALLBACK_TIMELINE} />
+      ) : (
+        <V2ExperienceMobile initial={FALLBACK_TIMELINE} />
+      )}
     </section>
   );
 }

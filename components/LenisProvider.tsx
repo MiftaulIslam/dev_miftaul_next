@@ -17,33 +17,34 @@ export default function LenisProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (reduced || disableSmootherRoute) return;
 
+    // Touch keeps native scrolling. normalizeScroll moves every touch scroll
+    // onto the main thread, so any long task froze the page under the reader's
+    // finger; native scrolling runs on the compositor and keeps moving. The
+    // smoothing on touch was nearly off anyway (smoothTouch 0.08). Every scroll
+    // helper (navShell, the reels) already falls back to native scrolling.
     const isTouch = window.matchMedia("(pointer: coarse)").matches;
-    const smoother = ScrollSmoother.create({
-      wrapper: "#smooth-wrapper",
-      content: "#smooth-content",
-      smooth: isTouch ? 0.65 : 1.1,
-      smoothTouch: isTouch ? 0.08 : 0,
-      normalizeScroll: true,
-      ignoreMobileResize: true,
-      effects: false,
-    });
+    const smoother = isTouch
+      ? null
+      : ScrollSmoother.create({
+          wrapper: "#smooth-wrapper",
+          content: "#smooth-content",
+          smooth: 1.1,
+          normalizeScroll: true,
+          ignoreMobileResize: true,
+          effects: false,
+        });
 
-    // Refresh ScrollTrigger on resize (debounced)
-    let resizeTimer: ReturnType<typeof setTimeout>;
-    const handleResize = () => {
-      clearTimeout(resizeTimer);
-      resizeTimer = setTimeout(() => ScrollTrigger.refresh(), 200);
-    };
+    // No resize listener: ScrollTrigger already refreshes itself on resize,
+    // debounced, and skips the address-bar resizes on touch. A second refresh
+    // here doubled that work, and on touch ran on every address-bar show/hide.
     const handleNavSettled = () => {
       requestAnimationFrame(() => ScrollTrigger.refresh());
     };
-    window.addEventListener("resize", handleResize);
     window.addEventListener("nav-section-settled", handleNavSettled);
 
     return () => {
-      window.removeEventListener("resize", handleResize);
       window.removeEventListener("nav-section-settled", handleNavSettled);
-      smoother.kill();
+      smoother?.kill();
     };
   }, [reduced, disableSmootherRoute]);
 

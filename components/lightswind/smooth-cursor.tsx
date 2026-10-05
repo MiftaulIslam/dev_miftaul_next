@@ -1,5 +1,5 @@
-import React, { useEffect, useRef, useState } from "react";
-import { motion, useSpring } from "framer-motion";
+import React, { useEffect, useRef } from "react";
+import gsap from "gsap";
 import { cn } from "@/lib/utils";
 
 const DefaultCursorSVG = ({ size = 25, color = "currentColor", className }: { size?: number; color?: string; className?: string }) => {
@@ -29,12 +29,6 @@ const DefaultCursorSVG = ({ size = 25, color = "currentColor", className }: { si
 
 export interface SmoothCursorProps {
   cursor?: React.ReactNode;
-  springConfig?: {
-    damping?: number;
-    stiffness?: number;
-    mass?: number;
-    restDelta?: number;
-  };
   className?: string;
   size?: number;
   color?: string;
@@ -52,14 +46,24 @@ export interface SmoothCursorProps {
   disabled?: boolean;
 }
 
+/** How often, at most, the magnetic targets are re-measured while the pointer moves. */
+const MAGNET_REMEASURE_MS = 150;
+
+/**
+ * A smoothed custom cursor with rotation, click squash, optional trail and
+ * magnetic pull towards small interactive targets.
+ *
+ * Rewritten off framer-motion onto GSAP (already on the page), and off layout:
+ * - the cursor moves by transform, where it used to animate `left`/`top` and
+ *   force a layout on every frame the pointer moved;
+ * - magnetic targets are measured at most every 150ms, where every pointer
+ *   frame used to query every link and button on the page and read each one's
+ *   rect;
+ * - nothing here sets React state per pointer frame — hiding over interactive
+ *   elements and the trail are direct style writes.
+ */
 export function SmoothCursor({
   cursor,
-  springConfig = {
-    damping: 35,
-    stiffness: 350,
-    mass: 0.8,
-    restDelta: 0.001,
-  },
   className,
   size = 22,
   color = "currentColor",
@@ -76,173 +80,146 @@ export function SmoothCursor({
   onCursorLeave,
   disabled = false,
 }: SmoothCursorProps) {
-  const [isVisible, setIsVisible] = useState(true);
-  const [isHoveringInteractive, setIsHoveringInteractive] = useState(false);
-  const [trail, setTrail] = useState<{ x: number; y: number }[]>([]);
-  const lastMousePos = useRef({ x: 0, y: 0 });
-  const velocity = useRef({ x: 0, y: 0 });
-  // Seeded in the effect below — reading the clock during render is impure.
-  const lastUpdateTime = useRef(0);
-  const previousAngle = useRef(0);
-  const accumulatedRotation = useRef(0);
-
-  const cursorX = useSpring(0, springConfig);
-  const cursorY = useSpring(0, springConfig);
-  const rotation = useSpring(0, {
-    ...springConfig,
-    damping: 50,
-    stiffness: 250,
-  });
-  const scale = useSpring(1, {
-    ...springConfig,
-    stiffness: 450,
-    damping: 30,
-  });
-
-  const defaultCursor = <DefaultCursorSVG size={size} color={color} />;
-  const cursorElement = cursor || defaultCursor;
+  const cursorRef = useRef<HTMLDivElement>(null);
+  const trailRefs = useRef<(HTMLDivElement | null)[]>([]);
 
   useEffect(() => {
-    if (disabled) return;
+    const el = cursorRef.current;
+    if (disabled || !el) return;
 
     // Only activate custom cursor on fine pointer devices (desktops)
-    const hasPointer = window.matchMedia("(pointer: fine)").matches;
-    if (!hasPointer) return;
+    if (!window.matchMedia("(pointer: fine)").matches) return;
 
-    lastUpdateTime.current = Date.now();
+    // The springs this replaces: position ~critically damped, rotation
+    // overdamped (slower), the click squash quick, the entrance a small pop.
+    gsap.set(el, { xPercent: -50, yPercent: -50, scale: 0, autoAlpha: 0 });
+    const toX = gsap.quickTo(el, "x", { duration: 0.25, ease: "power3.out" });
+    const toY = gsap.quickTo(el, "y", { duration: 0.25, ease: "power3.out" });
+    const toRotation = gsap.quickTo(el, "rotation", { duration: 0.5, ease: "power3.out" });
+    const toScale = gsap.quickTo(el, "scale", { duration: 0.15, ease: "power2.out" });
+    const popIn = () =>
+      gsap.fromTo(el, { scale: 0, autoAlpha: 0 }, { scale: 1, autoAlpha: 1, duration: 0.35, ease: "back.out(1.4)" });
 
-    const updateVelocity = (currentPos: { x: number; y: number }) => {
-      const currentTime = Date.now();
-      const deltaTime = currentTime - lastUpdateTime.current;
-      if (deltaTime > 0) {
-        velocity.current = {
-          x: (currentPos.x - lastMousePos.current.x) / deltaTime,
-          y: (currentPos.y - lastMousePos.current.y) / deltaTime,
-        };
+    const trailDots = showTrail ? trailRefs.current.filter((dot): dot is HTMLDivElement => Boolean(dot)) : [];
+    const trail: { x: number; y: number }[] = [];
+
+    let started = false;
+    let hidden = false;
+    let lastPos = { x: 0, y: 0 };
+    let lastTime = performance.now();
+    let previousAngle = 0;
+    let rotation = 0;
+
+    let magnets: { x: number; y: number }[] = [];
+    let measuredAt = -Infinity;
+    const nearestMagnet = (x: number, y: number, now: number) => {
+      if (now - measuredAt > MAGNET_REMEASURE_MS) {
+        magnets = Array.from(document.querySelectorAll(magneticElements), (node) => {
+          const rect = node.getBoundingClientRect();
+          return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+        });
+        measuredAt = now;
       }
-      lastUpdateTime.current = currentTime;
-      lastMousePos.current = currentPos;
-    };
-
-    const updateTrail = (pos: { x: number; y: number }) => {
-      if (!showTrail || isHoveringInteractive) return;
-      setTrail((prev) => [pos, ...prev.slice(0, trailLength - 1)]);
-    };
-
-    const findMagneticElement = (x: number, y: number) => {
-      const elements = document.querySelectorAll(magneticElements);
-      for (const element of Array.from(elements)) {
-        const rect = element.getBoundingClientRect();
-        const centerX = rect.left + rect.width / 2;
-        const centerY = rect.top + rect.height / 2;
-        const distance = Math.sqrt(Math.pow(x - centerX, 2) + Math.pow(y - centerY, 2));
-        if (distance < magneticDistance) {
-          return { x: centerX, y: centerY, distance };
-        }
+      for (const magnet of magnets) {
+        const distance = Math.hypot(x - magnet.x, y - magnet.y);
+        if (distance < magneticDistance) return { ...magnet, distance };
       }
       return null;
     };
 
-    const smoothMouseMove = (e: MouseEvent) => {
-      let currentPos = { x: e.clientX, y: e.clientY };
+    // Over a link or button the native pointer takes over and the custom
+    // cursor steps aside, popping back in when the pointer leaves it.
+    const setHidden = (next: boolean) => {
+      if (next === hidden) return;
+      hidden = next;
+      document.body.style.cursor = next ? "pointer" : "none";
+      if (next) gsap.set(el, { autoAlpha: 0 });
+      else popIn();
+      for (const dot of trailDots) dot.style.visibility = next ? "hidden" : "visible";
+    };
 
-      // Detect if hovering over clickable/pointer element
-      const target = e.target as HTMLElement | null;
-      const interactiveTarget = target?.closest(magneticElements);
-      const isInteractive = Boolean(interactiveTarget);
+    const onMouseMove = (event: MouseEvent) => {
+      const now = performance.now();
+      let pos = { x: event.clientX, y: event.clientY };
 
-      setIsHoveringInteractive(isInteractive);
-
-      if (isInteractive) {
-        document.body.style.cursor = "pointer";
-      } else {
-        document.body.style.cursor = "none";
+      if (!started) {
+        // First move: appear where the pointer is, not glide in from 0,0.
+        started = true;
+        gsap.set(el, { x: pos.x, y: pos.y });
+        popIn();
       }
 
-      const magneticTarget = findMagneticElement(currentPos.x, currentPos.y);
+      const target = event.target as Element | null;
+      setHidden(Boolean(target?.closest(magneticElements)));
 
-      if (magneticTarget) {
-        const strength = 1 - magneticTarget.distance / magneticDistance;
-        currentPos = {
-          x: currentPos.x + (magneticTarget.x - currentPos.x) * strength * 0.35,
-          y: currentPos.y + (magneticTarget.y - currentPos.y) * strength * 0.35,
+      const magnet = nearestMagnet(pos.x, pos.y, now);
+      if (magnet) {
+        const strength = 1 - magnet.distance / magneticDistance;
+        pos = {
+          x: pos.x + (magnet.x - pos.x) * strength * 0.35,
+          y: pos.y + (magnet.y - pos.y) * strength * 0.35,
         };
       }
 
-      updateVelocity(currentPos);
-      updateTrail(currentPos);
+      const dt = now - lastTime;
+      const vx = dt > 0 ? (pos.x - lastPos.x) / dt : 0;
+      const vy = dt > 0 ? (pos.y - lastPos.y) / dt : 0;
+      lastTime = now;
+      lastPos = pos;
 
-      const speed = Math.sqrt(Math.pow(velocity.current.x, 2) + Math.pow(velocity.current.y, 2));
-      cursorX.set(currentPos.x);
-      cursorY.set(currentPos.y);
-      onCursorMove?.(currentPos);
+      toX(pos.x);
+      toY(pos.y);
+      onCursorMove?.(pos);
 
-      if (speed > 0.1 && rotateOnMove) {
-        const currentAngle = Math.atan2(velocity.current.y, velocity.current.x) * (180 / Math.PI) + 90;
-        let angleDiff = currentAngle - previousAngle.current;
-        if (angleDiff > 180) angleDiff -= 360;
-        if (angleDiff < -180) angleDiff += 360;
-        accumulatedRotation.current += angleDiff;
-        rotation.set(accumulatedRotation.current);
-        previousAngle.current = currentAngle;
+      if (rotateOnMove && Math.hypot(vx, vy) > 0.1) {
+        const angle = Math.atan2(vy, vx) * (180 / Math.PI) + 90;
+        let diff = angle - previousAngle;
+        if (diff > 180) diff -= 360;
+        if (diff < -180) diff += 360;
+        rotation += diff;
+        previousAngle = angle;
+        toRotation(rotation);
+      }
+
+      if (trailDots.length && !hidden) {
+        trail.unshift(pos);
+        trail.length = Math.min(trail.length, trailDots.length);
+        trail.forEach((point, i) => {
+          trailDots[i].style.transform = `translate3d(${point.x}px, ${point.y}px, 0) translate(-50%, -50%) scale(${((trailDots.length - i) / trailDots.length) * 0.7})`;
+          trailDots[i].style.visibility = "visible";
+        });
       }
     };
 
-    const handleMouseEnter = () => {
-      setIsVisible(true);
+    const onMouseEnter = () => {
+      if (started && !hidden) gsap.set(el, { autoAlpha: 1 });
       onCursorEnter?.();
     };
-
-    const handleMouseLeave = () => {
-      if (hideOnLeave) {
-        setIsVisible(false);
-      }
+    const onMouseLeave = () => {
+      if (hideOnLeave) gsap.set(el, { autoAlpha: 0 });
       document.body.style.cursor = "auto";
       onCursorLeave?.();
     };
-
-    const handleMouseDown = () => {
-      if (scaleOnClick) {
-        scale.set(0.75);
-      }
-    };
-
-    const handleMouseUp = () => {
-      if (scaleOnClick) {
-        scale.set(1);
-      }
-    };
-
-    let rafId: number;
-    const throttledMouseMove = (e: MouseEvent) => {
-      if (rafId) return;
-      rafId = requestAnimationFrame(() => {
-        smoothMouseMove(e);
-        rafId = 0;
-      });
-    };
+    const onMouseDown = () => scaleOnClick && toScale(0.75);
+    const onMouseUp = () => scaleOnClick && toScale(1);
 
     document.body.style.cursor = "none";
-    window.addEventListener("mousemove", throttledMouseMove);
-    document.addEventListener("mouseenter", handleMouseEnter);
-    document.addEventListener("mouseleave", handleMouseLeave);
-    document.addEventListener("mousedown", handleMouseDown);
-    document.addEventListener("mouseup", handleMouseUp);
+    window.addEventListener("mousemove", onMouseMove, { passive: true });
+    document.addEventListener("mouseenter", onMouseEnter);
+    document.addEventListener("mouseleave", onMouseLeave);
+    document.addEventListener("mousedown", onMouseDown);
+    document.addEventListener("mouseup", onMouseUp);
 
     return () => {
-      window.removeEventListener("mousemove", throttledMouseMove);
-      document.removeEventListener("mouseenter", handleMouseEnter);
-      document.removeEventListener("mouseleave", handleMouseLeave);
-      document.removeEventListener("mousedown", handleMouseDown);
-      document.removeEventListener("mouseup", handleMouseUp);
+      window.removeEventListener("mousemove", onMouseMove);
+      document.removeEventListener("mouseenter", onMouseEnter);
+      document.removeEventListener("mouseleave", onMouseLeave);
+      document.removeEventListener("mousedown", onMouseDown);
+      document.removeEventListener("mouseup", onMouseUp);
       document.body.style.cursor = "auto";
-      if (rafId) cancelAnimationFrame(rafId);
+      gsap.killTweensOf(el);
     };
   }, [
-    cursorX,
-    cursorY,
-    rotation,
-    scale,
     disabled,
     showTrail,
     trailLength,
@@ -254,59 +231,46 @@ export function SmoothCursor({
     onCursorMove,
     onCursorEnter,
     onCursorLeave,
-    isHoveringInteractive,
   ]);
 
-  if (disabled || !isVisible || isHoveringInteractive) return null;
+  if (disabled) return null;
 
   return (
     <>
       {showTrail &&
-        !isHoveringInteractive &&
-        trail.map((pos, index) => (
-          <motion.div
+        Array.from({ length: trailLength }, (_, index) => (
+          <div
             key={index}
+            ref={(node) => {
+              trailRefs.current[index] = node;
+            }}
             style={{
               position: "fixed",
-              left: pos.x,
-              top: pos.y,
-              translateX: "-50%",
-              translateY: "-50%",
+              left: 0,
+              top: 0,
               zIndex: 9998 - index,
-              pointerEvents: "none",
               opacity: ((trailLength - index) / trailLength) * 0.4,
-              scale: ((trailLength - index) / trailLength) * 0.7,
+              // Shown on the first pointer move, not parked at 0,0 until then.
+              visibility: "hidden",
             }}
-            className="w-2.5 h-2.5 bg-primary rounded-full pointer-events-none"
+            className="pointer-events-none hidden h-2.5 w-2.5 rounded-full bg-primary md:block"
           />
         ))}
 
-      <motion.div
+      <div
+        ref={cursorRef}
         style={{
           position: "fixed",
-          left: cursorX,
-          top: cursorY,
-          translateX: "-50%",
-          translateY: "-50%",
-          rotate: rotateOnMove ? rotation : 0,
-          scale: scale,
+          left: 0,
+          top: 0,
           zIndex: 9999,
-          pointerEvents: "none",
           willChange: "transform",
           filter: glowEffect ? "drop-shadow(0 0 10px rgba(139, 92, 246, 0.5))" : "none",
         }}
-        initial={{ scale: 0, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        exit={{ scale: 0, opacity: 0 }}
-        transition={{
-          type: "spring",
-          stiffness: 400,
-          damping: 30,
-        }}
-        className={cn("select-none text-primary pointer-events-none hidden md:block", className)}
+        className={cn("pointer-events-none hidden select-none text-primary md:block", className)}
       >
-        {cursorElement}
-      </motion.div>
+        {cursor || <DefaultCursorSVG size={size} color={color} />}
+      </div>
     </>
   );
 }

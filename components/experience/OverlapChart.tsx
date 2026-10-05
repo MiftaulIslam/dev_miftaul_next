@@ -15,9 +15,8 @@ import {
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
-import type { Experience as ExperienceRecord } from "@/components/experience-data";
 import type { Role, Timeline } from "@/types/experience";
-import { buildTimeline, concurrencySentence, sharedLabel } from "@/lib/experience/roles";
+import { concurrencySentence, loadLiveTimeline, sharedLabel } from "@/lib/experience/roles";
 import { clamp01, damp, dur, label } from "@/lib/experience/timeline";
 import { useReducedMotion } from "@/lib/useReducedMotion";
 
@@ -128,23 +127,12 @@ export default function OverlapChart({ initial }: OverlapChartProps) {
   useEffect(() => {
     let mounted = true;
 
-    const load = async () => {
-      try {
-        const response = await fetch("/api/public/experience", { cache: "no-store" });
-        if (!response.ok) return;
-        const data = (await response.json()) as ExperienceRecord[];
-        if (!mounted || !Array.isArray(data) || !data.length) return;
+    void loadLiveTimeline().then((next) => {
+      if (!mounted || !next) return;
+      setTimeline(next);
+      requestAnimationFrame(() => ScrollTrigger.refresh());
+    });
 
-        const next = buildTimeline(data);
-        if (!next.roles.length) return;
-        setTimeline(next);
-        requestAnimationFrame(() => ScrollTrigger.refresh());
-      } catch {
-        // keep the static timeline
-      }
-    };
-
-    void load();
     return () => {
       mounted = false;
     };
@@ -184,7 +172,10 @@ export default function OverlapChart({ initial }: OverlapChartProps) {
   useEffect(() => {
     const rail = railRef.current;
     const stage = stageRef.current;
-    if (!rail || !stage) return;
+    // Phones hydrate this chart from the server HTML and then swap it for the
+    // mobile timeline a moment later, so building a pin here would be thrown
+    // away at once.
+    if (!rail || !stage || window.innerWidth < MOBILE) return;
 
     const trigger = ScrollTrigger.create({
       trigger: rail,
@@ -218,7 +209,7 @@ export default function OverlapChart({ initial }: OverlapChartProps) {
   useEffect(() => {
     const chart = chartRef.current;
     const marker = markerRef.current;
-    if (!chart || !roles.length) return;
+    if (!chart || !roles.length || window.innerWidth < MOBILE) return;
 
     chart.classList.add("js");
 
@@ -577,7 +568,10 @@ export default function OverlapChart({ initial }: OverlapChartProps) {
               onClose={() => setSelectedRoleId(null)}
             />
           ) : (
-            <p className="xp-hint">Hover a bar to preview it · click to keep it open</p>
+            <p className="xp-hint">
+              <span className="xp-hint-fine">Hover a bar to preview it · click to keep it open</span>
+              <span className="xp-hint-touch">Tap a bar to open it</span>
+            </p>
           )}
         </div>
       </div>

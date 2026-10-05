@@ -1,6 +1,7 @@
 import type { TextareaHTMLAttributes } from "react";
 
 import { cn } from "@/lib/cn";
+import { errorClass, fieldClass, hintClass, labelClass } from "./fieldStyles";
 
 interface TextareaProps extends TextareaHTMLAttributes<HTMLTextAreaElement> {
   label?: string;
@@ -11,17 +12,14 @@ interface TextareaProps extends TextareaHTMLAttributes<HTMLTextAreaElement> {
 export function Textarea({ className, label, hint, error, ...props }: TextareaProps) {
   return (
     <label className="block space-y-1.5">
-      {label ? <span className="text-xs font-medium uppercase tracking-[0.08em] text-slate-400">{label}</span> : null}
+      {label ? <span className={labelClass}>{label}</span> : null}
       <textarea
         {...props}
-        className={cn(
-          "min-h-[88px] w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition placeholder:text-slate-500 focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20",
-          className,
-        )}
+        aria-invalid={error ? true : undefined}
+        className={cn(fieldClass, "min-h-[96px] py-2 leading-relaxed", className)}
       />
-      {error ? <span className="text-xs text-rose-300">{error}</span> : null}
-      {hint && !error ? <span className="text-xs text-slate-500">{hint}</span> : null}
+      {error ? <span className={cn("block", errorClass)}>{error}</span> : null}
+      {hint && !error ? <span className={cn("block", hintClass)}>{hint}</span> : null}
     </label>
   );
 }
-

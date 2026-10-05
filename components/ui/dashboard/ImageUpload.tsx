@@ -38,7 +38,7 @@ export function ImageUpload({ label, value, onChange, hint, compact }: ImageUplo
 
   return (
     <div className="space-y-2">
-      <span className="text-xs font-medium uppercase tracking-[0.08em] text-slate-400">{label}</span>
+      <span className="text-[13px] font-medium text-dash-fg-2">{label}</span>
       <div
         className={cn(
           "flex flex-col gap-3 sm:flex-row sm:items-start",
@@ -47,9 +47,9 @@ export function ImageUpload({ label, value, onChange, hint, compact }: ImageUplo
       >
         <div
           className={cn(
-            "relative flex shrink-0 items-center justify-center overflow-hidden rounded-xl border border-dashed border-white/18 bg-slate-950/70",
+            "relative flex shrink-0 items-center justify-center overflow-hidden rounded-lg border border-dashed border-dash-border-strong bg-dash-field",
             compact ? "h-20 w-20" : "aspect-video w-full max-w-[240px] min-h-[120px]",
-            value ? "border-solid border-white/15" : "",
+            value ? "border-solid border-dash-border" : "",
           )}
         >
           {value ? (
@@ -62,11 +62,11 @@ export function ImageUpload({ label, value, onChange, hint, compact }: ImageUplo
               unoptimized={value.startsWith("/uploads/")}
             />
           ) : (
-            <Upload className={cn("text-slate-600", compact ? "h-6 w-6" : "h-9 w-9")} />
+            <Upload className={cn("text-dash-muted", compact ? "h-6 w-6" : "h-9 w-9")} />
           )}
           {busy ? (
             <div className="absolute inset-0 flex items-center justify-center bg-black/55">
-              <Loader2 className="h-7 w-7 animate-spin text-cyan-300" />
+              <Loader2 className="h-7 w-7 animate-spin text-dash-accent" />
             </div>
           ) : null}
         </div>
@@ -76,7 +76,7 @@ export function ImageUpload({ label, value, onChange, hint, compact }: ImageUplo
               type="button"
               onClick={() => inputRef.current?.click()}
               disabled={busy}
-              className="rounded-xl border border-white/14 bg-slate-900/90 px-3 py-2 text-sm font-medium text-white transition hover:border-blue-400/45 hover:bg-slate-800"
+              className="h-8 rounded-lg border border-dash-border-strong bg-dash-raised px-3 text-[13px] font-medium text-dash-fg transition-colors hover:bg-[#1f2430] disabled:opacity-50"
             >
               {value ? "Replace" : "Upload"}
             </button>
@@ -84,7 +84,7 @@ export function ImageUpload({ label, value, onChange, hint, compact }: ImageUplo
               <button
                 type="button"
                 onClick={() => onChange("")}
-                className="rounded-xl px-3 py-2 text-sm text-slate-400 transition hover:text-rose-300"
+                className="h-8 rounded-lg px-3 text-[13px] text-dash-fg-2 transition-colors hover:bg-dash-raised hover:text-dash-danger"
               >
                 Clear
               </button>
@@ -97,8 +97,8 @@ export function ImageUpload({ label, value, onChange, hint, compact }: ImageUplo
             className="hidden"
             onChange={onPick}
           />
-          {hint ? <p className="text-xs text-slate-500">{hint}</p> : null}
-          {err ? <p className="text-xs text-rose-300">{err}</p> : null}
+          {hint ? <p className="text-xs leading-relaxed text-dash-muted">{hint}</p> : null}
+          {err ? <p className="text-xs font-medium text-dash-danger">{err}</p> : null}
         </div>
       </div>
     </div>

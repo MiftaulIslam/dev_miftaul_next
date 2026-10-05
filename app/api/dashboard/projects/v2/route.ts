@@ -1,13 +1,16 @@
-import { NextResponse } from "next/server";
+import { after, NextResponse } from "next/server";
 
 import { requireDashboardAuth } from "@/lib/dashboard/api-auth";
 import {
   createV2Project,
   deleteV2Project,
+  getV2Project,
   listV2Projects,
+  reorderV2Projects,
   updateV2Project,
   type V2ProjectInput,
 } from "@/lib/dashboard/db";
+import { pingIndexNow } from "@/lib/indexnow";
 
 /**
  * CRUD for the v2 reel projects.
@@ -113,6 +116,7 @@ export async function POST(request: Request) {
   }
 
   const created = await createV2Project(normalized);
+  after(() => pingIndexNow(["/work", `/work/${created.slug}`]));
   return NextResponse.json(created);
 }
 
@@ -136,7 +140,23 @@ export async function PUT(request: Request) {
     return NextResponse.json({ error: "Project not found." }, { status: 404 });
   }
 
+  after(() => pingIndexNow(["/work", `/work/${updated.slug}`]));
   return NextResponse.json(updated);
+}
+
+/** Reorder: `{ order: [id, id, …] }`, first id first in the reel. */
+export async function PATCH(request: Request) {
+  const unauthorized = await requireDashboardAuth();
+  if (unauthorized) return unauthorized;
+
+  const payload = (await request.json().catch(() => null)) as { order?: unknown } | null;
+  const order = Array.isArray(payload?.order) ? payload.order.map(normalizeId) : [];
+  if (!order.length || order.some((id) => id === null) || new Set(order).size !== order.length) {
+    return NextResponse.json({ error: "order must be a list of unique project ids." }, { status: 400 });
+  }
+
+  await reorderV2Projects(order as number[]);
+  return NextResponse.json({ success: true });
 }
 
 export async function DELETE(request: Request) {
@@ -149,6 +169,9 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ error: "id is required." }, { status: 400 });
   }
 
+  const existing = await getV2Project(id);
   await deleteV2Project(id);
+  // The removed page now 404s; telling the engines drops it from their index sooner.
+  after(() => pingIndexNow(existing ? ["/work", `/work/${existing.slug}`] : ["/work"]));
   return NextResponse.json({ success: true });
 }

@@ -1,12 +1,13 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, JetBrains_Mono, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import LenisProvider from "@/components/LenisProvider";
-import Navbar from "@/components/navbar/Navbar";
+import V2Navbar from "@/components/navbar/v2/V2Navbar";
 import SettingsPanel from "@/components/settings/SettingsPanel";
-import SiteDock from "@/components/navbar/SiteDock";
+import V2SiteDock from "@/components/navbar/v2/V2SiteDock";
 import CursorLayer from "@/components/cursor/CursorLayer";
 import { THEME_BOOTSTRAP_SCRIPT } from "@/lib/theme";
+import { SITE_NAME, SITE_URL } from "@/lib/seo";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -20,28 +21,39 @@ const geistMono = Geist_Mono({
   display: "swap",
 });
 
+// Display and measure faces, self-hosted. They used to come from a Google Fonts
+// @import inside globals.css: render-blocking, two extra origins, and a layout
+// shift when they swapped in. Both are variable fonts, so no weight list.
+const spaceGrotesk = Space_Grotesk({
+  variable: "--font-space-grotesk",
+  subsets: ["latin"],
+  display: "swap",
+});
+
+const jetbrainsMono = JetBrains_Mono({
+  variable: "--font-jetbrains-mono",
+  subsets: ["latin"],
+  display: "swap",
+  // Only small labels use it, none in the first screen; a 40KB preload would
+  // compete with the CSS for bandwidth on a slow connection.
+  preload: false,
+});
+
 export const metadata: Metadata = {
-  title: "Miftaul Islam Shuvro — Full Stack Developer",
+  // Resolves relative canonical, og:url and og:image paths against production.
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: "Miftaul Islam Shuvro — Full Stack Developer",
+    template: `%s | ${SITE_NAME}`,
+  },
   description:
-    "Full Stack Developer with 3+ years of experience building high-performance web applications, SaaS platforms, and microservices. React, Next.js, Node.js, NestJS, AWS.",
-  keywords: [
-    "Full Stack Developer",
-    "React",
-    "Next.js",
-    "NestJS",
-    "AWS",
-    "Miftaul Islam Shuvro",
-  ],
-  authors: [{ name: "Miftaul Islam Shuvro", url: "https://miftaul.dev" }],
-  icons: {
-    icon: "/ariyan.webp",
-    apple: "/ariyan.webp",
-  },
-  openGraph: {
-    title: "Miftaul Islam Shuvro — Full Stack Developer",
-    description: "Premium portfolio — React, Next.js, NestJS, AWS and more.",
-    type: "website",
-  },
+    "Full stack developer in Dhaka building SaaS platforms with React, Next.js, Node.js, NestJS, GraphQL and AWS.",
+  applicationName: SITE_NAME,
+  authors: [{ name: SITE_NAME, url: SITE_URL }],
+  creator: SITE_NAME,
+  // Icons come from app/icon.jpg and app/apple-icon.jpg: 64px and 180px crops
+  // of the same photo. They used to point at /ariyan.webp, a 240KB 2039x2697
+  // image downloaded and decoded on every first visit just to draw a tab icon.
 };
 
 export default function RootLayout({
@@ -51,17 +63,20 @@ export default function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${geistSans.variable} ${geistMono.variable} dark h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} ${spaceGrotesk.variable} ${jetbrainsMono.variable} dark h-full antialiased`}
     >
       <head>
         {/* Resolve the stored theme before first paint: no flash, no mismatch. */}
         <script dangerouslySetInnerHTML={{ __html: THEME_BOOTSTRAP_SCRIPT }} />
       </head>
       <body className="min-h-full bg-background text-foreground overflow-x-hidden intro-active">
-        <Navbar />
+        <V2Navbar />
         <LenisProvider>{children}</LenisProvider>
-        <SiteDock />
-        <SettingsPanel />
+        <V2SiteDock />
+        {/* Settings dial is desktop-only */}
+        <div className="hidden md:block">
+          <SettingsPanel />
+        </div>
         <CursorLayer />
       </body>
     </html>
