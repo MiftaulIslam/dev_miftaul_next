@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import gsap from "gsap";
 import { ScrollSmoother } from "gsap/ScrollSmoother";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { requestScrollRefresh } from "@/lib/scrollRefresh";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -242,7 +243,9 @@ export function scrollToSection(href: string) {
 
   commit({ activeSection: id });
   window.setTimeout(() => {
-    ScrollTrigger.refresh();
+    // Coalesces with the refreshes the sections ask for on "settled", so a
+    // jump re-measures once instead of three or four times.
+    requestScrollRefresh();
     window.dispatchEvent(
       new CustomEvent("nav-section-settled", { detail: { id } })
     );

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import dynamic from "next/dynamic";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { requestScrollRefresh } from "@/lib/scrollRefresh";
 import HeroRoadmapPath from "@/components/ui/HeroRoadmapPath";
 import { markSectionsMounted } from "@/lib/navShell";
 import type { PortfolioSettings } from "@/lib/dashboard/types";
@@ -39,8 +39,7 @@ export default function HomeExperience({ initialProfile }: { initialProfile: Por
   useEffect(() => {
     if (!sectionsMounted) return;
     markSectionsMounted();
-    const raf = requestAnimationFrame(() => ScrollTrigger.refresh());
-    return () => cancelAnimationFrame(raf);
+    requestScrollRefresh();
   }, [sectionsMounted]);
 
   // With the intro on, the sections mount client-side after it, so fetch the

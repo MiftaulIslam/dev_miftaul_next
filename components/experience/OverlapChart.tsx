@@ -14,6 +14,7 @@ import {
 } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { requestScrollRefresh } from "@/lib/scrollRefresh";
 
 import type { Role, Timeline } from "@/types/experience";
 import { concurrencySentence, loadLiveTimeline, sharedLabel } from "@/lib/experience/roles";
@@ -129,8 +130,9 @@ export default function OverlapChart({ initial }: OverlapChartProps) {
 
     void loadLiveTimeline().then((next) => {
       if (!mounted || !next) return;
+      // Only re-measure if the live rows changed the section's height; the
+      // content height watcher in LenisProvider decides that.
       setTimeline(next);
-      requestAnimationFrame(() => ScrollTrigger.refresh());
     });
 
     return () => {
@@ -402,7 +404,7 @@ export default function OverlapChart({ initial }: OverlapChartProps) {
     const settled = (event: Event) => {
       const id = (event as CustomEvent<{ id?: string }>).detail?.id;
       if (id && id !== "experience") return;
-      requestAnimationFrame(() => ScrollTrigger.refresh());
+      requestScrollRefresh();
     };
 
     window.addEventListener("nav-section-jump", jump as EventListener);

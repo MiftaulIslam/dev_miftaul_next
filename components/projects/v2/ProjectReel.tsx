@@ -7,6 +7,7 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { ScrollSmoother } from "gsap/ScrollSmoother";
 import { ArrowLeft, ArrowRight, ArrowUpRight } from "lucide-react";
 import CaseSheet from "@/components/projects/v2/CaseSheet";
+import { requestScrollRefresh } from "@/lib/scrollRefresh";
 import ReelPlates from "@/components/projects/v2/ReelPlates";
 import { useReducedMotion } from "@/lib/useReducedMotion";
 import type { ReelProject } from "@/types/projects";
@@ -417,7 +418,7 @@ export default function ProjectReel({ projects, initialSlug, syncUrl = false }: 
     const onSettled = (event: Event) => {
       const id = (event as CustomEvent<{ id?: string }>).detail?.id;
       if (id && id !== "projects") return;
-      requestAnimationFrame(() => ScrollTrigger.refresh());
+      requestScrollRefresh();
     };
     window.addEventListener("nav-section-jump", onJump as EventListener);
     window.addEventListener("nav-section-settled", onSettled as EventListener);

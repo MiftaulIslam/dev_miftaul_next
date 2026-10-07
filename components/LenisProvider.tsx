@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { ScrollSmoother } from "gsap/ScrollSmoother";
+import { requestScrollRefresh, watchContentHeight } from "@/lib/scrollRefresh";
 import { useReducedMotion } from "@/lib/useReducedMotion";
 
 gsap.registerPlugin(ScrollTrigger, ScrollSmoother);
@@ -37,13 +38,17 @@ export default function LenisProvider({ children }: { children: ReactNode }) {
     // No resize listener: ScrollTrigger already refreshes itself on resize,
     // debounced, and skips the address-bar resizes on touch. A second refresh
     // here doubled that work, and on touch ran on every address-bar show/hide.
-    const handleNavSettled = () => {
-      requestAnimationFrame(() => ScrollTrigger.refresh());
-    };
+    const handleNavSettled = () => requestScrollRefresh();
     window.addEventListener("nav-section-settled", handleNavSettled);
+
+    // Re-measure only when the content really changes height. Replaces the
+    // blind refreshes sections used to schedule on load, on fonts and on timers.
+    const content = document.getElementById("smooth-content");
+    const unwatch = content ? watchContentHeight(content) : undefined;
 
     return () => {
       window.removeEventListener("nav-section-settled", handleNavSettled);
+      unwatch?.();
       smoother?.kill();
     };
   }, [reduced, disableSmootherRoute]);
