@@ -19,6 +19,10 @@ const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
   display: "swap",
+  // Only tiny labels use it (the hero badge, the scroll cue). A high-priority
+  // preload put another ~25KB in front of the CSS and the hero image on every
+  // first visit; the metric-matched fallback covers those labels until it lands.
+  preload: false,
 });
 
 // Display and measure faces, self-hosted. They used to come from a Google Fonts

@@ -6,6 +6,7 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import ChapterRail from "@/components/skills/ChapterRail";
 import { jumpToScene, useReelProgress } from "@/lib/skills/useReelProgress";
+import { requestScrollRefresh } from "@/lib/scrollRefresh";
 import { useReducedMotion } from "@/lib/useReducedMotion";
 import type { SkillCategory } from "@/types/skills";
 
@@ -121,7 +122,7 @@ export default function ReelChoreography({
 
   /* nav wiring: refresh on settle, reset state on jump */
   useEffect(() => {
-    const refresh = () => requestAnimationFrame(() => ScrollTrigger.refresh());
+    const refresh = () => requestScrollRefresh();
     const jump = (event: Event) => {
       const id = (event as CustomEvent<{ id?: string }>).detail?.id;
       if (id && id !== "skills") return;
@@ -139,19 +140,13 @@ export default function ReelChoreography({
     };
     window.addEventListener("nav-section-jump", jump as EventListener);
     window.addEventListener("nav-section-settled", settled as EventListener);
-    window.addEventListener("load", refresh);
-    let fontTimer: ReturnType<typeof setTimeout> | undefined;
-    if (typeof document !== "undefined" && "fonts" in document) {
-      document.fonts.ready.then(refresh);
-    }
-    // images above the reel reflow the page as they arrive — re-measure
-    const imageTimers = [400, 1200, 2500].map((ms) => setTimeout(refresh, ms));
+    // No load / fonts.ready / timer refreshes: ScrollTrigger refreshes itself on
+    // load, and LenisProvider's height watcher catches anything (fonts, late
+    // images, fetched content) that genuinely moves the page. The three blind
+    // timers here re-measured every trigger on the page for nothing.
     return () => {
       window.removeEventListener("nav-section-jump", jump as EventListener);
       window.removeEventListener("nav-section-settled", settled as EventListener);
-      window.removeEventListener("load", refresh);
-      imageTimers.forEach(clearTimeout);
-      if (fontTimer) clearTimeout(fontTimer);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [total]);

@@ -565,11 +565,22 @@ p {
 @keyframes hero-line-in {
   from { opacity: 0; transform: translateY(70px); }
 }
+/* Transform only, no fade: the summary is the page's LCP element on phones.
+   Fading it in from opacity 0 after a delay held LCP back until the fade
+   began (Chrome ignores invisible text), so the biggest block of text on the
+   first screen counted as unpainted for over a second. It is readable from
+   the first paint now and still settles upward with the name. */
+@keyframes hero-text-in {
+  from { transform: translateY(14px); }
+}
 @keyframes hero-card-in {
   from { opacity: 0; transform: translateY(-46px); filter: blur(10px); }
 }
 .hero-in {
   animation: hero-rise var(--hero-dur, 0.5s) cubic-bezier(0.165, 0.84, 0.44, 1) var(--hero-delay, 0s) backwards;
+}
+.hero-in-text {
+  animation: hero-text-in 0.7s cubic-bezier(0.165, 0.84, 0.44, 1) var(--hero-delay, 0s) backwards;
 }
 .hero-in-line {
   animation: hero-line-in 0.9s cubic-bezier(0.165, 0.84, 0.44, 1) var(--hero-delay, 0s) backwards;
@@ -592,6 +603,7 @@ p {
 }
 @media (prefers-reduced-motion: reduce) {
   .hero-in,
+  .hero-in-text,
   .hero-in-line,
   .hero-in-card,
   .page-fade-in {

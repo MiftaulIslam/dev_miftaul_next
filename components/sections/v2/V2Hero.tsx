@@ -392,7 +392,7 @@ export default function V2Hero({ profile }: HeroProps) {
           <V2ScrollHighlightText
             as="p"
             text={profile.shortSummary}
-            className="hero-summary hero-in max-w-lg text-base leading-relaxed text-muted-foreground [--hero-delay:0.72s] md:text-lg"
+            className="hero-summary hero-in-text max-w-lg text-base leading-relaxed text-muted-foreground [--hero-delay:0.15s] md:text-lg"
             triggerStart="top 82%"
           />
 
